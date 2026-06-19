@@ -1,79 +1,77 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# ?? ASTHMA MONITOR v3 — SUPPTIC ENSP Yaoundé
 
-# Getting Started
+Application mobile React Native de surveillance de l'asthme en temps réel.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## ?? Installation complète
 
-## Step 1: Start the Metro Server
+### 1. Prérequis
+- Node.js 18+
+- JDK 17
+- Android Studio + SDK 34
+- React Native CLI : `npm install -g react-native-cli`
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
-
-To start Metro, run the following command from the _root_ of your React Native project:
-
+### 2. Installer les dépendances
 ```bash
-# using npm
-npm start
-
-# OR using Yarn
-yarn start
+cd C:\Users\user\AsthmaMonitoring
+npm install
 ```
 
-## Step 2: Start your Application
+### 3. Firebase Setup
+1. Créer un projet sur https://console.firebase.google.com
+2. Activer Authentication (Email/Password)
+3. Activer Realtime Database
+4. Activer Firestore
+5. Activer Storage
+6. Télécharger `google-services.json` et le placer dans `android/app/`
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+### 4. Ajouter les permissions Android
+Ouvrir `android/app/src/main/AndroidManifest.xml` et ajouter le contenu de `android_permissions.xml`
 
-### For Android
-
-```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
+### 5. Configurer android/build.gradle
+```gradle
+// Dans android/build.gradle, ajouter dans dependencies :
+classpath 'com.google.gms:google-services:4.4.1'
 ```
 
-### For iOS
+### 6. Configurer android/app/build.gradle
+```gradle
+// En haut du fichier ajouter :
+apply plugin: 'com.google.gms.google-services'
 
-```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+// Dans defaultConfig :
+minSdkVersion 23
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+### 7. Lancer l'application
+```bash
+# Terminal 1 — Metro bundler
+npx react-native start
 
-This is one way to run your app â€” you can also run it directly from within Android Studio and Xcode respectively.
+# Terminal 2 — Compiler et installer
+npx react-native run-android
+```
 
-## Step 3: Modifying your App
+## ?? Fonctionnalités
 
-Now that you have successfully run the app, let's modify it.
+| Écran | Description |
+|-------|-------------|
+| ?? Accueil | Tableau de bord vitaux en temps réel |
+| ?? Vitaux | Historique des mesures |
+| ? Montre | Connexion BLE / GSM / GPS |
+| ?? IA | Analyse Claude AI + chat médical |
+| ?? Chat | Messagerie patients & médecins |
+| ? Rappels | Gestion médicaments |
+| ?? Profil | Paramètres & thèmes |
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd âŒ˜</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+## ?? Thèmes disponibles
+- ?? Clair
+- ?? Sombre
+- ?? Sarcelle
+- ?? Violet
 
-   For **iOS**: Hit <kbd>Cmd âŒ˜</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+## ?? Contexte
+Projet SUPPTIC — École Nationale Supérieure Polytechnique, Yaoundé, Cameroun.
 
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## ?? API Key Claude
+Dans `src/screens/AIScreen.js`, la clé API Anthropic doit être configurée côté backend
+(ne jamais exposer la clé dans le code client en production).

@@ -1,20 +1,47 @@
 buildscript {
     ext {
         buildToolsVersion = "34.0.0"
-        minSdkVersion = 21
+        minSdkVersion = 24
         compileSdkVersion = 34
         targetSdkVersion = 34
-        ndkVersion = "25.1.8937393"
-        kotlinVersion = "1.8.0"
+        ndkVersion = "26.1.10909125"
+        kotlinVersion = "1.9.22"
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle")
+        classpath("com.android.tools.build:gradle:8.3.1")
         classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        classpath("com.google.gms:google-services:4.4.1")
+    }
+}
+
+// HACK: Patch react-native-screens for React Native 0.74+ compatibility
+allprojects {
+    def patchScreens = {
+        def screensFile = file("../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt")
+        if (screensFile.exists()) {
+            def content = screensFile.text
+            if (content.contains("BaseReactPackage")) {
+                println "Patching RNScreensPackage.kt for RN 0.74 compatibility..."
+                content = content.replace("import com.facebook.react.BaseReactPackage", "import com.facebook.react.TurboReactPackage")
+                content = content.replace("class RNScreensPackage : BaseReactPackage()", "class RNScreensPackage : TurboReactPackage()")
+                screensFile.write(content)
+            }
+        }
+    }
+    
+    // On l'exécute au moment de l'évaluation du projet
+    afterEvaluate { project ->
+        if (project.name == 'react-native-screens') {
+            project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+                doFirst {
+                    patchScreens()
+                }
+            }
+        }
     }
 }
 

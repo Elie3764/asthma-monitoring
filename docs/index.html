@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTHMA MONITORING — Dashboard Médical</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #070d1a;
+  --bg2: #0d1829;
+  --bg3: #111f35;
+  --surface: #0f1e30;
+  --surface2: #162540;
+  --border: rgba(0,210,255,0.12);
+  --border2: rgba(0,210,255,0.25);
+  --teal: #00d2ff;
+  --teal2: #00a8cc;
+  --teal3: rgba(0,210,255,0.08);
+  --green: #00e5a0;
+  --yellow: #ffd84d;
+  --orange: #ff8c42;
+  --red: #ff3d5a;
+  --text: #e8f4ff;
+  --text2: #8ba8c4;
+  --text3: #4d6a85;
+  --font-mono: 'Space Mono', monospace;
+  --font: 'DM Sans', sans-serif;
+  --radius: 14px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+body.light-theme {
+  --bg: #f4f7fb;
+  --bg2: #ffffff;
+  --bg3: #eef2f7;
+  --surface: #ffffff;
+  --surface2: #eef2f7;
+  --border: rgba(0,120,160,0.14);
+  --border2: rgba(0,120,160,0.28);
+  --teal: #0090b3;
+  --teal2: #007a99;
+  --teal3: rgba(0,144,179,0.08);
+  --green: #00a878;
+  --yellow: #b88a00;
+  --orange: #d96a1f;
+  --red: #d6304a;
+  --text: #16242f;
+  --text2: #50657a;
+  --text3: #8093a3;
+  --shadow: 0 8px 32px rgba(20,40,60,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--teal2); border-radius: 4px; }
+
+/* ===== AUTH OVERLAY ===== */
+#auth-overlay {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 40%, rgba(0,210,255,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 70%, rgba(0,229,160,0.05) 0%, transparent 50%),
+              var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+.auth-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,210,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,210,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.auth-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 420px;
+  box-shadow: 0 0 80px rgba(0,210,255,0.08), var(--shadow);
+}
+.auth-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.auth-logo-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--teal), var(--green));
+  border-radius: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 30px rgba(0,210,255,0.3);
+}
+.auth-title {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  color: var(--teal);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.auth-sub {
+  font-size: 13px; color: var(--text2); margin-top: 4px;
+  font-style: italic;
+}
+.auth-tabs {
+  display: flex; background: var(--bg2);
+  border-radius: 10px; padding: 4px;
+  margin-bottom: 28px; gap: 4px;
+}
+.auth-tab {
+  flex: 1; padding: 9px;
+  background: none; border: none;
+  border-radius: 7px;
+  font-family: var(--font); font-size: 14px; font-weight: 500;
+  color: var(--text2); cursor: pointer;
+  transition: all .2s;
+}
+.auth-tab.active {
+  background: var(--teal);
+  color: var(--bg);
+}
+.auth-form-group { margin-bottom: 18px; }
+.auth-label {
+  display: block; font-size: 12px; color: var(--text2);
+  font-weight: 600; letter-spacing: .5px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.auth-input {
+  width: 100%; padding: 12px 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--font); font-size: 15px;
+  outline: none; transition: border .2s, box-shadow .2s;
+}
+.auth-input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(0,210,255,0.1);
+}
+.auth-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--teal), var(--teal2));
+  color: var(--bg); border: none;
+  border-radius: 10px; font-family: var(--font);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+  letter-spacing: .5px;
+}
+.auth-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,210,255,0.3); }
+.auth-btn:active { transform: translateY(0); }
+.auth-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.auth-error {
+  background: rgba(255,61,90,0.1); border: 1px solid rgba(255,61,90,0.3);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; color: var(--red);
+  margin-bottom: 16px; display: none;
+}
+.auth-project-badge {
+  text-align: center; margin-top: 24px;
+  font-size: 11px; color: var(--text3);
+  font-family: var(--font-mono); letter-spacing: 1px;
+}
+
+/* ===== MAIN LAYOUT ===== */
+#app { display: none; flex-direction: column; height: 100vh; }
+#app.visible { display: flex; }
+
+/* TOP BAR */
+.topbar {
+  display: flex; align-items: center;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px; height: 58px;
+  gap: 16px; flex-shrink: 0;
+}
+.topbar-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono);
+}
+.topbar-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--teal), var(--green));
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.topbar-name { font-size: 14px; color: var(--teal); letter-spacing: 1.5px; }
+.topbar-env { font-size: 10px; color: var(--text3); letter-spacing: .5px; }
+
+.topbar-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text2);
+  background: var(--teal3); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px;
+  margin-left: 8px;
+}
+.topbar-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.topbar-spacer { flex: 1; }
+
+.topbar-time {
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--text2); letter-spacing: 1px;
+}
+.topbar-alert-badge {
+  background: var(--red); color: white;
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 12px; font-weight: 700;
+  display: none; animation: pulse-red 1s infinite;
+}
+@keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(255,61,90,.6)} 50%{box-shadow:0 0 0 6px rgba(255,61,90,0)} }
+.topbar-alert-badge.active { display: block; }
+
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px; padding: 5px 14px 5px 5px;
+  cursor: pointer;
+}
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal), var(--green));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--bg);
+}
+.user-name { font-size: 13px; font-weight: 500; }
+.logout-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 12px;
+  color: var(--text2); font-size: 13px; cursor: pointer;
+  transition: all .2s;
+}
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* MAIN BODY */
+.main-body { display: flex; flex: 1; overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px; background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 16px 0; flex-shrink: 0;
+}
+.sidebar-section { padding: 0 12px 8px; }
+.sidebar-section-label {
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 0 8px 8px;
+  font-family: var(--font-mono);
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 9px;
+  cursor: pointer; transition: all .15s;
+  color: var(--text2); font-size: 14px; font-weight: 500;
+  position: relative;
+}
+.nav-item:hover { background: var(--teal3); color: var(--text); }
+.nav-item.active { background: var(--teal3); color: var(--teal); }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; background: var(--teal);
+  border-radius: 0 3px 3px 0;
+}
+.nav-icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: var(--red);
+  color: white; border-radius: 10px; padding: 1px 7px;
+  font-size: 11px; font-weight: 700;
+}
+.nav-badge.green { background: var(--green); color: var(--bg); }
+.sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 8px 12px; }
+
+.sidebar-footer {
+  margin-top: auto; padding: 12px;
+  font-size: 11px; color: var(--text3);
+  text-align: center;
+  font-family: var(--font-mono); letter-spacing: .5px;
+  border-top: 1px solid var(--border);
+}
+
+/* CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* PAGE HEADERS */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-title { font-family: var(--font-mono); font-size: 20px; color: var(--teal); letter-spacing: 1px; }
+.page-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: 9px;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all .2s;
+}
+.btn-teal { background: var(--teal); color: var(--bg); }
+.btn-teal:hover { box-shadow: 0 4px 16px rgba(0,210,255,.3); transform: translateY(-1px); }
+.btn-outline { background: none; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+.btn-danger { background: rgba(255,61,90,.15); border: 1px solid rgba(255,61,90,.3); color: var(--red); }
+.btn-green { background: var(--green); color: var(--bg); }
+
+/* GRID LAYOUTS */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.card-icon { font-size: 18px; }
+
+/* VITAL CARDS */
+.vital-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative; overflow: hidden;
+  transition: border-color .3s, box-shadow .3s;
+}
+.vital-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.vital-card.spo2::before { background: linear-gradient(90deg, var(--teal), var(--green)); }
+.vital-card.hr::before { background: linear-gradient(90deg, var(--red), var(--orange)); }
+.vital-card.temp::before { background: linear-gradient(90deg, var(--yellow), var(--orange)); }
+.vital-card.resp::before { background: linear-gradient(90deg, #a78bfa, var(--teal)); }
+
+.vital-card.alert-warn { border-color: var(--orange); box-shadow: 0 0 20px rgba(255,140,66,.2); }
+.vital-card.alert-crit { border-color: var(--red); box-shadow: 0 0 24px rgba(255,61,90,.3); animation: card-pulse .8s infinite; }
+@keyframes card-pulse { 0%,100%{box-shadow:0 0 24px rgba(255,61,90,.3)} 50%{box-shadow:0 0 36px rgba(255,61,90,.5)} }
+
+.vital-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); }
+.vital-value {
+  font-family: var(--font-mono); font-size: 44px; font-weight: 700;
+  line-height: 1.1; margin: 8px 0 4px;
+}
+.vital-unit { font-size: 14px; color: var(--text2); }
+.vital-trend { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+
+/* STATUS BADGES */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-green { background: rgba(0,229,160,.15); color: var(--green); border: 1px solid rgba(0,229,160,.3); }
+.badge-yellow { background: rgba(255,216,77,.15); color: var(--yellow); border: 1px solid rgba(255,216,77,.3); }
+.badge-orange { background: rgba(255,140,66,.15); color: var(--orange); border: 1px solid rgba(255,140,66,.3); }
+.badge-red { background: rgba(255,61,90,.15); color: var(--red); border: 1px solid rgba(255,61,90,.3); }
+.badge-teal { background: rgba(0,210,255,.12); color: var(--teal); border: 1px solid rgba(0,210,255,.25); }
+
+/* PATIENT TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left; padding: 10px 14px;
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .7px;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--border);
+}
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .15s;
+}
+tbody tr:hover { background: rgba(0,210,255,.03); }
+tbody td { padding: 12px 14px; font-size: 14px; vertical-align: middle; }
+.td-patient { display: flex; align-items: center; gap: 10px; }
+.patient-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.patient-name { font-weight: 500; }
+.patient-id { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+.vital-mini { font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+.action-btns { display: flex; gap: 6px; }
+.action-btn {
+  padding: 5px 12px; border-radius: 7px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); background: none;
+  color: var(--text2); transition: all .15s;
+}
+.action-btn:hover { border-color: var(--teal); color: var(--teal); }
+.action-btn.view-btn { border-color: var(--teal); color: var(--teal); background: var(--teal3); }
+.action-btn.chat-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* CHART AREA */
+.chart-container { position: relative; height: 160px; }
+canvas { width: 100% !important; }
+
+/* CHAT PANEL */
+.chat-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; height: 520px; }
+.chat-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+.chat-list-header { padding: 16px; border-bottom: 1px solid var(--border); }
+.chat-list-title { font-size: 13px; font-weight: 600; color: var(--text2); }
+.chat-search {
+  width: 100%; margin-top: 10px; padding: 8px 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  font-family: var(--font); font-size: 13px; outline: none;
+}
+.chat-items { flex: 1; overflow-y: auto; }
+.chat-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .15s;
+}
+.chat-item:hover, .chat-item.active { background: var(--teal3); }
+.chat-av {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.chat-item-info { flex: 1; min-width: 0; }
+.chat-item-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-item-last { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.chat-unread {
+  background: var(--teal); color: var(--bg);
+  border-radius: 10px; padding: 1px 7px;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+
+.chat-main { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
+.chat-main-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 70%; }
+.msg-in { align-self: flex-start; }
+.msg-out { align-self: flex-end; }
+.msg-bubble {
+  padding: 10px 14px; border-radius: 14px;
+  font-size: 14px; line-height: 1.5;
+}
+.msg-in .msg-bubble { background: var(--surface2); border-radius: 4px 14px 14px 14px; }
+.msg-out .msg-bubble { background: rgba(0,210,255,.15); border: 1px solid rgba(0,210,255,.2); border-radius: 14px 14px 4px 14px; }
+.msg-time { font-size: 10px; color: var(--text3); margin-top: 4px; padding: 0 4px; }
+.msg-out .msg-time { text-align: right; }
+
+.chat-input-area { padding: 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+.chat-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-family: var(--font); font-size: 14px; outline: none;
+  transition: border .2s;
+}
+.chat-input:focus { border-color: var(--teal); }
+.chat-send-btn {
+  padding: 10px 18px; background: var(--teal); color: var(--bg);
+  border: none; border-radius: 10px;
+  font-size: 14px; cursor: pointer; font-weight: 600; transition: all .2s;
+}
+.chat-send-btn:hover { box-shadow: 0 4px 14px rgba(0,210,255,.3); }
+
+/* MEDICATIONS */
+.med-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; align-items: flex-start; gap: 14px;
+  transition: border-color .2s;
+}
+.med-card:hover { border-color: var(--border2); }
+.med-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.med-info { flex: 1; }
+.med-name { font-size: 15px; font-weight: 600; }
+.med-class { font-size: 12px; color: var(--teal); font-family: var(--font-mono); }
+.med-desc { font-size: 13px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+.med-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.med-tag {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 8px;
+  font-size: 11px; color: var(--text2);
+}
+
+/* ORDONNANCES */
+.ordonnance-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 12px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.form-input, .form-select, .form-textarea {
+  padding: 10px 14px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 9px;
+  color: var(--text); font-family: var(--font); font-size: 14px;
+  outline: none; transition: border .2s;
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--teal); }
+.form-select option { background: var(--bg2); }
+
+/* ALERTS PAGE */
+.alert-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 10px; transition: all .2s;
+}
+.alert-item.crit { border-color: rgba(255,61,90,.4); background: rgba(255,61,90,.05); }
+.alert-item.warn { border-color: rgba(255,140,66,.4); background: rgba(255,140,66,.05); }
+.alert-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.alert-item.crit .alert-icon { background: rgba(255,61,90,.15); }
+.alert-item.warn .alert-icon { background: rgba(255,140,66,.15); }
+.alert-info { flex: 1; }
+.alert-title { font-size: 14px; font-weight: 600; }
+.alert-detail { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.alert-time { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+.alert-actions { display: flex; gap: 8px; }
+
+/* RAPPELS */
+.reminder-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 10px;
+}
+.reminder-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; background: var(--surface2);
+}
+.reminder-info { flex: 1; }
+.reminder-name { font-size: 14px; font-weight: 600; }
+.reminder-detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.toggle-wrap { position: relative; }
+.toggle-input { display: none; }
+.toggle-label {
+  display: block; width: 44px; height: 24px;
+  background: var(--bg2); border-radius: 12px;
+  cursor: pointer; position: relative;
+  transition: background .2s; border: 1px solid var(--border);
+}
+.toggle-label::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--text3); top: 2px; left: 2px;
+  transition: transform .2s, background .2s;
+}
+.toggle-input:checked + .toggle-label { background: rgba(0,229,160,.2); border-color: var(--green); }
+.toggle-input:checked + .toggle-label::after { background: var(--green); transform: translateX(20px); }
+
+/* LIVE SECTION */
+.live-banner {
+  background: linear-gradient(135deg, rgba(0,210,255,.1), rgba(0,229,160,.08));
+  border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 16px 20px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+.live-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--red); animation: blink 1s infinite; flex-shrink: 0;
+}
+.live-text { font-family: var(--font-mono); font-size: 13px; color: var(--teal); }
+.live-count { font-size: 22px; font-weight: 700; color: var(--green); font-family: var(--font-mono); margin-left: auto; }
+.live-count-label { font-size: 11px; color: var(--text2); text-align: right; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; z-index: 500;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 18px; padding: 28px; width: 520px; max-width: 90vw;
+  box-shadow: 0 24px 80px rgba(0,0,0,.5);
+  animation: modal-in .2s ease;
+}
+@keyframes modal-in { from{transform:scale(.95);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-family: var(--font-mono); font-size: 16px; color: var(--teal); }
+.modal-close { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; color: var(--text2); cursor: pointer; }
+.modal-close:hover { border-color: var(--red); color: var(--red); }
+
+/* TOAST */
+.toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; box-shadow: var(--shadow);
+  animation: toast-in .25s ease;
+  min-width: 260px;
+}
+.toast.success { border-color: rgba(0,229,160,.4); }
+.toast.error { border-color: rgba(255,61,90,.4); }
+.toast.info { border-color: var(--border2); }
+@keyframes toast-in { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* LOADING */
+.loading-spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--teal);
+  border-radius: 50%; animation: spin .6s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* STAT NUMBER */
+.stat-big { font-family: var(--font-mono); font-size: 36px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.stat-change { font-size: 12px; margin-top: 4px; }
+.stat-up { color: var(--green); }
+.stat-down { color: var(--red); }
+
+/* MISC */
+.section-gap { margin-bottom: 20px; }
+.text-teal { color: var(--teal); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-orange { color: var(--orange); }
+.text-yellow { color: var(--yellow); }
+.text-muted { color: var(--text2); }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.flex-row { display: flex; align-items: center; gap: 10px; }
+.spacer { flex: 1; }
+.patient-detail-grid { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-overlay">
+  <div class="auth-grid"></div>
+  <!-- Toggle thème sur la page auth -->
+  <button onclick="toggleTheme()" style="position:fixed;top:16px;right:16px;z-index:9999;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:inherit;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;backdrop-filter:blur(8px)" id="auth-theme-btn">☀️ Clair</button>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🫁</div>
+      <div class="auth-title">ASTHMA MONITORING</div>
+      <div class="auth-sub">Dashboard Médical — ENSP Yaoundé</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Connexion</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Créer compte</button>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="login-form">
+      <div class="auth-form-group">
+        <label class="auth-label">Email médecin</label>
+        <input type="email" id="login-email" class="auth-input" placeholder="docteur@ensp.cm">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Mot de passe</label>
+        <input type="password" id="login-password" class="auth-input" placeholder="••••••••">
+      </div>
+      <button class="auth-btn" id="login-btn" onclick="if(window.doLogin)window.doLogin();else alert('Chargement en cours, réessayez')">
+        <span id="login-btn-text">Se connecter</span>
+      </button>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="auth-form-group">
+        <label class="auth-label">Nom complet</label>
+        <input type="text" id="reg-name" class="auth-input" placeholder="Dr. Jean Mbarga">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Email</label>
+        <input type="email" id="reg-email" class="auth-input" placeholder="medecin@ensp.cm">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Mot de passe</label>
+        <input type="password" id="reg-password" class="auth-input" placeholder="••••••••">
+      </div>
+      <button class="auth-btn" id="reg-btn" onclick="if(window.doRegister)window.doRegister();else alert('Chargement en cours, réessayez')">
+        <span id="reg-btn-text">Créer le compte</span>
+      </button>
+    </div>
+    <div class="auth-project-badge">SUPPTIC · ENSP · Yaoundé · Cameroun</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-icon">🫁</div>
+      <div>
+        <div class="topbar-name">ASTHMA MONITOR</div>
+        <div class="topbar-env">ENSP Yaoundé</div>
+      </div>
+    </div>
+    <div class="topbar-status">
+      <div class="topbar-dot"></div>
+      <span id="live-patients-count">0 patients connectés</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-time" id="topbar-clock">--:--:--</div>
+    <div class="topbar-alert-badge" id="alert-badge">⚠ Alertes</div>
+    <button class="logout-btn" id="theme-toggle-btn" onclick="toggleTheme()" style="margin-right:4px">🌙 Sombre</button>
+    <div class="user-pill">
+      <div class="user-avatar" id="user-av">D</div>
+      <span class="user-name" id="user-display-name">Médecin</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Déconnexion</button>
+  </div>
+
+  <div class="main-body">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Principal</div>
+        <div class="nav-item active" onclick="showPage('home')">
+          <span class="nav-icon">🏠</span> Accueil
+        </div>
+        <div class="nav-item" onclick="showPage('patients')">
+          <span class="nav-icon">👥</span> Patients
+          <span class="nav-badge green" id="patients-nav-badge">0</span>
+        </div>
+        <div class="nav-item" onclick="showPage('vitals')">
+          <span class="nav-icon">💓</span> Vitaux Live
+        </div>
+        <div class="nav-item" onclick="showPage('alerts')">
+          <span class="nav-icon">⚠️</span> Alertes
+          <span class="nav-badge" id="alerts-nav-badge" style="display:none">0</span>
+        </div>
+      </div>
+      <hr class="sidebar-divider">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Clinique</div>
+        <div class="nav-item" onclick="showPage('chat')">
+          <span class="nav-icon">💬</span> Chat
+          <span class="nav-badge" id="chat-nav-badge">2</span>
+        </div>
+        <div class="nav-item" onclick="showPage('medications')">
+          <span class="nav-icon">📅</span> Rendez-vous
+        </div>
+        <div class="nav-item" onclick="showPage('ordonnances')">
+          <span class="nav-icon">📋</span> Ordonnances
+        </div>
+        <div class="nav-item" onclick="showPage('reminders')">
+          <span class="nav-icon">⏰</span> Rappels
+        </div>
+      </div>
+      <hr class="sidebar-divider">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Système</div>
+        <div class="nav-item" onclick="showPage('settings')">
+          <span class="nav-icon">⚙️</span> Paramètres
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        Firebase: asthma-monitoring<br>
+        v2.0 · SUPPTIC 2026
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- HOME PAGE -->
+      <div class="page active" id="page-home">
+        <div class="page-header">
+          <div>
+            <div class="page-title">TABLEAU DE BORD</div>
+            <div class="page-sub" id="home-date">Chargement...</div>
+          </div>
+          <button class="btn btn-teal" onclick="refreshData()">🔄 Actualiser</button>
+        </div>
+
+        <div class="live-banner">
+          <div class="live-dot"></div>
+          <div>
+            <div class="live-text">● SURVEILLANCE EN TEMPS RÉEL</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Données Firebase Realtime DB · Synchro toutes les 5s</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="live-count" id="home-online-count">0</div>
+            <div class="live-count-label">patients en ligne</div>
+          </div>
+        </div>
+
+        <div id="home-critical-section" style="display:none">
+          <div class="card-title text-muted mt-20" style="margin-bottom:12px">🚨 PATIENTS EN ALERTE</div>
+          <div class="grid-2" id="home-critical-patients" style="margin-bottom:8px">
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="grid-4 section-gap">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Patients Total</div><span>👥</span></div>
+            <div class="stat-big text-teal" id="stat-total">8</div>
+            <div class="stat-label">inscrits dans le système</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">En Ligne</div><span>🟢</span></div>
+            <div class="stat-big text-green" id="stat-online">0</div>
+            <div class="stat-label">connectés maintenant</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Alertes Actives</div><span>⚠️</span></div>
+            <div class="stat-big text-orange" id="stat-alerts">2</div>
+            <div class="stat-label">nécessitent attention</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Rappels Actifs</div><span>💊</span></div>
+            <div class="stat-big text-yellow" id="stat-reminders">5</div>
+            <div class="stat-label">médicaments programmés</div>
+          </div>
+        </div>
+
+        <!-- Vitaux moyens -->
+        <div class="card-title text-muted mt-20" style="margin-bottom:12px">⚡ MOYENNES VITAUX — PATIENTS ACTIFS</div>
+        <div class="grid-4 section-gap">
+          <div class="vital-card spo2">
+            <div class="vital-label">SpO2 Moyen</div>
+            <div class="vital-value text-teal" id="avg-spo2">96</div>
+            <div class="vital-unit">% saturation</div>
+            <div class="vital-trend text-green">↑ Normal</div>
+          </div>
+          <div class="vital-card hr">
+            <div class="vital-label">FC Moyenne</div>
+            <div class="vital-value" style="color:var(--orange)" id="avg-hr">78</div>
+            <div class="vital-unit">bpm</div>
+            <div class="vital-trend text-green">→ Normal</div>
+          </div>
+          <div class="vital-card temp">
+            <div class="vital-label">Temp. Moyenne</div>
+            <div class="vital-value text-yellow" id="avg-temp">36.7</div>
+            <div class="vital-unit">°C</div>
+            <div class="vital-trend text-green">→ Normal</div>
+          </div>
+          <div class="vital-card resp">
+            <div class="vital-label">FR Moyenne</div>
+            <div class="vital-value" style="color:#a78bfa" id="avg-resp">17</div>
+            <div class="vital-unit">resp/min</div>
+            <div class="vital-trend text-green">→ Normal</div>
+          </div>
+        </div>
+
+        <!-- Chart + Recent Alerts -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Évolution SpO2 (24h)</div>
+              <span class="badge badge-teal">Live</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="spo2-chart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Alertes Récentes</div>
+              <button class="btn btn-outline" style="font-size:12px;padding:5px 10px" onclick="showPage('alerts')">Voir tout</button>
+            </div>
+            <div id="recent-alerts-list">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATIENTS PAGE -->
+      <div class="page" id="page-patients">
+        <div class="page-header">
+          <div>
+            <div class="page-title">PATIENTS</div>
+            <div class="page-sub">Surveillance en temps réel</div>
+          </div>
+          <div class="flex-row">
+            <input type="text" id="patient-search" class="chat-search" style="width:220px;margin:0" placeholder="🔍 Rechercher..." oninput="filterPatients()">
+            <button class="btn btn-teal" onclick="openAddPatientModal()">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Statut</th>
+                  <th>SpO2</th>
+                  <th>FC</th>
+                  <th>Temp</th>
+                  <th>FR</th>
+                  <th>Appareil</th>
+                  <th>Dernière MAJ</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patients-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VITALS LIVE PAGE -->
+      <div class="page" id="page-vitals">
+        <div class="page-header">
+          <div>
+            <div class="page-title">VITAUX EN DIRECT</div>
+            <div class="page-sub">Flux temps réel depuis Firebase Realtime DB</div>
+          </div>
+          <div id="selected-patient-name" class="badge badge-teal">Sélectionner un patient</div>
+        </div>
+
+        <div class="card section-gap" style="padding:14px 20px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap" id="patient-selector-btns">
+          </div>
+        </div>
+
+        <div class="grid-4 section-gap">
+          <div class="vital-card spo2" id="live-spo2-card">
+            <div class="vital-label">SpO2</div>
+            <div class="vital-value text-teal" id="live-spo2">--</div>
+            <div class="vital-unit">% saturation</div>
+            <div class="vital-trend" id="live-spo2-status">En attente...</div>
+          </div>
+          <div class="vital-card hr">
+            <div class="vital-label">Fréq. Cardiaque</div>
+            <div class="vital-value" style="color:var(--orange)" id="live-hr">--</div>
+            <div class="vital-unit">bpm</div>
+            <div class="vital-trend" id="live-hr-status">En attente...</div>
+          </div>
+          <div class="vital-card temp">
+            <div class="vital-label">Température</div>
+            <div class="vital-value text-yellow" id="live-temp">--</div>
+            <div class="vital-unit">°C</div>
+            <div class="vital-trend" id="live-temp-status">En attente...</div>
+          </div>
+          <div class="vital-card resp">
+            <div class="vital-label">Fréq. Respiratoire</div>
+            <div class="vital-value" style="color:#a78bfa" id="live-resp">--</div>
+            <div class="vital-unit">resp/min</div>
+            <div class="vital-trend" id="live-resp-status">En attente...</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">SpO2 — Tendance</div>
+              <span class="badge badge-teal">● LIVE</span>
+            </div>
+            <div class="chart-container"><canvas id="live-spo2-chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">FC — Tendance</div>
+              <span class="badge badge-teal">● LIVE</span>
+            </div>
+            <div class="chart-container"><canvas id="live-hr-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERTS PAGE -->
+      <div class="page" id="page-alerts">
+        <div class="page-header">
+          <div>
+            <div class="page-title">ALERTES</div>
+            <div class="page-sub">Alertes critiques et avertissements</div>
+          </div>
+          <button class="btn btn-outline" onclick="clearAlerts()">✓ Tout acquitter</button>
+        </div>
+        <div id="alerts-list">
+        </div>
+      </div>
+
+      <!-- CHAT PAGE -->
+      <div class="page" id="page-chat">
+        <div class="page-header">
+          <div class="page-title">MESSAGERIE</div>
+          <div class="page-sub">Chat bidirectionnel Patient ↔ Médecin</div>
+        </div>
+        <div class="chat-layout">
+          <div class="chat-list">
+            <div class="chat-list-header">
+              <div class="chat-list-title">💬 Conversations</div>
+              <input class="chat-search" placeholder="🔍 Rechercher..." oninput="filterChats(this.value)">
+            </div>
+            <div class="chat-items" id="chat-items-list">
+            </div>
+          </div>
+          <div class="chat-main">
+            <div class="chat-main-header" id="chat-header">
+              <div class="chat-av" id="chat-header-av" style="background:linear-gradient(135deg,var(--teal),var(--green));width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--bg)">?</div>
+              <div>
+                <div style="font-weight:600;font-size:14px" id="chat-header-name">Sélectionner une conversation</div>
+                <div class="text-muted" style="font-size:12px" id="chat-header-status">—</div>
+              </div>
+              <div class="spacer"></div>
+              <span class="badge badge-teal" id="chat-header-badge" style="display:none">En ligne</span>
+            </div>
+            <div class="chat-messages" id="chat-messages-area">
+              <div style="margin:auto;text-align:center;color:var(--text3)">
+                <div style="font-size:40px;margin-bottom:10px">💬</div>
+                <div style="font-family:var(--font-mono);font-size:13px">Sélectionner un patient</div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" id="chat-msg-input" class="chat-input" placeholder="Écrire un message..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+              <button class="chat-send-btn" onclick="sendChatMessage()">Envoyer ➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RENDEZ-VOUS PAGE -->
+      <div class="page" id="page-medications">
+        <div class="page-header">
+          <div class="page-title">RENDEZ-VOUS</div>
+          <div class="page-sub">Planification des consultations patients</div>
+        </div>
+        <div class="grid-2">
+          <div class="ordonnance-form">
+            <div class="card-title text-muted" style="margin-bottom:20px">📅 NOUVEAU RENDEZ-VOUS</div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Patient</label>
+              <select class="form-select" id="rdv-patient">
+                <option value="">Sélectionner...</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-input" id="rdv-date">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Heure</label>
+                <input type="time" class="form-input" id="rdv-time" value="09:00">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Motif</label>
+              <input type="text" class="form-input" id="rdv-motif" placeholder="Contrôle de routine, crise récente...">
+            </div>
+            <button class="btn btn-teal" style="width:100%" onclick="addRdv()">Programmer le rendez-vous</button>
+          </div>
+          <div>
+            <div class="card-title text-muted" style="margin-bottom:12px">RENDEZ-VOUS À VENIR</div>
+            <div id="rdv-list">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDONNANCES PAGE -->
+      <div class="page" id="page-ordonnances">
+        <div class="page-header">
+          <div class="page-title">ORDONNANCES</div>
+          <div class="page-sub">Émettre et synchroniser avec l'app mobile</div>
+        </div>
+        <div class="grid-2">
+          <div class="ordonnance-form">
+            <div class="card-title text-muted" style="margin-bottom:20px">📋 NOUVELLE ORDONNANCE</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Patient</label>
+                <select class="form-select" id="ord-patient">
+                  <option value="">Sélectionner...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Médicament</label>
+                <select class="form-select" id="ord-med">
+                  <option value="Salbutamol">Salbutamol 100µg</option>
+                  <option value="Budésonide">Budésonide 200µg</option>
+                  <option value="Salmétérol">Salmétérol/Fluticasone</option>
+                  <option value="Ipratropium">Ipratropium 20µg</option>
+                  <option value="Théophylline">Théophylline 200mg</option>
+                  <option value="Prednisolone">Prednisolone 5mg</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Posologie</label>
+                <input type="text" class="form-input" id="ord-dosage" placeholder="ex: 2 bouffées · 3×/jour">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Durée</label>
+                <select class="form-select" id="ord-duration">
+                  <option value="7 jours">7 jours</option>
+                  <option value="14 jours">14 jours</option>
+                  <option value="1 mois" selected>1 mois</option>
+                  <option value="3 mois">3 mois</option>
+                  <option value="Chronique">Traitement chronique</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Instructions spéciales</label>
+              <textarea class="form-textarea" id="ord-notes" placeholder="Rincer la bouche après inhalation. À prendre avec de l'eau..."></textarea>
+            </div>
+            <button class="btn btn-teal" style="width:100%" onclick="emitOrdonnance()">📤 Émettre et synchroniser avec app</button>
+          </div>
+          <div class="card">
+            <div class="card-title text-muted" style="margin-bottom:16px">📜 HISTORIQUE ORDONNANCES</div>
+            <div id="ord-history">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REMINDERS PAGE -->
+      <div class="page" id="page-reminders">
+        <div class="page-header">
+          <div class="page-title">RAPPELS</div>
+          <div class="page-sub">Programmer les médicaments depuis le dashboard</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title text-muted" style="margin-bottom:16px">⏰ NOUVEAU RAPPEL</div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Patient</label>
+              <select class="form-select" id="rem-patient"></select>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Médicament</label>
+              <input type="text" class="form-input" id="rem-med" placeholder="Salbutamol 100µg">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Heure</label>
+                <input type="time" class="form-input" id="rem-time" value="08:00">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fréquence</label>
+                <select class="form-select" id="rem-freq">
+                  <option value="1×/jour">1× par jour</option>
+                  <option value="2×/jour" selected>2× par jour</option>
+                  <option value="3×/jour">3× par jour</option>
+                  <option value="Si besoin">Si besoin</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-teal" style="width:100%;margin-top:14px" onclick="addReminder()">+ Programmer le rappel</button>
+          </div>
+          <div>
+            <div class="card-title text-muted" style="margin-bottom:12px">RAPPELS ACTIFS</div>
+            <div id="reminders-list">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div class="page" id="page-settings">
+        <div class="page-header">
+          <div class="page-title">PARAMÈTRES</div>
+          <div class="page-sub">Configuration Firebase et système</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title text-muted" style="margin-bottom:16px">🔥 FIREBASE STATUS</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div class="flex-row">
+                <span class="text-muted">Projet:</span>
+                <span class="text-teal" style="font-family:var(--font-mono)">asthma-monitoring</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">Auth:</span>
+                <span class="badge badge-green" id="firebase-auth-status">✓ Connecté</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">Firestore:</span>
+                <span class="badge badge-green">✓ Actif</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">Realtime DB:</span>
+                <span class="badge badge-green">✓ Actif</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">FCM:</span>
+                <span class="badge badge-teal">Config requise</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title text-muted" style="margin-bottom:16px">⚙️ SEUILS D'ALERTE</div>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:13px">
+              <div class="flex-row">
+                <span class="text-muted">SpO2 Avertissement:</span>
+                <span class="badge badge-orange">SpO2 &lt; 92%</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">SpO2 Critique:</span>
+                <span class="badge badge-red">SpO2 &lt; 88%</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">Fièvre:</span>
+                <span class="badge badge-yellow">Temp ≥ 38.0°C</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">Tachycardie:</span>
+                <span class="badge badge-orange">FC &gt; 100 bpm</span>
+              </div>
+              <div class="flex-row">
+                <span class="text-muted">Tachypnée:</span>
+                <span class="badge badge-yellow">FR &gt; 20/min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card mt-20">
+          <div class="card-title text-muted" style="margin-bottom:16px">ℹ️ À PROPOS</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">
+            <strong>ASTHMA MONITORING v2.0</strong><br>
+            Projet SUPPTIC — École Nationale Supérieure des Postes, des Télécommunications et des TIC<br>
+            Système de surveillance de l'asthme au Cameroun<br>
+            Stack: React Native · Firebase · BLE · React Web · ENSP 2024
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-body -->
+</div><!-- /app -->
+
+<!-- MODAL ADD PATIENT -->
+<div class="modal-overlay" id="add-patient-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">+ NOUVEAU PATIENT</div>
+      <button class="modal-close" onclick="closeModal('add-patient-modal')">✕ Fermer</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nom complet</label>
+        <input type="text" class="form-input" id="np-name" placeholder="Jean Mbarga">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Téléphone (+237)</label>
+        <input type="text" class="form-input" id="np-phone" placeholder="+237 6XX XXX XXX">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Âge</label>
+        <input type="number" class="form-input" id="np-age" placeholder="35">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sexe</label>
+        <select class="form-select" id="np-sex">
+          <option value="M">Masculin</option>
+          <option value="F">Féminin</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">Sévérité asthme</label>
+      <select class="form-select" id="np-severity">
+        <option value="Intermittent">Intermittent</option>
+        <option value="Léger persistant">Léger persistant</option>
+        <option value="Modéré persistant">Modéré persistant</option>
+        <option value="Sévère persistant">Sévère persistant</option>
+      </select>
+    </div>
+    <button class="btn btn-teal" style="width:100%" onclick="addPatient()">Enregistrer le patient</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getDatabase, ref, onValue, set, push, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+// ===== FIREBASE CONFIG (ASTHMA MONITORING) =====
+const firebaseConfig = {
+  apiKey: "AIzaSyC-o5lFybzB54biVudkClaf4hucEpkW8LQ",
+  authDomain: "asthma-monitoring-79e4e.firebaseapp.com",
+  databaseURL: "https://asthma-monitoring-79e4e-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "asthma-monitoring-79e4e",
+  storageBucket: "asthma-monitoring-79e4e.firebasestorage.app",
+  messagingSenderId: "587156062510",
+  appId: "1:587156062510:web:846ad30db9ea59819bfabf"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const rtdb = getDatabase(app);
+
+window._firebase = { auth, db, rtdb, set, push, ref, get, onValue, collection, doc, setDoc, getDoc, getDocs, addDoc, onSnapshot, serverTimestamp, query, orderBy, limit };
+
+// ===== AUTH STATE =====
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window._currentUser = user;
+    showApp(user);
+    loadDashboard();
+  } else {
+    window._currentUser = null;
+    showAuth();
+  }
+});
+
+// ===== AUTH FUNCTIONS =====
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd = document.getElementById('login-password').value;
+  if (!email || !pwd) { showAuthError('Remplissez tous les champs'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  document.getElementById('login-btn-text').innerHTML = '<span class="loading-spinner"></span> Connexion...';
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+    showToast('✅ Connexion réussie!', 'success');
+  } catch(e) {
+    let msg = 'Erreur de connexion';
+    if(e.code === 'auth/user-not-found') msg = 'Compte introuvable. Créez un compte.';
+    else if(e.code === 'auth/wrong-password') msg = 'Mot de passe incorrect';
+    else if(e.code === 'auth/invalid-credential') msg = 'Identifiants incorrects';
+    showAuthError(msg);
+    btn.disabled = false;
+    document.getElementById('login-btn-text').textContent = 'Se connecter';
+  }
+};
+
+window.doRegister = async function() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pwd = document.getElementById('reg-password').value;
+  if(!name||!email||!pwd) { showAuthError('Remplissez tous les champs'); return; }
+  if(pwd.length < 6) { showAuthError('Mot de passe: minimum 6 caractères'); return; }
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  document.getElementById('reg-btn-text').innerHTML = '<span class="loading-spinner"></span>';
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await setDoc(doc(db, 'medecins', cred.user.uid), {
+      name, email, role: 'medecin', createdAt: serverTimestamp(), institution: 'ENSP Yaoundé'
+    });
+    showToast('✅ Compte créé avec succès!', 'success');
+  } catch(e) {
+    let msg = 'Erreur création compte';
+    if(e.code === 'auth/email-already-in-use') msg = 'Email déjà utilisé';
+    showAuthError(msg);
+    btn.disabled = false;
+    document.getElementById('reg-btn-text').textContent = 'Créer le compte';
+  }
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+  showToast('Déconnecté', 'info');
+};
+
+// ===== THEME TOGGLE =====
+window.toggleTheme = function() {
+  const isLight = document.body.classList.toggle('light-theme');
+  localStorage.setItem('asthma_theme', isLight ? 'light' : 'dark');
+  const label = isLight ? '☀️ Clair' : '🌙 Sombre';
+  const btn1 = document.getElementById('theme-toggle-btn');
+  const btn2 = document.getElementById('auth-theme-btn');
+  if (btn1) btn1.innerHTML = label;
+  if (btn2) btn2.innerHTML = label;
+};
+(function initTheme(){
+  const saved = localStorage.getItem('asthma_theme') || 'light';
+  if (saved === 'light') {
+    document.body.classList.add('light-theme');
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const isLight = document.body.classList.contains('light-theme');
+    const label = isLight ? '☀️ Clair' : '🌙 Sombre';
+    const btn1 = document.getElementById('theme-toggle-btn');
+    const btn2 = document.getElementById('auth-theme-btn');
+    if (btn1) btn1.innerHTML = label;
+    if (btn2) btn2.innerHTML = label;
+  });
+})();
+
+// ===== REAL PATIENTS DATA (Firestore + Realtime DB) =====
+window._patients = [];
+const PATIENT_COLORS = ['#00d2ff','#ff3d5a','#00e5a0','#ffd84d','#a78bfa','#ff8c42'];
+let _vitalsUnsubs = {};
+
+function colorForIndex(i) { return PATIENT_COLORS[i % PATIENT_COLORS.length]; }
+
+function subscribeToPatientVitals(patientId) {
+  if (_vitalsUnsubs[patientId]) return; // already subscribed
+  const vitalsRef = ref(rtdb, 'patients/' + patientId + '/vitals');
+  const unsub = onValue(vitalsRef, (snap) => {
+    const v = snap.val();
+    const idx = window._patients.findIndex(p => p.id === patientId);
+    if (idx === -1) return;
+    if (v) {
+      const ageMs = Date.now() - (v.timestamp || 0);
+      const isOnline = ageMs < 60000; // considered online if updated in last 60s
+      window._patients[idx] = {
+        ...window._patients[idx],
+        online: isOnline,
+        spo2: v.spo2 ?? window._patients[idx].spo2,
+        hr: v.hr ?? window._patients[idx].hr,
+        temp: v.temp ?? window._patients[idx].temp,
+        resp: v.resp ?? window._patients[idx].resp,
+        device: v.source === 'sim' ? 'Simulation' : v.source === 'gsm' ? 'GSM API' : v.source === 'ble' ? 'BLE Watch' : 'Manuel',
+        lastUpdate: v.timestamp || Date.now(),
+      };
+    } else {
+      window._patients[idx] = { ...window._patients[idx], online: false };
+    }
+    updateDashboardData();
+  });
+  _vitalsUnsubs[patientId] = unsub;
+}
+
+async function loadPatientsFromFirestore() {
+  try {
+    const snap = await getDocs(collection(db, 'patients'));
+    const patients = [];
+    let i = 0;
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      patients.push({
+        id: docSnap.id,
+        name: d.name || 'Patient inconnu',
+        age: d.age || '--',
+        sex: d.sex || '--',
+        phone: d.phone || '--',
+        severity: d.severity || 'Non spécifié',
+        online: false,
+        spo2: null, hr: null, temp: null, resp: null,
+        device: '--',
+        color: colorForIndex(i),
+        lastUpdate: null,
+      });
+      i++;
+    });
+    window._patients = patients;
+    patients.forEach(p => subscribeToPatientVitals(p.id));
+    updateDashboardData();
+    renderPatientsTable();
+    renderPatientSelector();
+    populatePatientSelects();
+  } catch(e) {
+    console.error('Erreur chargement patients Firestore:', e);
+    showToast('Erreur chargement patients', 'error');
+  }
+}
+
+const DEMO_ALERTS = [
+  { id:'a1', type:'crit', patient:'Paul Nkomo', msg:'SpO2 critique: 87% — Intervention immédiate requise', time:'Il y a 3 min', value:'87%' },
+  { id:'a2', type:'warn', patient:'Cécile Abomo', msg:'SpO2 basse: 93% — Surveillance renforcée', time:'Il y a 12 min', value:'93%' },
+  { id:'a3', type:'warn', patient:'René Atanga', msg:'Fréquence cardiaque élevée: 88 bpm + SpO2 90%', time:'Il y a 28 min', value:'88bpm' },
+  { id:'a4', type:'warn', patient:'Marie Essomba', msg:'SpO2 avertissement: 94% — Surveiller', time:'Il y a 45 min', value:'94%' },
+];
+window._alerts = [...DEMO_ALERTS];
+
+const DEMO_MEDS = [
+  { name:'Salbutamol', class:'Bronchodilatateur β2', desc:'Bronchodilatateur à courte durée d\'action (SABA). Traitement de secours en cas de crise d\'asthme aiguë.', icon:'💨', tags:['SABA','Urgence','Inhalé','Première ligne'], color:'#00d2ff' },
+  { name:'Budésonide', class:'Corticostéroïde inhalé', desc:'Corticostéroïde inhalé (CSI) pour le contrôle à long terme de l\'inflammation bronchique. Traitement de fond principal.', icon:'🌿', tags:['CSI','Fond','Anti-inflammatoire'], color:'#00e5a0' },
+  { name:'Salmétérol + Fluticasone', class:'LABA + CSI (combiné)', desc:'Association LABA/CSI pour l\'asthme modéré à sévère. Bronchodilatation prolongée + contrôle inflammatoire.', icon:'⚗️', tags:['LABA','CSI','Combiné','Modéré-Sévère'], color:'#a78bfa' },
+  { name:'Ipratropium', class:'Anticholinergique', desc:'Bronchodilatateur anticholinergique. Utilisé en complément du salbutamol dans les crises sévères.', icon:'🔵', tags:['Anticholinergique','Complément','Crise sévère'], color:'#ffd84d' },
+  { name:'Théophylline', class:'Méthylxanthine', desc:'Bronchodilatateur oral. Efficacité modérée, index thérapeutique étroit. Surveillance des taux sanguins requise.', icon:'💊', tags:['Oral','Bronchodilatateur','Surveillance'], color:'#ff8c42' },
+  { name:'Prednisolone', class:'Corticostéroïde oral', desc:'Corticostéroïde systémique pour les exacerbations sévères et le contrôle rapide de l\'inflammation aiguë.', icon:'🔴', tags:['Oral','Systémique','Exacerbation','Court terme'], color:'#ff3d5a' },
+];
+
+const DEMO_ORDONNANCES = [
+  { patient:'Marie Essomba', med:'Salbutamol 100µg', dosage:'2 bouffées si crise', duration:'Chronique', date:'28/05/2025', doctor:'Dr. Médecin' },
+  { patient:'Paul Nkomo', med:'Budésonide 200µg', dosage:'1 bouffée · 2×/jour', duration:'3 mois', date:'25/05/2025', doctor:'Dr. Médecin' },
+  { patient:'Aline Tchinda', med:'Salmétérol/Fluticasone', dosage:'1 bouffée · 2×/jour', duration:'1 mois', date:'20/05/2025', doctor:'Dr. Médecin' },
+];
+window._ordonnances = [...DEMO_ORDONNANCES];
+
+const DEMO_REMINDERS = [
+  { id:'r1', patient:'Marie Essomba', med:'Salbutamol 100µg', time:'08:00', freq:'2×/jour', active:true },
+  { id:'r2', patient:'Marie Essomba', med:'Budésonide 200µg', time:'20:00', freq:'2×/jour', active:true },
+  { id:'r3', patient:'Paul Nkomo', med:'Budésonide 200µg', time:'07:30', freq:'2×/jour', active:true },
+  { id:'r4', patient:'Aline Tchinda', med:'Salbutamol 100µg', time:'12:00', freq:'Si besoin', active:false },
+  { id:'r5', patient:'Cécile Abomo', med:'Théophylline 200mg', time:'21:00', freq:'1×/jour', active:true },
+];
+window._reminders = [...DEMO_REMINDERS];
+
+const DEMO_CHATS = {};
+window._chats = DEMO_CHATS;
+window._activeChatPatient = null;
+
+// ===== LOAD DASHBOARD =====
+function loadDashboard() {
+  loadPatientsFromFirestore();
+  renderAlerts();
+  renderChatList();
+  renderRdv();
+  renderOrdonnances();
+  renderReminders();
+  initCharts();
+  populatePatientSelects();
+}
+
+// ===== UPDATE LIVE DATA =====
+function updateDashboardData() {
+  const online = window._patients.filter(p=>p.online);
+  const count = online.length;
+
+  document.getElementById('live-patients-count').textContent = count + ' patients connectés';
+  document.getElementById('home-online-count').textContent = count;
+  document.getElementById('stat-online').textContent = count;
+  document.getElementById('patients-nav-badge').textContent = count;
+
+  const critAlerts = window._alerts.filter(a=>a.type==='crit');
+  document.getElementById('stat-alerts').textContent = window._alerts.length;
+  if(critAlerts.length > 0) {
+    document.getElementById('alert-badge').textContent = '⚠ ' + critAlerts.length + ' critique(s)';
+    document.getElementById('alert-badge').classList.add('active');
+    document.getElementById('alerts-nav-badge').textContent = window._alerts.length;
+    document.getElementById('alerts-nav-badge').style.display = 'block';
+  }
+
+  // Averages
+  const withData = online.filter(p => p.spo2 != null);
+  if(withData.length > 0) {
+    const avgSpo2 = (withData.reduce((s,p)=>s+p.spo2,0)/withData.length).toFixed(0);
+    const avgHr   = (withData.reduce((s,p)=>s+p.hr,0)/withData.length).toFixed(0);
+    const avgTemp = (withData.reduce((s,p)=>s+p.temp,0)/withData.length).toFixed(1);
+    const avgResp = (withData.reduce((s,p)=>s+p.resp,0)/withData.length).toFixed(0);
+    document.getElementById('avg-spo2').textContent = avgSpo2;
+    document.getElementById('avg-hr').textContent   = avgHr;
+    document.getElementById('avg-temp').textContent = avgTemp;
+    document.getElementById('avg-resp').textContent = avgResp;
+  } else {
+    document.getElementById('avg-spo2').textContent = '--';
+    document.getElementById('avg-hr').textContent   = '--';
+    document.getElementById('avg-temp').textContent = '--';
+    document.getElementById('avg-resp').textContent = '--';
+  }
+
+  // Patients table
+  renderPatientsTable();
+
+  // Live selected patient
+  if(window._activeLivePatient) {
+    updateLiveVitals(window._activeLivePatient);
+  }
+
+  // Charts
+  updateCharts();
+
+  // Recent alerts
+  renderRecentAlerts();
+
+  // Critical patients on home
+  renderHomeCriticalPatients();
+}
+
+// ===== HOME: PATIENTS EN ALERTE =====
+function renderHomeCriticalPatients() {
+  const section = document.getElementById('home-critical-section');
+  const grid = document.getElementById('home-critical-patients');
+  if (!section || !grid) return;
+  const atRisk = window._patients
+    .filter(p => p.online && p.spo2 != null && (p.spo2 < 92 || p.hr > 100))
+    .sort((a,b) => a.spo2 - b.spo2)
+    .slice(0, 3);
+  if (atRisk.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  grid.innerHTML = atRisk.map(p => {
+    const crit = p.spo2 < 88;
+    return `<div class="alert-item ${crit?'crit':'warn'}" style="margin-bottom:0">
+      <div class="alert-icon">${crit?'🚨':'⚠️'}</div>
+      <div class="alert-info">
+        <div class="alert-title">${p.name}</div>
+        <div class="alert-detail">SpO2: <strong>${p.spo2}%</strong> · FC: <strong>${p.hr} bpm</strong></div>
+      </div>
+      <div class="alert-actions">
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="openPatientChat('${p.id}')">💬</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== PATIENTS TABLE =====
+window.renderPatientsTable = function() {
+  const tbody = document.getElementById('patients-table-body');
+  const search = document.getElementById('patient-search')?.value.toLowerCase() || '';
+  const filtered = window._patients.filter(p => p.name.toLowerCase().includes(search));
+  tbody.innerHTML = filtered.map(p => {
+    const hasData = p.spo2 != null;
+    const spo2Class = !hasData ? '' : p.spo2 < 88 ? 'text-red' : p.spo2 < 92 ? 'text-orange' : 'text-green';
+    const statusBadge = p.online
+      ? '<span class="badge badge-green">● En ligne</span>'
+      : '<span class="badge" style="background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)">○ Hors ligne</span>';
+    return `<tr>
+      <td><div class="td-patient">
+        <div class="patient-av" style="background:linear-gradient(135deg,${p.color}33,${p.color}66)">
+          <span style="color:${p.color};font-size:13px;font-weight:700">${p.name.charAt(0)}</span>
+        </div>
+        <div><div class="patient-name">${p.name}</div><div class="patient-id">${p.age}ans · ${p.sex} · ${p.severity}</div></div>
+      </div></td>
+      <td>${statusBadge}</td>
+      <td><span class="vital-mini ${spo2Class}">${hasData ? p.spo2+'%' : '--'}</span></td>
+      <td><span class="vital-mini" style="color:var(--orange)">${hasData ? p.hr+' bpm' : '--'}</span></td>
+      <td><span class="vital-mini text-yellow">${hasData ? p.temp+'°C' : '--'}</span></td>
+      <td><span class="vital-mini" style="color:#a78bfa">${hasData ? p.resp+'/min' : '--'}</span></td>
+      <td><span style="font-size:12px;color:var(--text2)">${p.device}</span></td>
+      <td><span style="font-size:12px;color:var(--text3);font-family:var(--font-mono)">${p.lastUpdate ? formatRelativeTime(p.lastUpdate) : '--'}</span></td>
+      <td><div class="action-btns">
+        <button class="action-btn view-btn" onclick="viewPatientVitals('${p.id}')">📊 Vitaux</button>
+        <button class="action-btn chat-btn" onclick="openPatientChat('${p.id}')">💬 Chat</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+};
+
+function formatRelativeTime(ts) {
+  const diffSec = Math.floor((Date.now() - ts) / 1000);
+  if (diffSec < 60) return 'Il y a ' + diffSec + 's';
+  if (diffSec < 3600) return 'Il y a ' + Math.floor(diffSec/60) + 'min';
+  return 'Il y a ' + Math.floor(diffSec/3600) + 'h';
+}
+
+window.filterPatients = function() { renderPatientsTable(); };
+
+// ===== ALERTS =====
+function renderAlerts() {
+  const list = document.getElementById('alerts-list');
+  list.innerHTML = window._alerts.map(a => `
+    <div class="alert-item ${a.type}" id="alert-${a.id}">
+      <div class="alert-icon">${a.type==='crit'?'🚨':'⚠️'}</div>
+      <div class="alert-info">
+        <div class="alert-title">${a.patient} — ${a.msg}</div>
+        <div class="alert-detail">Valeur mesurée: <strong>${a.value}</strong></div>
+        <div class="alert-time">${a.time}</div>
+      </div>
+      <div class="alert-actions">
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="openPatientChat('${window._patients.find(p=>p.name===a.patient)?.id||'p1'}')">💬 Contacter</button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="acknowledgeAlert('${a.id}')">✓ Acquitter</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderRecentAlerts() {
+  const list = document.getElementById('recent-alerts-list');
+  const recent = window._alerts.slice(0,3);
+  list.innerHTML = recent.map(a => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg2);border-radius:9px;margin-bottom:8px">
+      <span>${a.type==='crit'?'🚨':'⚠️'}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${a.patient}</div>
+        <div style="font-size:11px;color:var(--text2)">${a.msg.substring(0,50)}...</div>
+      </div>
+      <span style="font-size:10px;color:var(--text3)">${a.time}</span>
+    </div>`).join('');
+}
+
+window.acknowledgeAlert = function(id) {
+  window._alerts = window._alerts.filter(a=>a.id!==id);
+  renderAlerts();
+  updateDashboardData();
+  showToast('Alerte acquittée', 'success');
+};
+
+window.clearAlerts = function() {
+  window._alerts = [];
+  renderAlerts();
+  updateDashboardData();
+  document.getElementById('alert-badge').classList.remove('active');
+  document.getElementById('alerts-nav-badge').style.display = 'none';
+  showToast('Toutes les alertes acquittées', 'success');
+};
+
+// ===== CHAT =====
+function renderChatList() {
+  const list = document.getElementById('chat-items-list');
+  if (!list) return;
+  const patients = window._patients;
+  if (patients.length === 0) {
+    list.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:13px;text-align:center">Aucun patient enregistré</div>';
+    return;
+  }
+  list.innerHTML = patients.map(p => {
+    const doctorFirestoreId = window._doctorFirestoreId || window._currentUser?.uid || 'doc';
+    const chatId = p.id + '_' + doctorFirestoreId;
+    const lastMsg = window._lastMessages?.[p.id] || 'Aucun message';
+    return `<div class="chat-item" id="chat-item-${p.id}" onclick="selectChat('${p.id}')">
+      <div class="chat-av" style="background:linear-gradient(135deg,${p.color||'#00d2ff'}44,${p.color||'#00d2ff'}88);color:${p.color||'#00d2ff'}">${p.name.charAt(0)}</div>
+      <div class="chat-item-info">
+        <div class="chat-item-name">${p.name}</div>
+        <div class="chat-item-last">${lastMsg}</div>
+      </div>
+      ${p.online?'<span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></span>':''}
+    </div>`;
+  }).join('');
+}
+
+window._lastMessages = {};
+window._chatUnsub = null;
+
+window.selectChat = function(pid) {
+  window._activeChatPatient = pid;
+  document.querySelectorAll('.chat-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('chat-item-'+pid)?.classList.add('active');
+  const p = window._patients.find(x=>x.id===pid);
+  if (!p) return;
+  document.getElementById('chat-header-av').textContent = p.name.charAt(0);
+  document.getElementById('chat-header-av').style.background = `linear-gradient(135deg,${p.color||'#00d2ff'}44,${p.color||'#00d2ff'}88)`;
+  document.getElementById('chat-header-av').style.color = p.color||'#00d2ff';
+  document.getElementById('chat-header-name').textContent = p.name;
+  document.getElementById('chat-header-status').textContent = p.online ? '● En ligne · '+p.spo2+'% SpO2' : '○ Hors ligne';
+  document.getElementById('chat-header-badge').style.display = p.online ? 'inline-flex' : 'none';
+
+  // Unsubscribe previous listener
+  if (window._chatUnsub) { window._chatUnsub(); window._chatUnsub = null; }
+
+  // chatId must match mobile app format: patientUid_doctorFirestoreId
+  const doctorFirestoreId = window._doctorFirestoreId || window._currentUser?.uid || '';
+  const chatId = pid + '_' + doctorFirestoreId;
+  const chatRef = ref(rtdb, 'chats/' + chatId);
+  window._chatUnsub = onValue(chatRef, (snap) => {
+    const data = snap.val();
+    const area = document.getElementById('chat-messages-area');
+    if (!area) return;
+    if (!data) {
+      area.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Aucun message. Démarrez la conversation.</div>';
+      return;
+    }
+    const msgs = Object.values(data).sort((a,b)=>a.timestamp-b.timestamp);
+    window._lastMessages[pid] = msgs[msgs.length-1]?.text || 'Aucun message';
+    area.innerHTML = msgs.map(m => {
+      const isDoc = m.from === (window._currentUser?.uid||'');
+      const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '--';
+      return `<div class="msg msg-${isDoc?'out':'in'}">
+        ${!isDoc?`<div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:2px">${m.fromName||'Patient'}</div>`:''}
+        <div class="msg-bubble">${m.text||''}</div>
+        <div class="msg-time">${time}</div>
+      </div>`;
+    }).join('');
+    area.scrollTop = area.scrollHeight;
+    // Update chat list preview
+    renderChatList();
+    document.getElementById('chat-item-'+pid)?.classList.add('active');
+  });
+};
+
+function renderMessages(pid) {
+  // Now handled by selectChat with real-time listener
+  if (window._activeChatPatient !== pid) selectChat(pid);
+}
+
+window.sendChatMessage = async function() {
+  const input = document.getElementById('chat-msg-input');
+  const text = input.value.trim();
+  if (!text || !window._activeChatPatient || !window._currentUser) return;
+  const pid = window._activeChatPatient;
+  const doctorFirestoreId = window._doctorFirestoreId || window._currentUser?.uid || '';
+  const chatId = pid + '_' + doctorFirestoreId;
+  const docName = window._doctorName || 'Médecin';
+  const msg = {
+    from: window._currentUser.uid,
+    fromName: docName,
+    text,
+    timestamp: Date.now()
+  };
+  input.value = '';
+  try {
+    await push(ref(rtdb, 'chats/' + chatId), msg);
+    showToast('Message envoyé', 'success');
+  } catch(e) {
+    showToast('Erreur envoi message', 'error');
+    console.error(e);
+  }
+};
+
+window.filterChats = function(val) {
+  const search = val.toLowerCase();
+  document.querySelectorAll('.chat-item').forEach(el => {
+    const name = el.querySelector('.chat-item-name')?.textContent.toLowerCase()||'';
+    el.style.display = name.includes(search) ? '' : 'none';
+  });
+};
+
+// ===== RENDEZ-VOUS =====
+window._rdvs = [
+  { id:'rdv1', patient:'Marie Essomba', date:'2026-06-20', time:'09:00', motif:'Contrôle de routine' },
+  { id:'rdv2', patient:'Paul Nkomo', date:'2026-06-18', time:'14:30', motif:'Suivi post-crise' },
+];
+
+function renderRdv() {
+  const list = document.getElementById('rdv-list');
+  if (!list) return;
+  if (window._rdvs.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:16px;text-align:center">Aucun rendez-vous programmé</div>';
+    return;
+  }
+  const sorted = [...window._rdvs].sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+  list.innerHTML = sorted.map(r => `
+    <div class="reminder-item" id="rdv-${r.id}">
+      <div class="reminder-icon">📅</div>
+      <div class="reminder-info">
+        <div class="reminder-name">${r.patient}</div>
+        <div class="reminder-detail">${formatRdvDate(r.date)} à ${r.time} · ${r.motif||'Consultation'}</div>
+      </div>
+      <button class="action-btn" style="font-size:12px;padding:6px 10px" onclick="cancelRdv('${r.id}')">✕ Annuler</button>
+    </div>`).join('');
+}
+
+function formatRdvDate(d) {
+  const date = new Date(d+'T00:00:00');
+  return date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+window.addRdv = function() {
+  const patient = document.getElementById('rdv-patient').value;
+  const date = document.getElementById('rdv-date').value;
+  const time = document.getElementById('rdv-time').value || '09:00';
+  const motif = document.getElementById('rdv-motif').value;
+  if (!patient || !date) { showToast('Sélectionnez un patient et une date', 'error'); return; }
+  window._rdvs.push({ id: 'rdv'+Date.now(), patient, date, time, motif });
+  renderRdv();
+  document.getElementById('rdv-motif').value = '';
+  showToast('✅ Rendez-vous programmé', 'success');
+};
+
+window.cancelRdv = function(id) {
+  window._rdvs = window._rdvs.filter(r => r.id !== id);
+  renderRdv();
+  showToast('Rendez-vous annulé', 'info');
+};
+
+// ===== ORDONNANCES =====
+function renderOrdonnances() {
+  const hist = document.getElementById('ord-history');
+  hist.innerHTML = window._ordonnances.map(o=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-weight:600;font-size:13px">${o.patient}</span>
+        <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${o.date}</span>
+      </div>
+      <div style="font-size:13px;color:var(--teal)">${o.med}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px">${o.dosage} · ${o.duration}</div>
+      <div style="margin-top:8px"><span class="badge badge-green">✓ Synchronisé app</span></div>
+    </div>`).join('');
+}
+
+function populatePatientSelects() {
+  ['ord-patient','rem-patient','rdv-patient'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(sel) sel.innerHTML = '<option value="">Sélectionner...</option>' +
+      window._patients.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+  });
+}
+
+window.emitOrdonnance = function() {
+  const patient = document.getElementById('ord-patient').value;
+  const med     = document.getElementById('ord-med').value;
+  const dosage  = document.getElementById('ord-dosage').value || '1× par jour';
+  const dur     = document.getElementById('ord-duration').value;
+  if(!patient) { showToast('Sélectionnez un patient','error'); return; }
+  const now = new Date();
+  const date = now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear();
+  window._ordonnances.unshift({patient, med, dosage, duration:dur, date, doctor:'Dr. Médecin'});
+  renderOrdonnances();
+  // Firebase sync
+  try {
+    const {db,collection,addDoc,serverTimestamp} = window._firebase;
+    addDoc(collection(db,'ordonnances'),{patient,med,dosage,duration:dur,date,createdAt:serverTimestamp(),doctorId:window._currentUser?.uid});
+  } catch(e) {}
+  showToast('✅ Ordonnance émise et synchronisée!','success');
+};
+
+// ===== REMINDERS =====
+function renderReminders() {
+  const list = document.getElementById('reminders-list');
+  list.innerHTML = window._reminders.map(r=>`
+    <div class="reminder-item">
+      <div class="reminder-icon">💊</div>
+      <div class="reminder-info">
+        <div class="reminder-name">${r.med}</div>
+        <div class="reminder-detail">${r.patient} · ${r.time} · ${r.freq}</div>
+      </div>
+      <div class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="rem-${r.id}" ${r.active?'checked':''} onchange="toggleReminder('${r.id}',this.checked)">
+        <label class="toggle-label" for="rem-${r.id}"></label>
+      </div>
+    </div>`).join('');
+}
+
+window.toggleReminder = function(id, val) {
+  window._reminders = window._reminders.map(r=>r.id===id?{...r,active:val}:r);
+  showToast(val ? '✅ Rappel activé' : 'Rappel désactivé', val?'success':'info');
+};
+
+window.addReminder = function() {
+  const patient = document.getElementById('rem-patient').value;
+  const med     = document.getElementById('rem-med').value;
+  const time    = document.getElementById('rem-time').value;
+  const freq    = document.getElementById('rem-freq').value;
+  if(!patient||!med) { showToast('Remplissez les champs requis','error'); return; }
+  const id = 'r'+Date.now();
+  window._reminders.push({id,patient,med,time,freq,active:true});
+  renderReminders();
+  document.getElementById('stat-reminders').textContent = window._reminders.filter(r=>r.active).length;
+  showToast('✅ Rappel programmé et synchronisé!','success');
+};
+
+// ===== PATIENT SELECTOR (Vitals page) =====
+function renderPatientSelector() {
+  const wrap = document.getElementById('patient-selector-btns');
+  const online = window._patients.filter(p=>p.online);
+  wrap.innerHTML = online.map(p=>`
+    <button class="btn btn-outline" id="psel-${p.id}" onclick="selectLivePatient('${p.id}')" style="font-size:13px">
+      <span style="color:${p.color}">${p.name.charAt(0)}</span> ${p.name}
+      <span class="badge badge-green" style="font-size:10px;padding:1px 6px">${p.spo2}%</span>
+    </button>`).join('');
+  if(online.length > 0 && !window._activeLivePatient) {
+    selectLivePatient(online[0].id);
+  }
+}
+
+window.selectLivePatient = function(pid) {
+  window._activeLivePatient = pid;
+  document.querySelectorAll('[id^="psel-"]').forEach(b=>{
+    b.classList.toggle('btn-teal', b.id==='psel-'+pid);
+    b.classList.toggle('btn-outline', b.id!=='psel-'+pid);
+  });
+  updateLiveVitals(pid);
+};
+
+function updateLiveVitals(pid) {
+  const p = window._patients.find(x=>x.id===pid);
+  if(!p) return;
+  document.getElementById('selected-patient-name').textContent = p.name;
+  document.getElementById('live-spo2').textContent = p.spo2;
+  document.getElementById('live-hr').textContent   = p.hr;
+  document.getElementById('live-temp').textContent = p.temp;
+  document.getElementById('live-resp').textContent = p.resp;
+
+  const spo2Status = p.spo2 < 88 ? '🔴 CRITIQUE' : p.spo2 < 92 ? '🟠 Avertissement' : '🟢 Normal';
+  document.getElementById('live-spo2-status').textContent = spo2Status;
+  document.getElementById('live-spo2-card').className = 'vital-card spo2' + (p.spo2<88?' alert-crit':p.spo2<92?' alert-warn':'');
+
+  document.getElementById('live-hr-status').textContent = p.hr > 100 ? '🟠 Tachycardie' : '🟢 Normal';
+  document.getElementById('live-temp-status').textContent = p.temp >= 38 ? '🟡 Fièvre' : '🟢 Normal';
+  document.getElementById('live-resp-status').textContent = p.resp > 20 ? '🟠 Tachypnée' : '🟢 Normal';
+}
+
+// ===== CHARTS =====
+let spo2Chart, liveSpO2Chart, liveHrChart;
+const generateHistory = (base, points=24) => Array.from({length:points}, (_,i) =>
+  Math.max(80, Math.min(100, base + (Math.random()-0.5)*4)));
+const generateLabels = (points=24) => Array.from({length:points}, (_,i) => {
+  const h = new Date(); h.setHours(h.getHours()-points+i);
+  return h.getHours().toString().padStart(2,'0')+':00';
+});
+
+function initCharts() {
+  const chartDefaults = { responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(7,13,26,.9)',borderColor:'rgba(0,210,255,.3)',borderWidth:1,titleColor:'#00d2ff',bodyColor:'#e8f4ff',padding:10}},
+    scales:{x:{ticks:{color:'#4d6a85',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#4d6a85',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}
+  };
+  // Main SpO2 chart
+  const ctx1 = document.getElementById('spo2-chart')?.getContext('2d');
+  if(ctx1) {
+    spo2Chart = new (window.Chart||class{})(ctx1,{
+      type:'line',
+      data:{labels:generateLabels(),datasets:[{data:generateHistory(95),borderColor:'#00d2ff',backgroundColor:'rgba(0,210,255,.05)',borderWidth:2,tension:.4,fill:true,pointRadius:0,pointHoverRadius:4}]},
+      options:{...chartDefaults,scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,min:85,max:100}}}
+    });
+  }
+  // Live charts
+  const liveHistory = {spo2:generateHistory(95,20), hr:generateHistory(78,20)};
+  window._liveHistory = liveHistory;
+  const liveLabels = Array.from({length:20},(_,i)=>i+'s');
+
+  const ctx2 = document.getElementById('live-spo2-chart')?.getContext('2d');
+  if(ctx2) {
+    liveSpO2Chart = new (window.Chart||class{})(ctx2,{
+      type:'line',
+      data:{labels:liveLabels,datasets:[{data:liveHistory.spo2,borderColor:'#00d2ff',backgroundColor:'rgba(0,210,255,.07)',borderWidth:2,tension:.4,fill:true,pointRadius:0}]},
+      options:{...chartDefaults,animation:{duration:0},scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,min:85,max:100}}}
+    });
+  }
+  const ctx3 = document.getElementById('live-hr-chart')?.getContext('2d');
+  if(ctx3) {
+    liveHrChart = new (window.Chart||class{})(ctx3,{
+      type:'line',
+      data:{labels:liveLabels,datasets:[{data:liveHistory.hr,borderColor:'#ff8c42',backgroundColor:'rgba(255,140,66,.07)',borderWidth:2,tension:.4,fill:true,pointRadius:0}]},
+      options:{...chartDefaults,animation:{duration:0},scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,min:50,max:120}}}
+    });
+  }
+}
+
+function updateCharts() {
+  if(window._activeLivePatient && liveSpO2Chart && liveHrChart) {
+    const p = window._patients.find(x=>x.id===window._activeLivePatient);
+    if(p) {
+      window._liveHistory.spo2.push(p.spo2); window._liveHistory.spo2.shift();
+      window._liveHistory.hr.push(p.hr);     window._liveHistory.hr.shift();
+      liveSpO2Chart.data.datasets[0].data = [...window._liveHistory.spo2];
+      liveSpO2Chart.update('none');
+      liveHrChart.data.datasets[0].data = [...window._liveHistory.hr];
+      liveHrChart.update('none');
+    }
+  }
+}
+
+// ===== NAVIGATION =====
+window.showPage = function(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')?.includes("'"+page+"'")) n.classList.add('active');
+  });
+  if(page==='patients') renderPatientsTable();
+  if(page==='vitals') renderPatientSelector();
+  if(page==='alerts') renderAlerts();
+  if(page==='medications') renderRdv();
+  if(page==='ordonnances') { renderOrdonnances(); populatePatientSelects(); }
+  if(page==='reminders') { renderReminders(); populatePatientSelects(); }
+};
+
+window.viewPatientVitals = function(pid) { showPage('vitals'); selectLivePatient(pid); };
+window.openPatientChat  = function(pid) { showPage('chat'); selectChat(pid); };
+window.refreshData = function() { loadPatientsFromFirestore(); showToast('Données actualisées','info'); };
+
+// ===== MODALS =====
+window.openAddPatientModal = function() { document.getElementById('add-patient-modal').classList.add('open'); };
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+window.addPatient = function() {
+  const name     = document.getElementById('np-name').value.trim();
+  const phone    = document.getElementById('np-phone').value.trim();
+  const age      = parseInt(document.getElementById('np-age').value)||0;
+  const sex      = document.getElementById('np-sex').value;
+  const severity = document.getElementById('np-severity').value;
+  if(!name) { showToast('Entrez le nom du patient','error'); return; }
+  const colors = ['#00d2ff','#00e5a0','#ffd84d','#ff8c42','#a78bfa','#ff3d5a'];
+  const p = { id:'p'+Date.now(), name, phone, age, sex, severity, online:false, spo2:97, hr:72, temp:36.6, resp:16, device:'Manuel', color:colors[Math.floor(Math.random()*colors.length)] };
+  window._patients.push(p);
+  try {
+    const {db,collection,addDoc,serverTimestamp} = window._firebase;
+    addDoc(collection(db,'patients'),{...p,createdAt:serverTimestamp(),doctorId:window._currentUser?.uid});
+  } catch(e) {}
+  renderPatientsTable();
+  populatePatientSelects();
+  closeModal('add-patient-modal');
+  showToast('✅ Patient '+name+' ajouté!','success');
+};
+
+// ===== UTILS =====
+function showApp(user) {
+  document.getElementById('auth-overlay').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  const fallbackName = 'Dr. '+user.email.split('@')[0];
+  document.getElementById('user-display-name').textContent = fallbackName;
+  document.getElementById('user-av').textContent = user.email.charAt(0).toUpperCase();
+  window._doctorName = fallbackName;
+  // Try to load real name from doctors collection
+  getDocs(collection(db,'doctors')).then(snap=>{
+    snap.forEach(d=>{
+      if(d.data().email === user.email || d.data().uid === user.uid) {
+        const realName = d.data().name || fallbackName;
+        window._doctorName = realName;
+        window._doctorFirestoreId = d.id; // Store Firestore doc ID for chatId
+        document.getElementById('user-display-name').textContent = realName;
+        document.getElementById('user-av').textContent = realName.charAt(0).toUpperCase();
+      }
+    });
+  }).catch(()=>{});
+}
+function showAuth() {
+  document.getElementById('auth-overlay').style.display='flex';
+  document.getElementById('app').classList.remove('visible');
+}
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.style.display='block'; el.textContent=msg;
+  setTimeout(()=>el.style.display='none',4000);
+}
+
+window.showToast = function(msg, type='info') {
+  const container = document.getElementById('toast-container');
+  const icons = {success:'✅', error:'❌', info:'ℹ️'};
+  const toast = document.createElement('div');
+  toast.className='toast '+type;
+  toast.innerHTML=`<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(()=>toast.remove(), 3200);
+};
+
+window.switchAuthTab = function(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').style.display = tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display = tab==='register'?'block':'none';
+  document.getElementById('auth-error').style.display='none';
+};
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  const t=[now.getHours(),now.getMinutes(),now.getSeconds()].map(n=>n.toString().padStart(2,'0')).join(':');
+  document.getElementById('topbar-clock').textContent=t;
+  const d=now.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('home-date').textContent=d.charAt(0).toUpperCase()+d.slice(1);
+}
+setInterval(updateClock,1000); updateClock();
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

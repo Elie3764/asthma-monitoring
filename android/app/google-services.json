@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "587156062510",
+    "firebase_url": "https://asthma-monitoring-79e4e-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "asthma-monitoring-79e4e",
+    "storage_bucket": "asthma-monitoring-79e4e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:587156062510:android:367b591e704e35bd9bfabf",
+        "android_client_info": {
+          "package_name": "com.asthmamonitoring"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVlzgY9XY6OfMBvFGJGXisf-hZ-_jMaTc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
