@@ -703,6 +703,29 @@ canvas { width: 100% !important; }
         <label class="auth-label">Mot de passe</label>
         <input type="password" id="reg-password" class="auth-input" placeholder="••••••••">
       </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Ville</label>
+        <select id="reg-ville" class="auth-input">
+          <option value="Yaounde">Yaounde</option>
+          <option value="Douala">Douala</option>
+          <option value="Bafoussam">Bafoussam</option>
+          <option value="Garoua">Garoua</option>
+          <option value="Bamenda">Bamenda</option>
+          <option value="Maroua">Maroua</option>
+          <option value="Ngaoundere">Ngaoundere</option>
+          <option value="Bertoua">Bertoua</option>
+          <option value="Ebolowa">Ebolowa</option>
+          <option value="Buea">Buea</option>
+        </select>
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Specialite</label>
+        <input type="text" id="reg-specialty" class="auth-input" placeholder="Pneumologue, Generaliste...">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Hopital / Clinique</label>
+        <input type="text" id="reg-hospital" class="auth-input" placeholder="Hopital Central">
+      </div>
       <button class="auth-btn" id="reg-btn" onclick="if(window.doRegister)window.doRegister();else alert('Chargement en cours, réessayez')">
         <span id="reg-btn-text">Créer le compte</span>
       </button>
@@ -1362,6 +1385,9 @@ window.doRegister = async function() {
   const name = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const pwd = document.getElementById('reg-password').value;
+  const ville = document.getElementById('reg-ville').value;
+  const specialty = document.getElementById('reg-specialty').value.trim() || 'Medecin generaliste';
+  const hospital = document.getElementById('reg-hospital').value.trim() || ville;
   if(!name||!email||!pwd) { showAuthError('Remplissez tous les champs'); return; }
   if(pwd.length < 6) { showAuthError('Mot de passe: minimum 6 caractères'); return; }
   const btn = document.getElementById('reg-btn');
@@ -1371,7 +1397,7 @@ window.doRegister = async function() {
     const cred = await createUserWithEmailAndPassword(auth, email, pwd);
     await setDoc(doc(db, 'doctors', cred.user.uid), {
       name, email, uid: cred.user.uid, role: 'doctor', online: true,
-      specialty: 'Medecin generaliste', hospital: 'ENSP Yaounde',
+      specialty, hospital, ville, patientCount: 0,
       createdAt: serverTimestamp()
     });
     showToast('✅ Compte créé avec succès!', 'success');
