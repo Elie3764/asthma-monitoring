@@ -2065,17 +2065,30 @@ window.toggleReminder = function(id, val) {
   showToast(val ? '✅ Rappel activé' : 'Rappel désactivé', val?'success':'info');
 };
 
-window.addReminder = function() {
-  const patient = document.getElementById('rem-patient').value;
+window.addReminder = async function() {
+  const patientId = document.getElementById('rem-patient').value;
   const med     = document.getElementById('rem-med').value;
-  const time    = document.getElementById('rem-time').value;
-  const freq    = document.getElementById('rem-freq').value;
-  if(!patient||!med) { showToast('Remplissez les champs requis','error'); return; }
+  const time    = document.getElementById('rem-time').value || '08:00';
+  const freq    = document.getElementById('rem-freq').value || '1x/jour';
+  if(!patientId||!med) { showToast('Remplissez les champs requis','error'); return; }
+  const p = window._patients.find(x => x.id === patientId);
+  const patientName = p ? p.name : 'Patient inconnu';
   const id = 'r'+Date.now();
-  window._reminders.push({id,patient,med,time,freq,active:true});
+  window._reminders.push({id,patient:patientName,med,time,freq,active:true});
   renderReminders();
   document.getElementById('stat-reminders').textContent = window._reminders.filter(r=>r.active).length;
-  showToast('✅ Rappel programmé et synchronisé!','success');
+  try {
+    await addDoc(collection(db,'doctorReminders'), {
+      patientId, patientName, med, time, freq, active: true,
+      createdAt: serverTimestamp(),
+      doctorId: window._currentUser?.uid,
+      doctorName: window._doctorName || 'Médecin'
+    });
+    showToast('✅ Rappel programmé et synchronisé avec l\'app!', 'success');
+  } catch(e) {
+    console.error(e);
+    showToast('Rappel sauvegardé localement (erreur sync)', 'error');
+  }
 };
 
 // ===== PATIENT SELECTOR (Vitals page) =====

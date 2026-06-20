@@ -1,4 +1,4 @@
-import React,{useState,useRef,useEffect}from"react";
+ï»¿import React,{useState,useRef,useEffect}from"react";
 import{View,Text,FlatList,TouchableOpacity,TextInput,Alert,ActivityIndicator,StatusBar,PermissionsAndroid,Platform}from"react-native";
 import{BleManager}from"react-native-ble-plx";
 import{Buffer}from"buffer";
@@ -169,7 +169,7 @@ export default function WatchScreen({navigation}){
         </TouchableOpacity>
         <View style={{flex:1}}>
           <Text style={{fontSize:22,fontWeight:"900",color:text}}>Connexion Appareil</Text>
-          <Text style={{fontSize:12,color:text2}}>Bluetooth · GSM/WiFi · Simulation</Text>
+          <Text style={{fontSize:12,color:text2}}>Bluetooth - GSM/WiFi - Simulation</Text>
         </View>
       </View>
 
@@ -276,6 +276,7 @@ export default function WatchScreen({navigation}){
     </View>
   );
 }
+
 
 
 

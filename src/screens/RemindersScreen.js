@@ -1,4 +1,4 @@
-import React,{useState,useEffect}from"react";
+Ôªøimport React,{useState,useEffect}from"react";
 import{View,Text,ScrollView,TouchableOpacity,StatusBar,TextInput,Alert,Switch}from"react-native";
 import firestore from"@react-native-firebase/firestore";
 import{useStore}from"../store/useStore";
@@ -44,7 +44,7 @@ export default function RemindersScreen({navigation}){
       <StatusBar barStyle={isLight?"dark-content":"light-content"} backgroundColor={bg}/>
       <View style={{flexDirection:"row",alignItems:"center",padding:20,paddingTop:52}}>
         <TouchableOpacity onPress={()=>navigation.goBack()} style={{marginRight:12}}>
-          <Text style={{fontSize:16,color:"#00c896",fontWeight:"700"}}>?</Text>
+          <Text style={{fontSize:16,color:"#00c896",fontWeight:"700"}}>‚Üê</Text>
         </TouchableOpacity>
         <Text style={{fontSize:22,fontWeight:"900",color:text,flex:1}}>Suivi medical</Text>
         {tab==="rappels"&&(
@@ -102,7 +102,7 @@ export default function RemindersScreen({navigation}){
                 </View>
                 <View style={{flex:1}}>
                   <Text style={{fontSize:14,fontWeight:"700",color:text}}>{r.med}</Text>
-                  <Text style={{fontSize:12,color:text2,marginTop:2}}>{r.time} ∑ {r.freq}</Text>
+                  <Text style={{fontSize:12,color:text2,marginTop:2}}>{r.time} - {r.freq}</Text>
                 </View>
                 <Switch value={r.active} onValueChange={()=>toggleReminder(r.id)} trackColor={{false:border,true:"#00c896"}} thumbColor="white"/>
                 <TouchableOpacity onPress={()=>deleteReminder(r.id)} style={{padding:4}}>
@@ -163,10 +163,10 @@ export default function RemindersScreen({navigation}){
                   </View>
                   <View style={{flex:1}}>
                     <Text style={{fontSize:14,fontWeight:"700",color:text}}>{o.med}</Text>
-                    <Text style={{fontSize:12,color:text2,marginTop:2}}>{o.dosage} ∑ {o.duration}</Text>
+                    <Text style={{fontSize:12,color:text2,marginTop:2}}>{o.dosage} - {o.duration}</Text>
                   </View>
                 </View>
-                <Text style={{fontSize:12,color:text2,marginLeft:56}}>{o.date} ∑ {o.doctorName||"Medecin"}</Text>
+                <Text style={{fontSize:12,color:text2,marginLeft:56}}>{o.date} - {o.doctorName||"Medecin"}</Text>
               </View>
             ))}
           </>
@@ -176,5 +176,7 @@ export default function RemindersScreen({navigation}){
     </View>
   );
 }
+
+
 
 

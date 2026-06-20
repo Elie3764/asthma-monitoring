@@ -1,4 +1,4 @@
-import React,{useEffect,useRef,useState}from"react";
+ï»¿import React,{useEffect,useRef,useState}from"react";
 import{View,Text,ScrollView,TouchableOpacity,Animated,StatusBar,RefreshControl,Modal}from"react-native";
 import{useStore}from"../store/useStore";
 export default function HomeScreen({navigation}){
@@ -59,7 +59,7 @@ export default function HomeScreen({navigation}){
             ))}
             <View style={{position:"absolute",bottom:30,left:20,right:20}}>
               <Text style={{fontSize:12,color:text2}}>{userProfile?.name||"Patient"}</Text>
-              <Text style={{fontSize:11,color:text2,marginTop:2}}>Patient · Asthmatique</Text>
+              <Text style={{fontSize:11,color:text2,marginTop:2}}>Patient - Asthmatique</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -74,7 +74,7 @@ export default function HomeScreen({navigation}){
         )}
         <View style={{backgroundColor:isLight?"#e8faf5":"#0a2a20",margin:16,borderRadius:12,padding:10,flexDirection:"row",alignItems:"center",gap:8}}>
           <View style={{width:8,height:8,borderRadius:4,backgroundColor:"#00c896"}}/>
-          <Text style={{fontSize:12,fontWeight:"700",color:"#00a878",flex:1}}>{connectedDevice?"Bracelet connecte · "+connectionType?.toUpperCase():"Tous vos parametres sont normaux"}</Text>
+          <Text style={{fontSize:12,fontWeight:"700",color:"#00a878",flex:1}}>{connectedDevice?"Bracelet connecte - "+connectionType?.toUpperCase():"Tous vos parametres sont normaux"}</Text>
           <Text style={{fontSize:11,color:"#00a878"}}>Mis a jour</Text>
         </View>
         <View style={{flexDirection:"row",justifyContent:"space-around",paddingHorizontal:16,marginBottom:16}}>
@@ -123,7 +123,7 @@ export default function HomeScreen({navigation}){
               <Text style={{fontSize:14,fontWeight:"700",color:"#00a878"}}>Connecter un bracelet</Text>
               <Text style={{fontSize:12,color:"#00a878",marginTop:2,opacity:0.8}}>Bluetooth BLE ou GSM</Text>
             </View>
-            <Text style={{fontSize:18,color:"#00c896"}}>›</Text>
+            <Text style={{fontSize:18,color:"#00c896"}}>â€º</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -133,4 +133,5 @@ export default function HomeScreen({navigation}){
     </View>
   );
 }
+
 

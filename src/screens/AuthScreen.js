@@ -160,17 +160,15 @@ export default function AuthScreen(){
             <View style={{flex:1}}><Text style={s.fl}>Prenom</Text><TextInput style={s.input} value={prenom} onChangeText={setPrenom} placeholder="Ines" placeholderTextColor="#aaa"/></View>
           </View>
           {accountType==="patient"&&(
-            <>
-              <View style={{flexDirection:"row",gap:10}}>
-                <View style={{flex:1}}><Text style={s.fl}>Age</Text><TextInput style={s.input} value={age} onChangeText={setAge} placeholder="25" placeholderTextColor="#aaa" keyboardType="numeric"/></View>
-                <View style={{flex:1}}>
-                  <Text style={s.fl}>Ville</Text>
-                  <TouchableOpacity style={s.input} onPress={()=>setVillePicker(true)}>
-                    <Text style={{color:"#16242f",fontSize:15}}>{ville}</Text>
-                  </TouchableOpacity>
-                </View>
+            <View style={{flexDirection:"row",gap:10}}>
+              <View style={{flex:1}}><Text style={s.fl}>Age</Text><TextInput style={s.input} value={age} onChangeText={setAge} placeholder="25" placeholderTextColor="#aaa" keyboardType="numeric"/></View>
+              <View style={{flex:1}}>
+                <Text style={s.fl}>Ville</Text>
+                <TouchableOpacity style={s.input} onPress={()=>setVillePicker(true)}>
+                  <Text style={{color:"#16242f",fontSize:15}}>{ville}</Text>
+                </TouchableOpacity>
               </View>
-            </>
+            </View>
           )}
           <Text style={s.fl}>Email</Text>
           <TextInput style={s.input} value={email} onChangeText={setEmail} placeholder="email@gmail.com" placeholderTextColor="#aaa" keyboardType="email-address" autoCapitalize="none"/>

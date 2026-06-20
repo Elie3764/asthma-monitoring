@@ -1,4 +1,4 @@
-import React,{useState,useEffect,useRef}from"react";
+ï»¿import React,{useState,useEffect,useRef}from"react";
 import{View,Text,FlatList,TextInput,TouchableOpacity,KeyboardAvoidingView,Platform,StatusBar,ScrollView,Alert,ActivityIndicator}from"react-native";
 import database from"@react-native-firebase/database";
 import firestore from"@react-native-firebase/firestore";
@@ -140,7 +140,7 @@ export default function ChatScreen({navigation}){
         <View style={{flexDirection:"row",alignItems:"center",padding:10,borderTopWidth:1,borderTopColor:border,backgroundColor:card,gap:8}}>
           <TextInput style={{flex:1,borderRadius:24,borderWidth:1.5,paddingHorizontal:14,paddingVertical:10,fontSize:14,maxHeight:100,backgroundColor:bg,borderColor:border,color:text}} value={input} onChangeText={setInput} placeholder="Ecrire un message..." placeholderTextColor={text2} multiline/>
           <TouchableOpacity style={{width:44,height:44,borderRadius:22,alignItems:"center",justifyContent:"center",backgroundColor:input.trim()?"#00c896":border}} onPress={sendMsg} disabled={!input.trim()}>
-            <Text style={{color:"white",fontSize:18,fontWeight:"900"}}>›</Text>
+            <Text style={{color:"white",fontSize:18,fontWeight:"900"}}>â€º</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -195,7 +195,7 @@ export default function ChatScreen({navigation}){
               </View>
               <View style={{flex:1}}>
                 <Text style={{fontSize:14,fontWeight:"700",color:text}}>{item.name}</Text>
-                <Text style={{fontSize:12,color:text2,marginTop:1}}>{item.severity||"Patient"} · {item.ville||""}</Text>
+                <Text style={{fontSize:12,color:text2,marginTop:1}}>{item.severity||"Patient"} - {item.ville||""}</Text>
               </View>
               <View style={{paddingHorizontal:10,paddingVertical:5,borderRadius:10,backgroundColor:"#00c89620"}}>
                 <Text style={{fontSize:11,fontWeight:"700",color:"#00c896"}}>Message</Text>
@@ -269,6 +269,7 @@ export default function ChatScreen({navigation}){
     </View>
   );
 }
+
 
 
 
