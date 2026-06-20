@@ -1,4 +1,4 @@
-﻿package com.asthmamonitoring
+package com.asthmamonitoring
 import android.app.Application
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -48,3 +48,5 @@ class MainApplication : Application(), ReactApplication {
     }
   }
 }
+
+

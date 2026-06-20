@@ -3,6 +3,7 @@ import{View,Text,FlatList,TextInput,TouchableOpacity,KeyboardAvoidingView,Platfo
 import database from"@react-native-firebase/database";
 import firestore from"@react-native-firebase/firestore";
 import{useStore}from"../store/useStore";
+import{playNotificationSound}from"../utils/sounds";
 export default function ChatScreen({navigation}){
   const{theme,user,userProfile,messages,setMessages,appendMessage}=useStore();
   const isLight=theme==="light";
@@ -52,9 +53,16 @@ export default function ChatScreen({navigation}){
     if(!selected||!user?.uid)return;
     const chatId=getChatId(selected.id,selectedType);
     const ref=database().ref("chats/"+chatId);
+    let lastSeenTs=0;
     const unsub=ref.orderByChild("timestamp").limitToLast(50).on("value",snap=>{
       const d=snap.val();
-      if(d)setMessages(chatId,Object.values(d).sort((a,b)=>a.timestamp-b.timestamp));
+      if(d){
+        const list=Object.values(d).sort((a,b)=>a.timestamp-b.timestamp);
+        const last=list[list.length-1];
+        if(last&&last.from!==user?.uid&&last.timestamp>lastSeenTs&&lastSeenTs!==0){playNotificationSound();}
+        if(last)lastSeenTs=last.timestamp;
+        setMessages(chatId,list);
+      }
       else setMessages(chatId,[]);
     });
     return()=>ref.off("value",unsub);
@@ -261,4 +269,7 @@ export default function ChatScreen({navigation}){
     </View>
   );
 }
+
+
+
 

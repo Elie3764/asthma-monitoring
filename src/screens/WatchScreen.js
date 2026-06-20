@@ -1,10 +1,11 @@
-ï»¿import React,{useState,useRef,useEffect}from"react";
+import React,{useState,useRef,useEffect}from"react";
 import{View,Text,FlatList,TouchableOpacity,TextInput,Alert,ActivityIndicator,StatusBar,PermissionsAndroid,Platform}from"react-native";
 import{BleManager}from"react-native-ble-plx";
 import{Buffer}from"buffer";
 import database from"@react-native-firebase/database";
 import{useStore}from"../store/useStore";
 import{ALERT_THRESHOLDS}from"../services/firebase";
+import{playAlertSound}from"../utils/sounds";
 
 const ble=new BleManager();
 const HR_SERVICE="0000180d-0000-1000-8000-00805f9b34fb";
@@ -115,7 +116,7 @@ export default function WatchScreen({navigation}){
 
   const handleV=(v,src)=>{
     setVitals(v);
-    if(v.spo2<ALERT_THRESHOLDS.spo2.critical){setAlertStatus("critical");addAlert({level:"critical",message:"SpO2 critique: "+v.spo2+"%",timestamp:Date.now()});}
+    if(v.spo2<ALERT_THRESHOLDS.spo2.critical){setAlertStatus("critical");addAlert({level:"critical",message:"SpO2 critique: "+v.spo2+"%",timestamp:Date.now()});playAlertSound();}
     else if(v.spo2<ALERT_THRESHOLDS.spo2.warning){setAlertStatus("warning");addAlert({level:"warning",message:"SpO2 basse: "+v.spo2+"%",timestamp:Date.now()});}
     else setAlertStatus("normal");
     if(user?.uid)database().ref("patients/"+user.uid+"/vitals").set({...v,timestamp:database.ServerValue.TIMESTAMP,source:src}).catch(()=>{});
@@ -168,7 +169,7 @@ export default function WatchScreen({navigation}){
         </TouchableOpacity>
         <View style={{flex:1}}>
           <Text style={{fontSize:22,fontWeight:"900",color:text}}>Connexion Appareil</Text>
-          <Text style={{fontSize:12,color:text2}}>Bluetooth Â· GSM/WiFi Â· Simulation</Text>
+          <Text style={{fontSize:12,color:text2}}>Bluetooth · GSM/WiFi · Simulation</Text>
         </View>
       </View>
 
@@ -275,3 +276,6 @@ export default function WatchScreen({navigation}){
     </View>
   );
 }
+
+
+

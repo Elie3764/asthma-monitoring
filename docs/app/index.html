@@ -242,7 +242,21 @@ function renderAuth(mode='login'){
         </div>
         <div id="patient-fields" class="row2">
           <div><label class="field-label">Age</label><input class="input-field" id="rg-age" placeholder="25" type="number"></div>
-          <div><label class="field-label">Ville</label><input class="input-field" id="rg-ville" placeholder="Yaounde"></div>
+          <div>
+            <label class="field-label">Ville</label>
+            <select class="input-field" id="rg-ville" onchange="fetchAvailableDoctorsPWA(this.value)">
+              <option value="Yaounde">Yaounde</option>
+              <option value="Douala">Douala</option>
+              <option value="Bafoussam">Bafoussam</option>
+              <option value="Garoua">Garoua</option>
+              <option value="Bamenda">Bamenda</option>
+              <option value="Maroua">Maroua</option>
+              <option value="Ngaoundere">Ngaoundere</option>
+              <option value="Bertoua">Bertoua</option>
+              <option value="Ebolowa">Ebolowa</option>
+              <option value="Buea">Buea</option>
+            </select>
+          </div>
         </div>
         <label class="field-label">Email</label>
         <input class="input-field" id="rg-email" type="email" placeholder="email@gmail.com">
@@ -255,8 +269,9 @@ function renderAuth(mode='login'){
           <label class="field-label">Numero d'urgence (Parent)</label>
           <input class="input-field" id="rg-phone" placeholder="683271688" type="tel">
           <div class="field-hint">Ce numero permettra a votre proche de se connecter et suivre vos donnees</div>
-          <label class="field-label">Email de votre medecin</label>
-          <input class="input-field" id="rg-doctor-email" type="email" placeholder="medecin@hopital.cm">
+          <label class="field-label">Medecin (dans votre ville)</label>
+          <select class="input-field" id="rg-doctor-select"><option value="">Chargement...</option></select>
+          <div class="field-hint" id="doctor-count-hint"></div>
         </div>
         <div id="parent-only-fields" class="hidden">
           <label class="field-label">Votre numero de telephone</label>
@@ -267,17 +282,50 @@ function renderAuth(mode='login'){
         <div class="link-row">Deja un compte ? <b onclick="renderAuth('login')">Se connecter</b></div>
       </div>
     </div>`;
+    setTimeout(()=>fetchAvailableDoctorsPWA(document.getElementById('rg-ville').value), 100);
   }
 }
 window.renderAuth = renderAuth;
 
 window._accType = 'patient';
+window._selectedDoctor = null;
 window.setAccType = function(t){
   window._accType = t;
   document.querySelectorAll('#acc-type-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.type===t));
   document.getElementById('patient-fields').classList.toggle('hidden', t!=='patient');
   document.getElementById('patient-only-fields').classList.toggle('hidden', t!=='patient');
   document.getElementById('parent-only-fields').classList.toggle('hidden', t!=='parent');
+  if(t==='patient'){
+    const ville = document.getElementById('rg-ville').value;
+    fetchAvailableDoctorsPWA(ville);
+  }
+};
+
+window.fetchAvailableDoctorsPWA = async function(ville){
+  const sel = document.getElementById('rg-doctor-select');
+  const hint = document.getElementById('doctor-count-hint');
+  sel.innerHTML = '<option value="">Chargement...</option>';
+  try{
+    const q = query(collection(db,'doctors'), where('ville','==',ville));
+    const snap = await getDocs(q);
+    const list = [];
+    snap.forEach(d=>{
+      const data = d.data();
+      const count = data.patientCount||0;
+      if(count<7) list.push({id:d.id, ...data, patientCount:count});
+    });
+    window._availableDoctorsPWA = list;
+    if(list.length===0){
+      sel.innerHTML = '<option value="">Aucun medecin disponible</option>';
+      hint.textContent = 'Aucun medecin disponible actuellement dans cette ville';
+    }else{
+      sel.innerHTML = '<option value="">Selectionner...</option>' +
+        list.map(d=>`<option value="${d.id}">${d.name} - ${d.specialty||'Medecin'} (${d.patientCount}/7)</option>`).join('');
+      hint.textContent = list.length+' medecin(s) disponible(s)';
+    }
+  }catch(e){
+    sel.innerHTML = '<option value="">Erreur de chargement</option>';
+  }
 };
 
 window.togglePass = function(id, el){
@@ -314,13 +362,16 @@ window.doRegister = async function(){
     const age = document.getElementById('rg-age').value;
     const ville = document.getElementById('rg-ville').value;
     const phone = document.getElementById('rg-phone').value;
-    const doctorEmail = document.getElementById('rg-doctor-email').value;
+    const doctorId = document.getElementById('rg-doctor-select').value;
+    if(!doctorId){showToast('Selectionnez un medecin disponible');btn.textContent="S'INSCRIRE";return;}
+    const selectedDoc = (window._availableDoctorsPWA||[]).find(d=>d.id===doctorId);
     try{
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const p = {name:name+' '+prenom, firstName:prenom, lastName:name, age:age||'--', ville:ville||'Yaounde',
         email, phone, uid:cred.user.uid, role:'patient', severity:'Modere persistant', online:true,
-        doctorEmail:doctorEmail||'', createdAt:serverTimestamp()};
+        doctorId, doctorEmail:selectedDoc?.email||'', doctorName:selectedDoc?.name||'', createdAt:serverTimestamp()};
       await setDoc(doc(db,'patients',cred.user.uid), p);
+      await updateDoc(doc(db,'doctors',doctorId), {patientCount: (selectedDoc?.patientCount||0)+1});
     }catch(e){
       showToast(e.code==='auth/email-already-in-use'?'Email deja utilise':'Erreur creation compte');
       btn.textContent = "S'INSCRIRE";
@@ -593,7 +644,11 @@ window.renderConnexionScreen = renderConnexionScreen;
 function handleVitalsUpdate(v, source){
   window._state.vitals = v;
   const ALERT = {spo2:{critical:88, warning:92}};
-  if(v.spo2 < ALERT.spo2.critical) window._state.alertStatus = 'critical';
+  const wasCritical = window._state.alertStatus === 'critical';
+  if(v.spo2 < ALERT.spo2.critical){
+    window._state.alertStatus = 'critical';
+    if(!wasCritical && navigator.vibrate) navigator.vibrate([400,200,400,200,400,200,400,200,400]);
+  }
   else if(v.spo2 < ALERT.spo2.warning) window._state.alertStatus = 'warning';
   else window._state.alertStatus = 'normal';
 
@@ -849,10 +904,19 @@ window.openChat = function(otherId, type, otherName){
   `;
   if(window._chatState.unsubMsg) window._chatState.unsubMsg();
   const msgRef = ref(rtdb, 'chats/'+chatId);
+  let lastSeenTs = 0;
   window._chatState.unsubMsg = onValue(msgRef, (snap)=>{
     const d = snap.val();
     const msgs = d ? Object.values(d).sort((a,b)=>a.timestamp-b.timestamp) : [];
+    const last = msgs[msgs.length-1];
+    if(last && last.from!==window._state.user.uid && last.timestamp>lastSeenTs && lastSeenTs!==0){
+      if(navigator.vibrate) navigator.vibrate(150);
+    }
+    if(last) lastSeenTs = last.timestamp;
     renderChatMessages(msgs);
+  }, (err)=>{
+    showToast('Erreur lecture chat: '+err.message);
+    console.error('openChat onValue error', err);
   });
 };
 
@@ -881,9 +945,14 @@ window.sendChatMsg = async function(){
   if(!text) return;
   const chatId = getChatId(window._chatState.selected.id, window._chatState.selectedType);
   input.value = '';
-  await push(ref(rtdb,'chats/'+chatId), {
-    text, from: window._state.user.uid, fromName: window._state.profile?.name||'Patient', timestamp: Date.now()
-  });
+  try{
+    await push(ref(rtdb,'chats/'+chatId), {
+      text, from: window._state.user.uid, fromName: window._state.profile?.name||'Patient', timestamp: Date.now()
+    });
+  }catch(e){
+    showToast('Erreur envoi: '+e.message);
+    console.error('sendChatMsg error', e);
+  }
 };
 
 // ===== IA SCREEN =====
@@ -1148,6 +1217,7 @@ window.switchParentTab = function(tab){
   if(tab==='alertes') renderParentAlertsScreen();
 };
 
+window._parentSubTab = 'suivi';
 async function renderParentSuiviScreen(){
   const p = window._state.profile;
   const linkedId = p?.linkedPatientId;
@@ -1161,12 +1231,60 @@ async function renderParentSuiviScreen(){
     const snap = await getDoc(doc(db,'patients',linkedId));
     patientInfo = snap.exists() ? snap.data() : null;
     window._parentPatientInfo = patientInfo;
+    if(patientInfo?.doctorId){
+      const docSnap = await getDoc(doc(db,'doctors',patientInfo.doctorId));
+      window._parentDoctorInfo = docSnap.exists() ? docSnap.data() : null;
+    }
   }
   const v = window._parentVitals;
   const spo2Color = !v.spo2?'#8093a3':v.spo2<88?'#d6304a':v.spo2<92?'#d96a1f':'#00c896';
   sc.innerHTML = `
     <div class="topbar"><h1>Suivi</h1><button class="icon-btn" onclick="toggleTheme()">${window._state.theme==='light'?'N':'J'}</button></div>
-    <div style="padding:0 16px;">
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:0 16px;margin-bottom:14px;">
+      ${[['suivi','Suivi'],['rdv','Rendez-vous'],['rappels','Rappels'],['analyses','Analyses']].map(([k,l])=>`
+        <button onclick="setParentSubTab('${k}')" data-sub="${k}" class="parent-sub-btn" style="padding:8px 14px;border-radius:18px;font-size:12px;font-weight:700;white-space:nowrap;border:1px solid var(--border);background:${window._parentSubTab===k?'var(--primary)':'var(--card)'};color:${window._parentSubTab===k?'white':'var(--text2)'};">${l}</button>
+      `).join('')}
+    </div>
+    <div id="parent-sub-content" style="padding:0 16px;"></div>
+    <div style="height:90px;"></div>
+  `;
+  renderParentSubContent(patientInfo, v, spo2Color);
+
+  const vitalsRef = ref(rtdb, 'patients/'+linkedId+'/vitals');
+  onValue(vitalsRef, (snap)=>{
+    const data = snap.val();
+    if(data){
+      const wasCritical = window._parentVitals?.spo2 < 88;
+      window._parentVitals = data;
+      window._parentOnline = (Date.now()-(data.timestamp||0)) < 60000;
+      if(data.spo2 < 88 && !wasCritical && navigator.vibrate){
+        navigator.vibrate([400,200,400,200,400,200,400,200,400]);
+      }
+      if(window._state.currentTab!=='chat' && document.querySelector('.topbar h1')?.textContent==='Suivi' && window._parentSubTab==='suivi'){
+        renderParentSuiviScreen();
+      }
+    }
+  });
+}
+window.renderParentSuiviScreen = renderParentSuiviScreen;
+
+window.setParentSubTab = function(tab){
+  window._parentSubTab = tab;
+  document.querySelectorAll('.parent-sub-btn').forEach(b=>{
+    const active = b.dataset.sub===tab;
+    b.style.background = active?'var(--primary)':'var(--card)';
+    b.style.color = active?'white':'var(--text2)';
+  });
+  renderParentSubContent(window._parentPatientInfo, window._parentVitals, !window._parentVitals.spo2?'#8093a3':window._parentVitals.spo2<88?'#d6304a':window._parentVitals.spo2<92?'#d96a1f':'#00c896');
+};
+
+async function renderParentSubContent(patientInfo, v, spo2Color){
+  const content = document.getElementById('parent-sub-content');
+  if(!content) return;
+  const tab = window._parentSubTab;
+
+  if(tab==='suivi'){
+    content.innerHTML = `
       <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
         <div style="width:48px;height:48px;border-radius:24px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--primary);">${initials(patientInfo?.name)}</div>
         <div style="flex:1;">
@@ -1182,29 +1300,76 @@ async function renderParentSuiviScreen(){
       <div style="background:${v.spo2&&v.spo2<92?'rgba(214,48,74,0.08)':'rgba(0,200,150,0.08)'};border-radius:14px;padding:14px;margin-bottom:16px;">
         <div style="font-size:13px;font-weight:700;color:${v.spo2&&v.spo2<92?'#d6304a':'#00a878'};">${v.spo2&&v.spo2<92?'Attention: SpO2 basse':'Aucune alerte actuellement'}</div>
       </div>
-      <button onclick="callEmergency()" style="width:100%;background:#d6304a;border-radius:14px;padding:16px;color:white;font-weight:900;font-size:15px;">Appeler en cas d'urgence</button>
-    </div>
-    <div style="height:90px;"></div>
-  `;
-  const vitalsRef = ref(rtdb, 'patients/'+linkedId+'/vitals');
-  onValue(vitalsRef, (snap)=>{
-    const data = snap.val();
-    if(data){
-      window._parentVitals = data;
-      window._parentOnline = (Date.now()-(data.timestamp||0)) < 60000;
-      if(window._state.currentTab!=='chat' && document.querySelector('.topbar h1')?.textContent==='Suivi'){
-        renderParentSuiviScreen();
-      }
-    }
-  });
+      ${(patientInfo?.phone || window._parentDoctorInfo?.phone) ? `<button onclick="callEmergency()" style="width:100%;background:#d6304a;border-radius:14px;padding:16px;color:white;font-weight:900;font-size:15px;">Appeler en cas d'urgence</button>` : ''}
+    `;
+  }
+
+  if(tab==='rdv'){
+    content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Chargement...</div>';
+    const linkedId = window._state.profile?.linkedPatientId;
+    const q = query(collection(db,'rdvs'), where('patientId','==',linkedId), orderBy('date','asc'));
+    onSnapshot(q, (snap)=>{
+      const list = [];
+      snap.forEach(d=>list.push({id:d.id, ...d.data()}));
+      if(window._parentSubTab!=='rdv') return;
+      if(list.length===0){ content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucun rendez-vous</div>'; return; }
+      content.innerHTML = list.map(r=>`
+        <div class="card" style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:#7c3aed;">${r.date?r.date.split('-')[2]:'--'}</div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:700;">${r.date} a ${r.time}</div>
+              <div style="font-size:12px;color:var(--text2);">${r.doctorName||'Medecin'}</div>
+            </div>
+            <div style="padding:4px 10px;border-radius:10px;background:rgba(0,200,150,0.12);font-size:10px;font-weight:700;color:var(--primary);">${r.status||'confirme'}</div>
+          </div>
+          ${r.motif?`<div style="font-size:13px;color:var(--text2);margin-left:56px;">${r.motif}</div>`:''}
+        </div>
+      `).join('');
+    });
+  }
+
+  if(tab==='rappels'){
+    content.innerHTML = `<div class="card"><div style="font-size:13px;color:var(--text2);text-align:center;">Les rappels de medicaments sont geres directement par ${patientInfo?.name||'le patient'} sur son telephone.</div></div>`;
+  }
+
+  if(tab==='analyses'){
+    content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Chargement...</div>';
+    const linkedId = window._state.profile?.linkedPatientId;
+    const q = query(collection(db,'medicalNotes'), where('patientId','==',linkedId), orderBy('createdAt','desc'));
+    onSnapshot(q, (snap)=>{
+      const notes = [];
+      snap.forEach(d=>notes.push({id:d.id, ...d.data()}));
+      if(window._parentSubTab!=='analyses') return;
+      content.innerHTML = `
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Notes du medecin</div>
+        ${notes.length===0 ? `<div class="card" style="margin-bottom:20px;"><div style="font-size:13px;color:var(--text2);text-align:center;">Aucune note medicale pour le moment</div></div>` :
+          notes.map(n=>`
+          <div class="card" style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;">${n.doctorName||'Medecin'}</div>
+              <div style="font-size:11px;color:var(--text2);">${n.createdAt?.toDate?n.createdAt.toDate().toLocaleDateString('fr-FR'):''}</div>
+            </div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.5;">${n.text}</div>
+          </div>`).join('')}
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-top:10px;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Vitaux actuels</div>
+        <div class="card">
+          <div style="font-size:13px;color:var(--text2);line-height:1.5;">SpO2: ${v.spo2||'--'}% - FC: ${v.hr||'--'} bpm - Temp: ${v.temp||'--'}C - Resp: ${v.resp||'--'}/min</div>
+        </div>
+      `;
+    });
+  }
 }
-window.renderParentSuiviScreen = renderParentSuiviScreen;
 
 window.callEmergency = function(){
-  const phone = window._parentPatientInfo?.phone;
-  if(confirm("Contacter "+(window._parentPatientInfo?.name||'votre proche')+" maintenant ?")){
-    if(phone) window.location.href = 'tel:'+phone;
-    else showToast('Numero non disponible');
+  const patientPhone = window._parentPatientInfo?.phone;
+  const doctorPhone = window._parentDoctorInfo?.phone;
+  if(!patientPhone && !doctorPhone){ showToast('Aucun numero disponible'); return; }
+  if(patientPhone && doctorPhone){
+    const choice = confirm("Appeler "+(window._parentPatientInfo?.name||'le patient')+" ? (Annuler pour appeler le medecin a la place)");
+    window.location.href = 'tel:' + (choice ? patientPhone : doctorPhone);
+  }else{
+    window.location.href = 'tel:' + (patientPhone || doctorPhone);
   }
 };
 
