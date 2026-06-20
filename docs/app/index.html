@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Asthma Monitoring</title>
+<meta name="theme-color" content="#00c896">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Asthma">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f7fb;--card:#ffffff;--text:#16242f;--text2:#50657a;--border:#eef2f7;
+  --primary:#00c896;--primary2:#00a878;--orange:#d96a1f;--purple:#7c3aed;--amber:#b88a00;--red:#d6304a;
+  --font:'DM Sans',sans-serif;
+}
+body.dark{
+  --bg:#0d1829;--card:#111f35;--text:#e8f4ff;--text2:#8ba8c4;--border:#1e3050;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overscroll-behavior:none;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);transition:background .2s;}
+#root{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:70px;}
+button{font-family:var(--font);cursor:pointer;border:none;background:none;}
+input,textarea,select{font-family:var(--font);}
+.hidden{display:none!important;}
+::-webkit-scrollbar{display:none;}
+.btn-primary{background:var(--primary);color:white;font-weight:900;font-size:14px;padding:16px;border-radius:14px;text-align:center;letter-spacing:0.5px;}
+.btn-primary:active{opacity:0.85;}
+.card{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--border);}
+.input-field{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:15px;color:var(--text);border:1.5px solid var(--border);width:100%;margin-bottom:14px;}
+.input-field::placeholder{color:var(--text2);}
+.field-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;}
+.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 20px;border-radius:30px;font-size:13px;font-weight:700;z-index:999;max-width:90%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+
+/* ===== AUTH ===== */
+#auth-screen{padding:24px;padding-top:60px;min-height:100vh;}
+.logo-wrap{text-align:center;margin-bottom:32px;}
+.logo-box{width:72px;height:72px;border-radius:20px;background:var(--primary);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,200,150,0.3);}
+.app-name{font-size:20px;font-weight:900;color:var(--text);letter-spacing:1px;}
+.tagline{font-size:13px;color:var(--text2);margin-top:4px;font-style:italic;}
+.auth-card{background:var(--card);border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,0.06);}
+.auth-card h2{font-size:22px;font-weight:900;margin-bottom:20px;}
+.type-toggle{display:flex;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);margin-bottom:14px;}
+.type-toggle button{flex:1;padding:14px;font-weight:700;color:var(--text2);background:transparent;}
+.type-toggle button.active{background:var(--primary);color:white;}
+.row2{display:flex;gap:10px;}
+.row2>div{flex:1;}
+.link-row{margin-top:16px;text-align:center;font-size:14px;color:var(--text2);}
+.link-row b{color:var(--primary);font-weight:700;}
+.pass-wrap{position:relative;}
+.pass-toggle{position:absolute;right:14px;top:12px;color:var(--primary);font-size:12px;font-weight:700;}
+.field-hint{font-size:11px;color:var(--text2);margin-top:-8px;margin-bottom:12px;}
+
+/* ===== TOPBAR ===== */
+.topbar{display:flex;align-items:center;padding:20px 16px;padding-top:48px;gap:10px;}
+.topbar h1{font-size:22px;font-weight:900;flex:1;}
+.icon-btn{width:36px;height:36px;border-radius:18px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
+.back-btn{font-size:16px;color:var(--primary);font-weight:700;margin-right:8px;}
+
+/* ===== TABBAR ===== */
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-top:1px solid var(--border);display:flex;height:65px;padding-bottom:8px;z-index:100;}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--text2);}
+.tabbar button.active{color:var(--primary);}
+.tabbar .tab-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;}
+.tabbar button.active .tab-icon{background:rgba(0,200,150,0.12);}
+.tabbar .tab-label{font-size:9px;font-weight:600;}
+.tabbar button.active .tab-label{font-weight:800;}
+
+/* ===== HOME ===== */
+.status-banner{background:rgba(0,200,150,0.1);margin:16px;border-radius:12px;padding:10px;display:flex;align-items:center;gap:8px;}
+.status-dot{width:8px;height:8px;border-radius:4px;background:var(--primary);}
+.quick-actions{display:flex;justify-content:space-around;padding:0 16px;margin-bottom:16px;}
+.qa-item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.qa-icon{width:52px;height:52px;border-radius:14px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.qa-label{font-size:11px;font-weight:600;color:var(--text2);}
+.spo2-wrap{display:flex;justify-content:center;margin:8px 0;}
+.spo2-circle{width:180px;height:180px;border-radius:90px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,0.08);position:relative;}
+.spo2-ring{position:absolute;width:160px;height:160px;border-radius:80px;border:3px dashed;}
+.spo2-label{font-size:11px;font-weight:700;letter-spacing:1px;}
+.spo2-value{font-size:52px;font-weight:900;line-height:1;}
+.spo2-hr{font-size:14px;font-weight:700;color:var(--text2);margin-top:4px;}
+.risk-card{margin:16px;border-radius:16px;padding:16px;}
+.risk-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.risk-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;}
+.risk-label{font-size:18px;font-weight:900;}
+.vitals-row{display:flex;gap:10px;margin:0 16px 16px;}
+.vital-box{flex:1;background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border);}
+.vital-box .vl{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;}
+.vital-box .vv{font-size:26px;font-weight:900;}
+.fab{position:fixed;bottom:80px;right:calc(50% - 240px + 20px);width:52px;height:52px;border-radius:26px;background:#ff5252;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(255,82,82,0.4);z-index:90;color:white;font-size:22px;font-weight:900;}
+@media(max-width:480px){.fab{right:20px;}}
+
+/* ===== SIDE MENU ===== */
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:flex;}
+.menu-panel{width:260px;height:100%;background:var(--card);padding:20px;padding-top:60px;position:relative;}
+.menu-item{padding:14px;border-radius:10px;font-size:15px;font-weight:600;color:var(--text);}
+.menu-close{position:absolute;top:20px;right:20px;font-size:20px;color:var(--text2);}
+.menu-footer{position:absolute;bottom:30px;left:20px;right:20px;}
+.menu-footer .mn{font-size:12px;color:var(--text2);}
+.menu-footer .mr{font-size:11px;color:var(--text2);margin-top:2px;}
+
+/* ===== LOADING ===== */
+#loading-screen{position:fixed;inset:0;background:#0d1829;display:flex;align-items:center;justify-content:center;z-index:1000;}
+.loading-spin{width:36px;height:36px;border:3px solid rgba(0,200,150,0.3);border-top-color:#00c896;border-radius:50%;animation:spin .8s linear infinite;}
+</style>
+</head>
+<body>
+
+<div id="loading-screen"><div class="loading-spin"></div></div>
+<div id="root"></div>
+<div id="toast-container"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, onSnapshot, serverTimestamp, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getDatabase, ref, onValue, set, push, off, serverTimestamp as rtdbTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCVlzgY9XY6OfMBvFGJGXisf-hZ-_jMaTc",
+  databaseURL: "https://asthma-monitoring-79e4e-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "asthma-monitoring-79e4e",
+  storageBucket: "asthma-monitoring-79e4e.firebasestorage.app",
+  messagingSenderId: "587156062510",
+  appId: "1:587156062510:android:367b591e704e35bd9bfabf"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const rtdb = getDatabase(app);
+
+window._fb = { auth, db, rtdb, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, onSnapshot, serverTimestamp, query, where, orderBy, limit,
+  ref, onValue, set, push, off, rtdbTimestamp };
+
+window._state = {
+  user: null, role: null, profile: null, theme: 'light',
+  vitals: {spo2:null,hr:null,temp:null,resp:null}, alertStatus:'normal',
+  simInterval: null, menuOpen:false, currentTab:'home', currentScreen:'home'
+};
+
+function showToast(msg){
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 2800);
+}
+window.showToast = showToast;
+
+function initials(name){
+  if(!name) return '?';
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+window.initials = initials;
+
+// ===== AUTH STATE =====
+onAuthStateChanged(auth, async (u) => {
+  document.getElementById('loading-screen').style.display='none';
+  if(u){
+    window._state.user = u;
+    await checkRole(u.uid);
+  }else{
+    window._state.user = null;
+    window._state.role = null;
+    window._state.profile = null;
+    renderAuth();
+  }
+});
+
+async function checkRole(uid){
+  try{
+    const parentSnap = await getDoc(doc(db,'parents',uid));
+    if(parentSnap.exists()){
+      window._state.role = 'parent';
+      window._state.profile = parentSnap.data();
+      renderParentApp();
+      return;
+    }
+    const patientSnap = await getDoc(doc(db,'patients',uid));
+    if(patientSnap.exists()){
+      window._state.role = 'patient';
+      window._state.profile = patientSnap.data();
+      renderPatientApp();
+      return;
+    }
+    renderAuth();
+  }catch(e){
+    console.error(e);
+    renderAuth();
+  }
+}
+window.checkRole = checkRole;
+
+// ===== AUTH SCREEN =====
+function renderAuth(mode='login'){
+  const root = document.getElementById('root');
+  if(mode==='login'){
+    root.innerHTML = `
+    <div id="auth-screen">
+      <div class="logo-wrap">
+        <div class="logo-box"><span style="font-size:32px;color:white;font-weight:900;">+</span></div>
+        <div class="app-name">ASTHMA MONITORING</div>
+        <div class="tagline">Surveillez. Prevenez. Vivez.</div>
+      </div>
+      <div class="auth-card">
+        <h2>Se connecter</h2>
+        <label class="field-label">Email</label>
+        <input class="input-field" id="li-email" type="email" placeholder="votre@email.com" autocomplete="email">
+        <label class="field-label">Mot de passe</label>
+        <div class="pass-wrap">
+          <input class="input-field" id="li-pass" type="password" placeholder="........" autocomplete="current-password">
+          <span class="pass-toggle" onclick="togglePass('li-pass',this)">Voir</span>
+        </div>
+        <button class="btn-primary" style="width:100%" id="li-btn" onclick="doLogin()">SE CONNECTER</button>
+        <div class="link-row">Pas de compte ? <b onclick="renderAuth('register')">S'inscrire</b></div>
+      </div>
+    </div>`;
+  }else{
+    root.innerHTML = `
+    <div id="auth-screen">
+      <div style="margin-bottom:24px;">
+        <div style="font-size:28px;font-weight:900;">Creer un compte</div>
+        <div style="font-size:14px;color:var(--text2);margin-top:4px;">Rejoignez la communaute Asthma Monitoring</div>
+      </div>
+      <div class="auth-card">
+        <label class="field-label">Type de compte</label>
+        <div class="type-toggle" id="acc-type-toggle">
+          <button class="active" data-type="patient" onclick="setAccType('patient')">Patient</button>
+          <button data-type="parent" onclick="setAccType('parent')">Parent/Proche</button>
+        </div>
+        <div class="row2">
+          <div><label class="field-label">Nom</label><input class="input-field" id="rg-name" placeholder="Essoung"></div>
+          <div><label class="field-label">Prenom</label><input class="input-field" id="rg-prenom" placeholder="Ines"></div>
+        </div>
+        <div id="patient-fields" class="row2">
+          <div><label class="field-label">Age</label><input class="input-field" id="rg-age" placeholder="25" type="number"></div>
+          <div><label class="field-label">Ville</label><input class="input-field" id="rg-ville" placeholder="Yaounde"></div>
+        </div>
+        <label class="field-label">Email</label>
+        <input class="input-field" id="rg-email" type="email" placeholder="email@gmail.com">
+        <label class="field-label">Mot de passe</label>
+        <div class="pass-wrap">
+          <input class="input-field" id="rg-pass" type="password" placeholder="........">
+          <span class="pass-toggle" onclick="togglePass('rg-pass',this)">Voir</span>
+        </div>
+        <div id="patient-only-fields">
+          <label class="field-label">Numero d'urgence (Parent)</label>
+          <input class="input-field" id="rg-phone" placeholder="683271688" type="tel">
+          <div class="field-hint">Ce numero permettra a votre proche de se connecter et suivre vos donnees</div>
+          <label class="field-label">Email de votre medecin</label>
+          <input class="input-field" id="rg-doctor-email" type="email" placeholder="medecin@hopital.cm">
+        </div>
+        <div id="parent-only-fields" class="hidden">
+          <label class="field-label">Votre numero de telephone</label>
+          <input class="input-field" id="rg-parent-phone" placeholder="683271688" type="tel">
+          <div class="field-hint">Ce numero doit correspondre au "numero d'urgence" enregistre par votre proche patient</div>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-top:6px;" id="rg-btn" onclick="doRegister()">S'INSCRIRE</button>
+        <div class="link-row">Deja un compte ? <b onclick="renderAuth('login')">Se connecter</b></div>
+      </div>
+    </div>`;
+  }
+}
+window.renderAuth = renderAuth;
+
+window._accType = 'patient';
+window.setAccType = function(t){
+  window._accType = t;
+  document.querySelectorAll('#acc-type-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.type===t));
+  document.getElementById('patient-fields').classList.toggle('hidden', t!=='patient');
+  document.getElementById('patient-only-fields').classList.toggle('hidden', t!=='patient');
+  document.getElementById('parent-only-fields').classList.toggle('hidden', t!=='parent');
+};
+
+window.togglePass = function(id, el){
+  const inp = document.getElementById(id);
+  if(inp.type==='password'){inp.type='text';el.textContent='Cacher';}
+  else{inp.type='password';el.textContent='Voir';}
+};
+
+window.doLogin = async function(){
+  const email = document.getElementById('li-email').value.trim();
+  const pass = document.getElementById('li-pass').value;
+  if(!email||!pass){showToast('Remplissez tous les champs');return;}
+  const btn = document.getElementById('li-btn');
+  btn.innerHTML = '<span class="spinner"></span>';
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(e){
+    showToast(e.code==='auth/invalid-credential'?'Email ou mot de passe incorrect':'Erreur de connexion');
+    btn.textContent = 'SE CONNECTER';
+  }
+};
+
+window.doRegister = async function(){
+  const name = document.getElementById('rg-name').value.trim();
+  const prenom = document.getElementById('rg-prenom').value.trim();
+  const email = document.getElementById('rg-email').value.trim();
+  const pass = document.getElementById('rg-pass').value;
+  if(!name||!email||!pass){showToast('Remplissez tous les champs');return;}
+  if(pass.length<6){showToast('Mot de passe trop court (min 6)');return;}
+  const btn = document.getElementById('rg-btn');
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  if(window._accType==='patient'){
+    const age = document.getElementById('rg-age').value;
+    const ville = document.getElementById('rg-ville').value;
+    const phone = document.getElementById('rg-phone').value;
+    const doctorEmail = document.getElementById('rg-doctor-email').value;
+    try{
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      const p = {name:name+' '+prenom, firstName:prenom, lastName:name, age:age||'--', ville:ville||'Yaounde',
+        email, phone, uid:cred.user.uid, role:'patient', severity:'Modere persistant', online:true,
+        doctorEmail:doctorEmail||'', createdAt:serverTimestamp()};
+      await setDoc(doc(db,'patients',cred.user.uid), p);
+    }catch(e){
+      showToast(e.code==='auth/email-already-in-use'?'Email deja utilise':'Erreur creation compte');
+      btn.textContent = "S'INSCRIRE";
+    }
+  }else{
+    const parentPhone = document.getElementById('rg-parent-phone').value;
+    if(!parentPhone){showToast('Entrez votre numero de telephone');btn.textContent="S'INSCRIRE";return;}
+    try{
+      const cleanPhone = parentPhone.replace(/\s/g,'');
+      const patientsSnap = await getDocs(collection(db,'patients'));
+      let linkedPatient = null;
+      patientsSnap.forEach(d=>{
+        const data = d.data();
+        if(data.phone && data.phone.replace(/\s/g,'')===cleanPhone){
+          linkedPatient = {id:d.id, ...data};
+        }
+      });
+      if(!linkedPatient){
+        showToast("Aucun patient trouve avec ce numero d'urgence");
+        btn.textContent = "S'INSCRIRE";
+        return;
+      }
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      const p = {name:name+' '+prenom, firstName:prenom, lastName:name, email, phone:parentPhone,
+        uid:cred.user.uid, role:'parent', linkedPatientId:linkedPatient.id, linkedPatientName:linkedPatient.name,
+        createdAt:serverTimestamp()};
+      await setDoc(doc(db,'parents',cred.user.uid), p);
+      showToast('Connecte a '+linkedPatient.name+' !');
+    }catch(e){
+      showToast(e.code==='auth/email-already-in-use'?'Email deja utilise':'Erreur: '+e.message);
+      btn.textContent = "S'INSCRIRE";
+    }
+  }
+};
+
+window.doLogout = function(){
+  if(confirm('Voulez-vous vous deconnecter ?')){
+    if(window._state.simInterval) clearInterval(window._state.simInterval);
+    signOut(auth);
+  }
+};
+
+// ===== PATIENT APP SHELL =====
+function renderPatientApp(){
+  document.body.classList.toggle('dark', window._state.theme==='dark');
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <div id="screen-container"></div>
+    <div class="tabbar" id="tabbar">
+      <button data-tab="home" onclick="switchTab('home')"><div class="tab-icon">S</div><div class="tab-label">Sante</div></button>
+      <button data-tab="chat" onclick="switchTab('chat')"><div class="tab-icon">M</div><div class="tab-label">Messages</div></button>
+      <button data-tab="ai" onclick="switchTab('ai')"><div class="tab-icon">IA</div><div class="tab-label">IA</div></button>
+      <button data-tab="profile" onclick="switchTab('profile')"><div class="tab-icon">R</div><div class="tab-label">Reglages</div></button>
+    </div>
+  `;
+  switchTab('home');
+  startVitalsListener();
+}
+window.renderPatientApp = renderPatientApp;
+
+window.switchTab = function(tab){
+  window._state.currentTab = tab;
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  if(tab==='home') renderHomeScreen();
+  if(tab==='chat') renderChatListScreen();
+  if(tab==='ai') renderAIScreen();
+  if(tab==='profile') renderProfileScreen();
+};
+
+function vitalsRisk(){
+  const v = window._state.vitals;
+  if(!v.spo2) return {label:'Inconnu', color:'#8093a3', bg:'#f0f4f8', icon:'?'};
+  if(v.spo2<88) return {label:'Critique', color:'#d6304a', bg:'#fde8ec', icon:'!'};
+  if(v.spo2<92) return {label:'Eleve', color:'#d96a1f', bg:'#fef3e8', icon:'!'};
+  if(v.spo2<95) return {label:'Modere', color:'#b88a00', bg:'#fefbe8', icon:'~'};
+  return {label:'Faible', color:'#00a878', bg:'#e8faf5', icon:'v'};
+}
+
+function renderHomeScreen(){
+  const v = window._state.vitals;
+  const p = window._state.profile;
+  const r = vitalsRisk();
+  const spo2Color = !v.spo2?'#8093a3':v.spo2<88?'#d6304a':v.spo2<92?'#d96a1f':v.spo2<95?'#b88a00':'#00c896';
+  const sc = document.getElementById('screen-container');
+  sc.innerHTML = `
+    <div style="display:flex;align-items:center;padding:16px;padding-top:48px;gap:10px;background:var(--card);border-bottom:1px solid var(--border);">
+      <button class="icon-btn" onclick="toggleMenu(true)" style="background:transparent;flex-direction:column;gap:3px;align-items:flex-start;padding-left:4px;">
+        <div style="width:20px;height:2px;background:var(--text);border-radius:2px;"></div>
+        <div style="width:14px;height:2px;background:var(--text);border-radius:2px;"></div>
+        <div style="width:20px;height:2px;background:var(--text);border-radius:2px;"></div>
+      </button>
+      <div style="flex:1;text-align:center;font-size:15px;font-weight:900;color:var(--primary);letter-spacing:1px;">ASTHMA MONITORING</div>
+      <button class="icon-btn" onclick="toggleTheme()">${window._state.theme==='light'?'N':'J'}</button>
+    </div>
+    <div class="status-banner">
+      <div class="status-dot"></div>
+      <div style="flex:1;font-size:12px;font-weight:700;color:#00a878;">Vitaux en temps reel</div>
+      <div style="font-size:11px;color:#00a878;">Mis a jour</div>
+    </div>
+    <div class="quick-actions">
+      <div class="qa-item" onclick="switchScreenStandalone('vitaux')"><div class="qa-icon">J</div><div class="qa-label">Journal</div></div>
+      <div class="qa-item" onclick="switchScreenStandalone('connexion')"><div class="qa-icon">C</div><div class="qa-label">Connexion</div></div>
+      <div class="qa-item" onclick="switchTab('chat')"><div class="qa-icon">M</div><div class="qa-label">Messages</div></div>
+      <div class="qa-item" onclick="switchTab('ai')"><div class="qa-icon">IA</div><div class="qa-label">IA</div></div>
+    </div>
+    <div class="spo2-wrap">
+      <div class="spo2-circle">
+        <div class="spo2-ring" style="border-color:${spo2Color}66;"></div>
+        <div class="spo2-label" style="color:${spo2Color};">SpO2</div>
+        <div class="spo2-value" style="color:${spo2Color};">${v.spo2||'--'}${v.spo2?'%':''}</div>
+        <div class="spo2-hr">${v.hr||'--'} bpm</div>
+      </div>
+    </div>
+    <div class="risk-card" style="background:${r.bg};border:1px solid ${r.color}30;">
+      <div class="risk-top">
+        <div class="risk-icon" style="background:${r.color}20;color:${r.color};">${r.icon}</div>
+        <div class="risk-label" style="color:${r.color};">${r.label}</div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:${r.color};text-transform:uppercase;letter-spacing:0.5px;">Niveau de Risque</div>
+      <div style="font-size:12px;color:${r.color}99;margin-top:2px;">${window._state.alertStatus==='normal'?'Aucune alerte detectee':'Attention requise'}</div>
+    </div>
+    <div class="vitals-row">
+      <div class="vital-box"><div class="vl">Temp</div><div class="vv" style="color:#b88a00;">${v.temp!=null?v.temp.toFixed(1):'--'} <span style="font-size:13px;font-weight:400;color:var(--text2);">C</span></div></div>
+      <div class="vital-box"><div class="vl">Resp</div><div class="vv" style="color:#7c3aed;">${v.resp||'--'} <span style="font-size:13px;font-weight:400;color:var(--text2);">/min</span></div></div>
+    </div>
+    ${!window._state.simInterval ? `
+    <div class="card" style="margin:16px;margin-top:0;border-style:dashed;border-color:var(--primary);background:rgba(0,200,150,0.06);" onclick="switchScreenStandalone('connexion')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;color:#00a878;">Connecter un appareil</div>
+          <div style="font-size:12px;color:#00a878;margin-top:2px;opacity:0.8;">Simulation ou GSM/WiFi</div>
+        </div>
+        <div style="font-size:18px;color:var(--primary);">›</div>
+      </div>
+    </div>` : ''}
+    <div style="height:90px;"></div>
+  `;
+  renderFab();
+  renderMenuIfOpen();
+}
+window.renderHomeScreen = renderHomeScreen;
+
+function renderFab(){
+  let fab = document.getElementById('fab-emergency');
+  if(fab) fab.remove();
+  fab = document.createElement('div');
+  fab.id = 'fab-emergency';
+  fab.className = 'fab';
+  fab.textContent = '!';
+  fab.onclick = ()=>switchTab('chat');
+  document.body.appendChild(fab);
+}
+
+window.toggleTheme = function(){
+  window._state.theme = window._state.theme==='light' ? 'dark' : 'light';
+  document.body.classList.toggle('dark', window._state.theme==='dark');
+  if(window._state.currentScreen==='home' || window._state.currentTab==='home') renderHomeScreen();
+  else switchTab(window._state.currentTab);
+};
+
+window.toggleMenu = function(open){
+  window._state.menuOpen = open;
+  renderMenuIfOpen();
+};
+
+function renderMenuIfOpen(){
+  let m = document.getElementById('menu-overlay');
+  if(m) m.remove();
+  if(!window._state.menuOpen) return;
+  const p = window._state.profile;
+  const items = [['Accueil','home'],['Mon Medecin','chat'],['Mes Donnees','vitaux'],['Connexion','connexion'],['Rappels','reminders'],['Reglages','profile']];
+  const overlay = document.createElement('div');
+  overlay.id = 'menu-overlay';
+  overlay.className = 'menu-overlay';
+  overlay.onclick = (e)=>{ if(e.target===overlay) toggleMenu(false); };
+  overlay.innerHTML = `
+    <div class="menu-panel">
+      <div class="menu-close" onclick="toggleMenu(false)">x</div>
+      <div style="font-size:11px;color:var(--text2);font-weight:700;letter-spacing:1px;margin-bottom:16px;">ASTHMA MONITORING</div>
+      ${items.map(([label,target])=>`<div class="menu-item" onclick="menuNavigate('${target}')">${label}</div>`).join('')}
+      <div class="menu-footer">
+        <div class="mn">${p?.name||'Patient'}</div>
+        <div class="mr">Patient - Asthmatique</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+window.menuNavigate = function(target){
+  toggleMenu(false);
+  if(target==='home') switchTab('home');
+  else if(target==='chat') switchTab('chat');
+  else if(target==='profile') switchTab('profile');
+  else switchScreenStandalone(target);
+};
+
+// ===== STANDALONE SCREENS (with back button) =====
+window.switchScreenStandalone = function(screen){
+  window._state.currentScreen = screen;
+  if(screen==='vitaux') renderVitauxScreen();
+  if(screen==='connexion') renderConnexionScreen();
+  if(screen==='reminders') renderRemindersScreen();
+};
+
+function screenHeader(title, sub){
+  return `
+  <div class="topbar">
+    <button class="back-btn" onclick="switchTab('home')">retour</button>
+    <div>
+      <h1 style="font-size:22px;">${title}</h1>
+      ${sub?`<div style="font-size:12px;color:var(--text2);">${sub}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderVitauxScreen(){
+  const sc = document.getElementById('screen-container');
+  const v = window._state.vitals;
+  sc.innerHTML = screenHeader('Mes Vitaux') + `
+    <div style="padding:16px;">
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">Statistiques actuelles</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><div class="vl" style="font-size:11px;color:var(--text2);">SpO2</div><div style="font-size:22px;font-weight:900;color:var(--primary);">${v.spo2||'--'}%</div></div>
+          <div><div class="vl" style="font-size:11px;color:var(--text2);">FC</div><div style="font-size:22px;font-weight:900;color:#d96a1f;">${v.hr||'--'} bpm</div></div>
+          <div><div class="vl" style="font-size:11px;color:var(--text2);">Temp</div><div style="font-size:22px;font-weight:900;color:#b88a00;">${v.temp!=null?v.temp.toFixed(1):'--'} C</div></div>
+          <div><div class="vl" style="font-size:11px;color:var(--text2);">Resp</div><div style="font-size:22px;font-weight:900;color:#7c3aed;">${v.resp||'--'}/min</div></div>
+        </div>
+      </div>
+      <div id="vitals-history" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+    <div style="height:80px;"></div>
+  `;
+}
+window.renderVitauxScreen = renderVitauxScreen;
+
+function renderConnexionScreen(){
+  const sc = document.getElementById('screen-container');
+  const connected = !!window._state.simInterval || !!window._state.gsmInterval;
+  sc.innerHTML = screenHeader('Connexion Appareil', 'Simulation - GSM/WiFi') + `
+    <div style="padding:16px;">
+      ${connected ? `
+      <div class="card" style="background:rgba(0,200,150,0.08);border-color:rgba(0,200,150,0.3);margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+        <div class="status-dot"></div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;color:#00a878;">${window._state.deviceName||'Appareil connecte'}</div>
+          <div style="font-size:11px;color:#00a878;">Actif</div>
+        </div>
+        <button onclick="disconnectDevice()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(214,48,74,0.25);color:#d6304a;font-size:12px;font-weight:700;">Deconnecter</button>
+      </div>` : ''}
+      <div class="card" style="margin-bottom:14px;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Mode Simulation</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Genere des donnees vitales aleatoires pour tester l'application</div>
+        <button class="btn-primary" style="width:100%;" onclick="startSimulation()">Demarrer Simulation</button>
+      </div>
+      <div class="card">
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;">GSM / WiFi (ESP32)</div>
+        <label class="field-label">URL de votre appareil</label>
+        <input class="input-field" id="gsm-url" placeholder="http://192.168.1.100:3000" value="http://192.168.1.100:3000">
+        <div style="font-size:11px;color:var(--text2);margin-top:-8px;margin-bottom:12px;">Format attendu: GET /vitals avec JSON contenant spo2, hr, temp, resp</div>
+        <button class="btn-primary" style="width:100%;" onclick="connectGSM()">Connecter via WiFi/GSM</button>
+      </div>
+    </div>
+    <div style="height:80px;"></div>
+  `;
+}
+window.renderConnexionScreen = renderConnexionScreen;
+
+function handleVitalsUpdate(v, source){
+  window._state.vitals = v;
+  const ALERT = {spo2:{critical:88, warning:92}};
+  if(v.spo2 < ALERT.spo2.critical) window._state.alertStatus = 'critical';
+  else if(v.spo2 < ALERT.spo2.warning) window._state.alertStatus = 'warning';
+  else window._state.alertStatus = 'normal';
+
+  const uid = window._state.user?.uid;
+  if(uid){
+    set(ref(rtdb, 'patients/'+uid+'/vitals'), {...v, timestamp: Date.now(), source});
+  }
+  if(window._state.currentTab==='home' && window._state.currentScreen==='home'){
+    renderHomeScreen();
+  }
+}
+
+window.startSimulation = function(){
+  if(window._state.simInterval) clearInterval(window._state.simInterval);
+  window._state.deviceName = 'Simulation';
+  const poll = ()=>handleVitalsUpdate({
+    spo2: 94+Math.floor(Math.random()*6),
+    hr: 65+Math.floor(Math.random()*30),
+    temp: +(36.2+Math.random()*0.9).toFixed(1),
+    resp: 13+Math.floor(Math.random()*7)
+  }, 'sim');
+  poll();
+  window._state.simInterval = setInterval(poll, 5000);
+  showToast('Simulation demarree');
+  renderConnexionScreen();
+};
+
+window.connectGSM = function(){
+  const url = document.getElementById('gsm-url').value;
+  if(!url.startsWith('http')){showToast('URL invalide');return;}
+  if(window._state.gsmInterval) clearInterval(window._state.gsmInterval);
+  window._state.deviceName = 'GSM '+url;
+  const poll = async()=>{
+    try{
+      const res = await fetch(url+'/vitals', {signal: AbortSignal.timeout(8000)});
+      if(res.ok){
+        const d = await res.json();
+        handleVitalsUpdate({spo2:+d.spo2, hr:+(d.hr||d.heartRate), temp:+(d.temp||d.temperature), resp:+(d.resp||d.respiratoryRate)}, 'gsm');
+      }
+    }catch(e){ showToast('Erreur GSM: verifiez la connexion'); }
+  };
+  poll();
+  window._state.gsmInterval = setInterval(poll, 30000);
+  showToast('Connexion GSM en cours...');
+  renderConnexionScreen();
+};
+
+window.disconnectDevice = function(){
+  if(window._state.simInterval){clearInterval(window._state.simInterval);window._state.simInterval=null;}
+  if(window._state.gsmInterval){clearInterval(window._state.gsmInterval);window._state.gsmInterval=null;}
+  window._state.deviceName = null;
+  showToast('Appareil deconnecte');
+  renderConnexionScreen();
+};
+
+function startVitalsListener(){
+  const uid = window._state.user?.uid;
+  if(!uid) return;
+}
+window.startVitalsListener = startVitalsListener;
+
+// ===== CHAT SCREEN (Medecin / Patients / Forum) =====
+window._chatState = { tab:'medecin', selected:null, selectedType:null, doctors:[], patients:[], posts:[], unsubMsg:null, activeCategory:'Tous' };
+
+function renderChatListScreen(){
+  window._state.currentScreen = 'chat-list';
+  const cs = window._chatState;
+  const sc = document.getElementById('screen-container');
+  sc.innerHTML = `
+    <div class="topbar"><h1>Messages</h1></div>
+    <div style="display:flex;padding:4px;border-radius:14px;margin:0 16px 12px;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+      <button onclick="setChatTab('medecin')" id="ct-medecin" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Mon Medecin</button>
+      <button onclick="setChatTab('patients')" id="ct-patients" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Patients</button>
+      <button onclick="setChatTab('forum')" id="ct-forum" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Forum</button>
+    </div>
+    <div id="chat-list-content" style="padding:0 16px;"></div>
+    <div style="height:90px;"></div>
+  `;
+  setChatTab(cs.tab);
+}
+window.renderChatListScreen = renderChatListScreen;
+
+window.setChatTab = async function(tab){
+  window._chatState.tab = tab;
+  ['medecin','patients','forum'].forEach(t=>{
+    const b = document.getElementById('ct-'+t);
+    if(b){ b.style.background = t===tab?'var(--primary)':'transparent'; b.style.color = t===tab?'white':'var(--text2)'; }
+  });
+  const content = document.getElementById('chat-list-content');
+  if(!content) return;
+  if(tab==='medecin'){
+    content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Chargement...</div>';
+    const snap = await getDocs(collection(db,'doctors'));
+    const docs = [];
+    snap.forEach(d=>docs.push({id:d.id, ...d.data()}));
+    window._chatState.doctors = docs;
+    if(docs.length===0){ content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucun medecin disponible</div>'; return; }
+    content.innerHTML = docs.map(d=>`
+      <div class="card" style="margin-bottom:10px;display:flex;align-items:center;gap:12px;" onclick="openChat('${d.id}','medecin','${(d.name||'').replace(/'/g,"")}')">
+        <div style="width:50px;height:50px;border-radius:25px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--primary);">${initials(d.name)}</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">${d.name||'Medecin'}</div>
+          <div style="font-size:12px;color:var(--primary);margin-top:1px;">${d.specialty||'Medecin'}</div>
+          <div style="font-size:11px;color:var(--text2);">${d.hospital||''}</div>
+        </div>
+        ${d.online?'<div style="padding:4px 8px;border-radius:12px;background:rgba(0,200,150,0.12);font-size:10px;font-weight:700;color:var(--primary);">En ligne</div>':'<div style="font-size:11px;color:var(--text2);">Hors ligne</div>'}
+      </div>
+    `).join('');
+  }
+  if(tab==='patients'){
+    content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Chargement...</div>';
+    const snap = await getDocs(collection(db,'patients'));
+    const docs = [];
+    snap.forEach(d=>{ if(d.id!==window._state.user.uid) docs.push({id:d.id, ...d.data()}); });
+    window._chatState.patients = docs;
+    if(docs.length===0){ content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucun autre patient</div>'; return; }
+    content.innerHTML = docs.map((p,i)=>{
+      const colors = ['#00c896','#d96a1f','#7c3aed','#b88a00','#d6304a'];
+      const c = colors[i%colors.length];
+      return `
+      <div class="card" style="margin-bottom:10px;display:flex;align-items:center;gap:12px;" onclick="openChat('${p.id}','patient','${(p.name||'').replace(/'/g,"")}')">
+        <div style="width:46px;height:46px;border-radius:23px;background:${c}20;display:flex;align-items:center;justify-content:center;font-weight:900;color:${c};">${initials(p.name)}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">${p.name}</div>
+          <div style="font-size:12px;color:var(--text2);">${p.severity||'Patient'} - ${p.ville||''}</div>
+        </div>
+        <div style="padding:5px 10px;border-radius:10px;background:rgba(0,200,150,0.12);font-size:11px;font-weight:700;color:var(--primary);">Message</div>
+      </div>`;
+    }).join('');
+  }
+  if(tab==='forum'){
+    renderForumTab(content);
+  }
+};
+
+async function renderForumTab(content){
+  content.innerHTML = `
+    <div class="card" style="margin-bottom:14px;">
+      <textarea class="input-field" id="forum-new-post" placeholder="Partagez votre experience..." style="min-height:60px;resize:none;"></textarea>
+      <div style="display:flex;gap:8px;overflow-x:auto;margin:10px 0;" id="forum-cat-picker">
+        ${['General','Pollution','Astuces Inhalateur','Alimentation','Sport'].map(c=>`<button onclick="setForumPostCategory('${c}')" data-cat="${c}" class="forum-cat-btn" style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid var(--border);">${c}</button>`).join('')}
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="sendForumPost()">Publier</button>
+    </div>
+    <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;">
+      ${['Tous','Pollution','Astuces Inhalateur','Alimentation','Sport','General'].map(c=>`<button onclick="setForumFilter('${c}')" data-filter="${c}" class="forum-filter-btn" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;border:1px solid var(--border);background:var(--card);">${c}</button>`).join('')}
+    </div>
+    <div id="forum-posts-list"></div>
+  `;
+  window._forumPostCategory = 'General';
+  setForumPostCategory('General');
+  setForumFilter('Tous');
+  const q = query(collection(db,'forum'), orderBy('createdAt','desc'), limit(50));
+  onSnapshot(q, (snap)=>{
+    const posts = [];
+    snap.forEach(d=>posts.push({id:d.id, ...d.data()}));
+    window._chatState.posts = posts;
+    renderForumPosts();
+  });
+}
+
+window.setForumPostCategory = function(c){
+  window._forumPostCategory = c;
+  document.querySelectorAll('.forum-cat-btn').forEach(b=>{
+    const active = b.dataset.cat===c;
+    b.style.background = active?'var(--primary)':'var(--bg)';
+    b.style.color = active?'white':'var(--text2)';
+  });
+};
+
+window.setForumFilter = function(c){
+  window._forumFilter = c;
+  document.querySelectorAll('.forum-filter-btn').forEach(b=>{
+    const active = b.dataset.filter===c;
+    b.style.background = active?'var(--primary)':'var(--card)';
+    b.style.color = active?'white':'var(--text2)';
+  });
+  renderForumPosts();
+};
+
+function renderForumPosts(){
+  const list = document.getElementById('forum-posts-list');
+  if(!list) return;
+  const filter = window._forumFilter||'Tous';
+  const colors = ['#00c896','#7c3aed','#d96a1f','#b88a00','#d6304a'];
+  const posts = filter==='Tous' ? window._chatState.posts : window._chatState.posts.filter(p=>p.category===filter);
+  if(posts.length===0){ list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucune publication</div>'; return; }
+  list.innerHTML = posts.map((p,i)=>{
+    const c = colors[i%colors.length];
+    const date = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('fr-FR') : 'Maintenant';
+    return `
+    <div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:36px;height:36px;border-radius:18px;background:${c}20;display:flex;align-items:center;justify-content:center;font-weight:900;color:${c};font-size:13px;">${initials(p.fromName||'U')}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;">${p.fromName||'Patient'}</div>
+          <div style="font-size:11px;color:var(--text2);">${date}</div>
+        </div>
+        ${p.category?`<div style="padding:3px 8px;border-radius:12px;background:rgba(0,200,150,0.1);font-size:10px;font-weight:700;color:var(--primary);">${p.category}</div>`:''}
+      </div>
+      <div style="font-size:14px;line-height:1.5;margin-bottom:12px;">${p.text}</div>
+      <div style="display:flex;gap:16px;border-top:1px solid var(--border);padding-top:10px;">
+        <button onclick="likeForumPost('${p.id}',${p.likes||0})" style="display:flex;align-items:center;gap:6px;">
+          <span style="color:#d6304a;font-size:16px;">v</span><span style="font-size:12px;color:var(--text2);">${p.likes||0}</span>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.sendForumPost = async function(){
+  const text = document.getElementById('forum-new-post').value.trim();
+  if(!text) return;
+  try{
+    await addDoc(collection(db,'forum'), {
+      text, from: window._state.user.uid, fromName: window._state.profile?.name||'Patient',
+      category: window._forumPostCategory||'General', likes:0, comments:0, createdAt: serverTimestamp()
+    });
+    document.getElementById('forum-new-post').value = '';
+    showToast('Publie !');
+  }catch(e){ showToast('Erreur de publication'); }
+};
+
+window.likeForumPost = async function(id, likes){
+  await updateDoc(doc(db,'forum',id), {likes: likes+1}).catch(()=>{});
+};
+
+function getChatId(otherId, type){
+  const uid = window._state.user.uid;
+  if(type==='medecin') return uid+'_'+otherId;
+  const ids = [uid, otherId].sort();
+  return ids[0]+'_'+ids[1];
+}
+
+window.openChat = function(otherId, type, otherName){
+  window._chatState.selected = {id:otherId, name:otherName};
+  window._chatState.selectedType = type;
+  window._state.currentScreen = 'chat-thread';
+  const chatId = getChatId(otherId, type);
+  const sc = document.getElementById('screen-container');
+  sc.innerHTML = `
+    <div style="display:flex;align-items:center;padding:14px;padding-top:50px;border-bottom:1px solid var(--border);background:var(--card);gap:10px;">
+      <button class="back-btn" onclick="renderChatListScreen()">retour</button>
+      <div style="width:40px;height:40px;border-radius:20px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--primary);">${initials(otherName)}</div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:700;">${otherName}</div></div>
+    </div>
+    <div id="chat-messages" style="padding:16px;display:flex;flex-direction:column;gap:8px;min-height:300px;"></div>
+    <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;align-items:center;padding:10px;border-top:1px solid var(--border);background:var(--card);gap:8px;">
+      <input class="input-field" id="chat-input" placeholder="Ecrire un message..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter')sendChatMsg()">
+      <button onclick="sendChatMsg()" style="width:44px;height:44px;border-radius:22px;background:var(--primary);color:white;font-size:18px;font-weight:900;flex-shrink:0;">›</button>
+    </div>
+    <div style="height:70px;"></div>
+  `;
+  if(window._chatState.unsubMsg) window._chatState.unsubMsg();
+  const msgRef = ref(rtdb, 'chats/'+chatId);
+  window._chatState.unsubMsg = onValue(msgRef, (snap)=>{
+    const d = snap.val();
+    const msgs = d ? Object.values(d).sort((a,b)=>a.timestamp-b.timestamp) : [];
+    renderChatMessages(msgs);
+  });
+};
+
+function renderChatMessages(msgs){
+  const c = document.getElementById('chat-messages');
+  if(!c) return;
+  const uid = window._state.user.uid;
+  c.innerHTML = msgs.length===0 ? '<div style="text-align:center;color:var(--text2);padding-top:40px;">Demarrez la conversation</div>' : msgs.map(m=>{
+    const isMe = m.from===uid;
+    const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `
+    <div style="max-width:82%;${isMe?'align-self:flex-end;':''}">
+      ${!isMe?`<div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:3px;">${m.fromName||''}</div>`:''}
+      <div style="border-radius:16px;padding:10px;background:${isMe?'var(--primary)':'rgba(0,200,150,0.1)'};color:${isMe?'white':'var(--text)'};${isMe?'border-bottom-right-radius:4px;':'border-bottom-left-radius:4px;'}">
+        <div style="font-size:14px;line-height:1.4;">${m.text}</div>
+        <div style="font-size:10px;margin-top:4px;text-align:right;color:${isMe?'rgba(255,255,255,0.7)':'var(--text2)'};">${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+window.sendChatMsg = async function(){
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const chatId = getChatId(window._chatState.selected.id, window._chatState.selectedType);
+  input.value = '';
+  await push(ref(rtdb,'chats/'+chatId), {
+    text, from: window._state.user.uid, fromName: window._state.profile?.name||'Patient', timestamp: Date.now()
+  });
+};
+
+// ===== IA SCREEN =====
+function renderAIScreen(){
+  window._state.currentScreen = 'ai';
+  const v = window._state.vitals;
+  const sc = document.getElementById('screen-container');
+  sc.innerHTML = `
+    <div class="topbar"><h1>Analyse IA</h1></div>
+    <div style="padding:16px;">
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;">Vos vitaux actuels</div>
+        <div style="font-size:13px;color:var(--text2);">SpO2: ${v.spo2||'--'}% - FC: ${v.hr||'--'} bpm - Temp: ${v.temp||'--'}C - Resp: ${v.resp||'--'}/min</div>
+      </div>
+      <div id="ai-messages" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">Questions suggerees</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button onclick="askAI('Comment sont mes vitaux actuellement ?')" style="text-align:left;padding:10px;border-radius:10px;background:var(--bg);font-size:13px;">Comment sont mes vitaux actuellement ?</button>
+          <button onclick="askAI('Que dois-je faire si ma SpO2 baisse ?')" style="text-align:left;padding:10px;border-radius:10px;background:var(--bg);font-size:13px;">Que dois-je faire si ma SpO2 baisse ?</button>
+          <button onclick="askAI('Conseils pour gerer mon asthme au quotidien')" style="text-align:left;padding:10px;border-radius:10px;background:var(--bg);font-size:13px;">Conseils pour gerer mon asthme au quotidien</button>
+        </div>
+      </div>
+    </div>
+    <div style="position:fixed;bottom:65px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;align-items:center;padding:10px;border-top:1px solid var(--border);background:var(--card);gap:8px;">
+      <input class="input-field" id="ai-input" placeholder="Posez votre question..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter')sendAIQuestion()">
+      <button onclick="sendAIQuestion()" style="width:44px;height:44px;border-radius:22px;background:var(--primary);color:white;font-size:18px;font-weight:900;flex-shrink:0;">›</button>
+    </div>
+  `;
+}
+window.renderAIScreen = renderAIScreen;
+window._aiHistory = [];
+
+window.askAI = function(q){
+  document.getElementById('ai-input').value = q;
+  sendAIQuestion();
+};
+
+window.sendAIQuestion = async function(){
+  const input = document.getElementById('ai-input');
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+  window._aiHistory.push({role:'user', text:q});
+  renderAIMessages();
+  try{
+    const v = window._state.vitals;
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:400,
+        messages:[{role:'user', content:`Tu es un assistant medical pour patients asthmatiques. Vitaux actuels: SpO2 ${v.spo2||'inconnu'}%, FC ${v.hr||'inconnu'} bpm, Temp ${v.temp||'inconnu'}C, Resp ${v.resp||'inconnu'}/min. Question du patient: ${q}. Reponds en francais, de maniere concise et bienveillante, sans jamais remplacer un avis medical professionnel.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(c=>c.text||'').join('') || "Je n'ai pas pu repondre, reessayez.";
+    window._aiHistory.push({role:'ai', text});
+  }catch(e){
+    window._aiHistory.push({role:'ai', text:"Erreur de connexion a l'assistant IA."});
+  }
+  renderAIMessages();
+};
+
+function renderAIMessages(){
+  const c = document.getElementById('ai-messages');
+  if(!c) return;
+  c.innerHTML = window._aiHistory.map(m=>`
+    <div style="max-width:88%;${m.role==='user'?'align-self:flex-end;':''}">
+      <div style="border-radius:14px;padding:12px;background:${m.role==='user'?'var(--primary)':'var(--card)'};color:${m.role==='user'?'white':'var(--text)'};border:${m.role==='ai'?'1px solid var(--border)':'none'};">
+        <div style="font-size:14px;line-height:1.5;">${m.text}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== REMINDERS / RDV / ORDONNANCES SCREEN =====
+window._remindersTab = 'rappels';
+window._localReminders = JSON.parse(localStorage.getItem('reminders')||'[]');
+
+function renderRemindersScreen(){
+  const sc = document.getElementById('screen-container');
+  sc.innerHTML = screenHeader('Suivi medical') + `
+    <div style="display:flex;padding:4px;border-radius:14px;margin:0 16px 12px;background:var(--card);">
+      <button onclick="setRemindersTab('rappels')" id="rt-rappels" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Rappels</button>
+      <button onclick="setRemindersTab('rdv')" id="rt-rdv" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Rendez-vous</button>
+      <button onclick="setRemindersTab('ordonnances')" id="rt-ordonnances" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Ordonnances</button>
+    </div>
+    <div id="reminders-content" style="padding:0 16px;"></div>
+    <div style="height:90px;"></div>
+  `;
+  setRemindersTab(window._remindersTab);
+}
+window.renderRemindersScreen = renderRemindersScreen;
+
+window.setRemindersTab = async function(tab){
+  window._remindersTab = tab;
+  ['rappels','rdv','ordonnances'].forEach(t=>{
+    const b = document.getElementById('rt-'+t);
+    if(b){ b.style.background = t===tab?'var(--primary)':'transparent'; b.style.color = t===tab?'white':'var(--text2)'; }
+  });
+  const content = document.getElementById('reminders-content');
+  if(tab==='rappels'){
+    content.innerHTML = `
+      <button class="btn-primary" style="width:100%;margin-bottom:14px;" onclick="addLocalReminder()">+ Ajouter un rappel</button>
+      <div id="reminders-list"></div>
+    `;
+    renderLocalReminders();
+  }
+  if(tab==='rdv'){
+    content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Chargement...</div>';
+    const uid = window._state.user.uid;
+    const q = query(collection(db,'rdvs'), where('patientId','==',uid), orderBy('date','asc'));
+    onSnapshot(q, (snap)=>{
+      const list = [];
+      snap.forEach(d=>list.push({id:d.id, ...d.data()}));
+      if(list.length===0){ content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucun rendez-vous</div>'; return; }
+      content.innerHTML = list.map(r=>`
+        <div class="card" style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:#7c3aed;">${r.date?r.date.split('-')[2]:'--'}</div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:700;">${r.date} a ${r.time}</div>
+              <div style="font-size:12px;color:var(--text2);">${r.doctorName||'Medecin'}</div>
+            </div>
+            <div style="padding:4px 10px;border-radius:10px;background:rgba(0,200,150,0.12);font-size:10px;font-weight:700;color:var(--primary);">${r.status||'confirme'}</div>
+          </div>
+          ${r.motif?`<div style="font-size:13px;color:var(--text2);margin-left:56px;">${r.motif}</div>`:''}
+        </div>
+      `).join('');
+    });
+  }
+  if(tab==='ordonnances'){
+    content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Chargement...</div>';
+    const uid = window._state.user.uid;
+    const q = query(collection(db,'ordonnances'), where('patientId','==',uid), orderBy('createdAt','desc'));
+    onSnapshot(q, (snap)=>{
+      const list = [];
+      snap.forEach(d=>list.push({id:d.id, ...d.data()}));
+      if(list.length===0){ content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucune ordonnance</div>'; return; }
+      content.innerHTML = list.map(o=>`
+        <div class="card" style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(217,106,31,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:#d96a1f;font-size:13px;">Rx</div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:700;">${o.med}</div>
+              <div style="font-size:12px;color:var(--text2);">${o.dosage} - ${o.duration}</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-left:56px;">${o.date} - ${o.doctorName||'Medecin'}</div>
+        </div>
+      `).join('');
+    });
+  }
+};
+
+window.addLocalReminder = function(){
+  const med = prompt('Nom du medicament :');
+  if(!med) return;
+  const time = prompt('Heure (ex: 08:00) :', '08:00');
+  const r = {id:'r'+Date.now(), med, time:time||'08:00', freq:'1x/jour', active:true};
+  window._localReminders.push(r);
+  localStorage.setItem('reminders', JSON.stringify(window._localReminders));
+  renderLocalReminders();
+};
+
+function renderLocalReminders(){
+  const list = document.getElementById('reminders-list');
+  if(!list) return;
+  if(window._localReminders.length===0){ list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucun rappel</div>'; return; }
+  list.innerHTML = window._localReminders.map(r=>`
+    <div class="card" style="margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--primary);">M</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;">${r.med}</div>
+        <div style="font-size:12px;color:var(--text2);">${r.time} - ${r.freq}</div>
+      </div>
+      <button onclick="deleteLocalReminder('${r.id}')" style="color:#d6304a;font-size:16px;">x</button>
+    </div>
+  `).join('');
+}
+
+window.deleteLocalReminder = function(id){
+  window._localReminders = window._localReminders.filter(r=>r.id!==id);
+  localStorage.setItem('reminders', JSON.stringify(window._localReminders));
+  renderLocalReminders();
+};
+
+// ===== PROFILE SCREEN =====
+function renderProfileScreen(){
+  window._state.currentScreen = 'profile';
+  const p = window._state.profile;
+  const sc = document.getElementById('screen-container');
+  sc.innerHTML = `
+    <div class="topbar"><h1>Reglages</h1></div>
+    <div style="text-align:center;padding:20px 0;">
+      <div style="width:80px;height:80px;border-radius:40px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:3px solid var(--primary);font-size:28px;font-weight:900;color:var(--primary);">${initials(p?.name)}</div>
+      <div style="font-size:18px;font-weight:900;">${p?.name||'Patient'}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:2px;">${p?.email||''}</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+        <div style="padding:4px 12px;border-radius:20px;background:rgba(0,200,150,0.12);font-size:11px;font-weight:700;color:var(--primary);">${p?.severity||'Modere persistant'}</div>
+        <div style="padding:4px 12px;border-radius:20px;background:var(--border);font-size:11px;font-weight:700;color:var(--text2);">${p?.ville||'Yaounde'}</div>
+      </div>
+    </div>
+    <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);margin-bottom:16px;">
+      <div onclick="editProfile()" style="display:flex;align-items:center;padding:16px;border-bottom:1px solid var(--border);">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:var(--primary);">P</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Profil</div><div style="font-size:12px;color:var(--text2);">Modifier vos informations</div></div>
+        <div style="color:var(--text2);">›</div>
+      </div>
+      <div onclick="toggleTheme()" style="display:flex;align-items:center;padding:16px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:#7c3aed;">T</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Mode sombre</div><div style="font-size:12px;color:var(--text2);">Changer l'apparence</div></div>
+        <div style="color:var(--text2);">${window._state.theme==='dark'?'On':'Off'}</div>
+      </div>
+    </div>
+    <div style="margin:16px;border-radius:16px;border:1px solid #fde8ec;background:rgba(214,48,74,0.06);padding:16px;">
+      <div style="font-size:12px;font-weight:700;color:#d6304a;margin-bottom:12px;">Zone de danger</div>
+      <button onclick="doLogout()" style="width:100%;background:#d6304a;border-radius:12px;padding:14px;color:white;font-weight:900;font-size:15px;">Se deconnecter</button>
+    </div>
+    <div style="height:90px;"></div>
+  `;
+}
+window.renderProfileScreen = renderProfileScreen;
+
+window.editProfile = async function(){
+  const p = window._state.profile;
+  const name = prompt('Nom complet :', p?.name||'');
+  if(name===null) return;
+  const phone = prompt('Telephone :', p?.phone||'');
+  const ville = prompt('Ville :', p?.ville||'');
+  try{
+    await updateDoc(doc(db,'patients',window._state.user.uid), {name, phone, ville});
+    window._state.profile = {...p, name, phone, ville};
+    showToast('Profil mis a jour !');
+    renderProfileScreen();
+  }catch(e){ showToast('Impossible de sauvegarder'); }
+};
+
+// ===== PARENT MODE =====
+window._parentVitals = {spo2:null, hr:null, temp:null, resp:null};
+window._parentOnline = false;
+
+function renderParentApp(){
+  document.body.classList.toggle('dark', window._state.theme==='dark');
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <div id="screen-container"></div>
+    <div class="tabbar">
+      <button data-tab="suivi" onclick="switchParentTab('suivi')" class="active"><div class="tab-icon">S</div><div class="tab-label">Suivi</div></button>
+      <button data-tab="forum" onclick="switchParentTab('forum')"><div class="tab-icon">F</div><div class="tab-label">Forum</div></button>
+      <button data-tab="alertes" onclick="switchParentTab('alertes')"><div class="tab-icon">A</div><div class="tab-label">Alertes</div></button>
+    </div>
+  `;
+  switchParentTab('suivi');
+}
+window.renderParentApp = renderParentApp;
+
+window.switchParentTab = function(tab){
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  if(tab==='suivi') renderParentSuiviScreen();
+  if(tab==='forum'){ const sc=document.getElementById('screen-container'); sc.innerHTML='<div class="topbar"><h1>Forum</h1></div><div id="forum-host" style="padding:0 16px;"></div><div style="height:90px;"></div>'; renderForumTab(document.getElementById('forum-host')); }
+  if(tab==='alertes') renderParentAlertsScreen();
+};
+
+async function renderParentSuiviScreen(){
+  const p = window._state.profile;
+  const linkedId = p?.linkedPatientId;
+  const sc = document.getElementById('screen-container');
+  if(!linkedId){
+    sc.innerHTML = `<div class="topbar"><h1>Suivi</h1></div><div style="padding:40px;text-align:center;color:var(--text2);">Aucun patient lie a votre compte.</div>`;
+    return;
+  }
+  let patientInfo = window._parentPatientInfo;
+  if(!patientInfo){
+    const snap = await getDoc(doc(db,'patients',linkedId));
+    patientInfo = snap.exists() ? snap.data() : null;
+    window._parentPatientInfo = patientInfo;
+  }
+  const v = window._parentVitals;
+  const spo2Color = !v.spo2?'#8093a3':v.spo2<88?'#d6304a':v.spo2<92?'#d96a1f':'#00c896';
+  sc.innerHTML = `
+    <div class="topbar"><h1>Suivi</h1><button class="icon-btn" onclick="toggleTheme()">${window._state.theme==='light'?'N':'J'}</button></div>
+    <div style="padding:0 16px;">
+      <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:48px;height:48px;border-radius:24px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--primary);">${initials(patientInfo?.name)}</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">Vous suivez ${patientInfo?.name||'...'}</div>
+          <div style="font-size:12px;color:${window._parentOnline?'var(--primary)':'var(--text2)'};">${window._parentOnline?'Connecte maintenant':'Hors ligne'}</div>
+        </div>
+        <div style="width:10px;height:10px;border-radius:5px;background:${window._parentOnline?'var(--primary)':'var(--border)'};"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <div class="vital-box"><div class="vl">SpO2</div><div class="vv" style="color:${spo2Color};">${v.spo2||'--'}%</div></div>
+        <div class="vital-box"><div class="vl">FC</div><div class="vv" style="color:#d96a1f;">${v.hr||'--'} bpm</div></div>
+      </div>
+      <div style="background:${v.spo2&&v.spo2<92?'rgba(214,48,74,0.08)':'rgba(0,200,150,0.08)'};border-radius:14px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:${v.spo2&&v.spo2<92?'#d6304a':'#00a878'};">${v.spo2&&v.spo2<92?'Attention: SpO2 basse':'Aucune alerte actuellement'}</div>
+      </div>
+      <button onclick="callEmergency()" style="width:100%;background:#d6304a;border-radius:14px;padding:16px;color:white;font-weight:900;font-size:15px;">Appeler en cas d'urgence</button>
+    </div>
+    <div style="height:90px;"></div>
+  `;
+  const vitalsRef = ref(rtdb, 'patients/'+linkedId+'/vitals');
+  onValue(vitalsRef, (snap)=>{
+    const data = snap.val();
+    if(data){
+      window._parentVitals = data;
+      window._parentOnline = (Date.now()-(data.timestamp||0)) < 60000;
+      if(window._state.currentTab!=='chat' && document.querySelector('.topbar h1')?.textContent==='Suivi'){
+        renderParentSuiviScreen();
+      }
+    }
+  });
+}
+window.renderParentSuiviScreen = renderParentSuiviScreen;
+
+window.callEmergency = function(){
+  const phone = window._parentPatientInfo?.phone;
+  if(confirm("Contacter "+(window._parentPatientInfo?.name||'votre proche')+" maintenant ?")){
+    if(phone) window.location.href = 'tel:'+phone;
+    else showToast('Numero non disponible');
+  }
+};
+
+window._parentAlertHistory = [];
+function renderParentAlertsScreen(){
+  const sc = document.getElementById('screen-container');
+  const alerts = window._parentAlertHistory.filter(a=>a.critical||a.warning);
+  sc.innerHTML = `
+    <div class="topbar"><h1>Historique des alertes</h1></div>
+    <div style="padding:0 16px;">
+      ${alerts.length===0 ? `<div style="text-align:center;padding:60px 20px;color:var(--text2);">Aucune alerte</div>` :
+        alerts.map(a=>`
+        <div class="card" style="margin-bottom:10px;display:flex;align-items:center;gap:12px;border-color:${a.critical?'#d6304a40':'#d96a1f40'};">
+          <div style="width:36px;height:36px;border-radius:18px;background:${a.critical?'rgba(214,48,74,0.12)':'rgba(217,106,31,0.12)'};display:flex;align-items:center;justify-content:center;font-weight:900;color:${a.critical?'#d6304a':'#d96a1f'};">!</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">SpO2 ${a.critical?'critique':'basse'}: ${a.spo2}%</div>
+            <div style="font-size:12px;color:var(--text2);">${new Date(a.timestamp).toLocaleString('fr-FR')}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="height:90px;"></div>
+  `;
+}
+window.renderParentAlertsScreen = renderParentAlertsScreen;
+
+renderAuth();
+</script>
+</body>
+</html>
+
