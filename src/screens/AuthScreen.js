@@ -1,23 +1,51 @@
-import React,{useState}from"react";
-import{View,Text,StyleSheet,TextInput,TouchableOpacity,KeyboardAvoidingView,Platform,ScrollView,Alert,ActivityIndicator,StatusBar}from"react-native";
+﻿import React,{useState,useEffect}from"react";
+import{View,Text,StyleSheet,TextInput,TouchableOpacity,KeyboardAvoidingView,Platform,ScrollView,Alert,ActivityIndicator,StatusBar,Modal,FlatList}from"react-native";
 import auth from"@react-native-firebase/auth";
 import firestore from"@react-native-firebase/firestore";
 import{useStore}from"../store/useStore";
+const VILLES=["Yaounde","Douala","Bafoussam","Garoua","Bamenda","Maroua","Ngaoundere","Bertoua","Ebolowa","Buea"];
 export default function AuthScreen(){
   const[mode,setMode]=useState("login");
   const[name,setName]=useState("");
   const[prenom,setPrenom]=useState("");
   const[age,setAge]=useState("");
-  const[ville,setVille]=useState("");
+  const[ville,setVille]=useState("Yaounde");
+  const[villePicker,setVillePicker]=useState(false);
   const[email,setEmail]=useState("");
   const[password,setPass]=useState("");
   const[showPass,setShowPass]=useState(false);
   const[phone,setPhone]=useState("");
   const[parentPhone,setParentPhone]=useState("");
-  const[doctorEmail,setDoctorEmail]=useState("");
+  const[selectedDoctor,setSelectedDoctor]=useState(null);
+  const[doctorPicker,setDoctorPicker]=useState(false);
+  const[availableDoctors,setAvailableDoctors]=useState([]);
+  const[loadingDoctors,setLoadingDoctors]=useState(false);
   const[accountType,setAccountType]=useState("patient");
   const[loading,setLoading]=useState(false);
   const{setUserProfile,setUser}=useStore();
+
+  useEffect(()=>{
+    if(accountType==="patient"){
+      fetchAvailableDoctors(ville);
+    }
+  },[ville,accountType]);
+
+  const fetchAvailableDoctors=async(v)=>{
+    setLoadingDoctors(true);
+    setSelectedDoctor(null);
+    try{
+      const snap=await firestore().collection("doctors").where("ville","==",v).get();
+      const list=[];
+      snap.forEach(d=>{
+        const data=d.data();
+        const count=data.patientCount||0;
+        if(count<7)list.push({id:d.id,...data,patientCount:count});
+      });
+      setAvailableDoctors(list);
+    }catch(e){setAvailableDoctors([]);}
+    finally{setLoadingDoctors(false);}
+  };
+
   const doLogin=async()=>{
     if(!email||!password){Alert.alert("Champs requis");return;}
     setLoading(true);
@@ -32,24 +60,27 @@ export default function AuthScreen(){
     }catch(e){Alert.alert("Erreur",e.code==="auth/wrong-password"||e.code==="auth/invalid-credential"?"Email ou mot de passe incorrect":"Erreur connexion");}
     finally{setLoading(false);}
   };
+
   const doRegisterPatient=async()=>{
     if(!name||!email||!password){Alert.alert("Remplissez tous les champs");return;}
     if(password.length<6){Alert.alert("Mot de passe trop court");return;}
+    if(!selectedDoctor){Alert.alert("Choisissez un medecin","Selectionnez un medecin disponible dans votre ville");return;}
     setLoading(true);
     try{
       const c=await auth().createUserWithEmailAndPassword(email.trim(),password);
-      const p={name:name+" "+prenom,firstName:prenom,lastName:name,age:age||"--",ville:ville||"Yaounde",email:email.trim(),phone,uid:c.user.uid,role:"patient",severity:"Modere persistant",online:true,doctorEmail:doctorEmail||"",createdAt:firestore.FieldValue.serverTimestamp()};
+      const p={name:name+" "+prenom,firstName:prenom,lastName:name,age:age||"--",ville,email:email.trim(),phone,uid:c.user.uid,role:"patient",severity:"Modere persistant",online:true,doctorId:selectedDoctor.id,doctorEmail:selectedDoctor.email||"",doctorName:selectedDoctor.name||"",createdAt:firestore.FieldValue.serverTimestamp()};
       await firestore().collection("patients").doc(c.user.uid).set(p);
+      await firestore().collection("doctors").doc(selectedDoctor.id).update({patientCount:firestore.FieldValue.increment(1)});
       setUserProfile(p);
     }catch(e){Alert.alert("Erreur",e.code==="auth/email-already-in-use"?"Email deja utilise":"Erreur creation");}
     finally{setLoading(false);}
   };
+
   const doRegisterParent=async()=>{
     if(!name||!email||!password||!parentPhone){Alert.alert("Remplissez tous les champs, y compris votre numero");return;}
     if(password.length<6){Alert.alert("Mot de passe trop court");return;}
     setLoading(true);
     try{
-      // Search for a patient whose emergency phone matches this parent's phone
       const cleanPhone=parentPhone.replace(/\s/g,"");
       const patientsSnap=await firestore().collection("patients").get();
       let linkedPatient=null;
@@ -74,6 +105,7 @@ export default function AuthScreen(){
     finally{setLoading(false);}
   };
   const doRegister=()=>accountType==="patient"?doRegisterPatient():doRegisterParent();
+
   if(mode==="login"){return(
     <KeyboardAvoidingView style={s.c} behavior={Platform.OS==="ios"?"padding":"height"}>
       <StatusBar barStyle="dark-content" backgroundColor="#f4f7fb"/>
@@ -128,10 +160,17 @@ export default function AuthScreen(){
             <View style={{flex:1}}><Text style={s.fl}>Prenom</Text><TextInput style={s.input} value={prenom} onChangeText={setPrenom} placeholder="Ines" placeholderTextColor="#aaa"/></View>
           </View>
           {accountType==="patient"&&(
-            <View style={{flexDirection:"row",gap:10}}>
-              <View style={{flex:1}}><Text style={s.fl}>Age</Text><TextInput style={s.input} value={age} onChangeText={setAge} placeholder="25" placeholderTextColor="#aaa" keyboardType="numeric"/></View>
-              <View style={{flex:1}}><Text style={s.fl}>Ville</Text><TextInput style={s.input} value={ville} onChangeText={setVille} placeholder="Yaounde" placeholderTextColor="#aaa"/></View>
-            </View>
+            <>
+              <View style={{flexDirection:"row",gap:10}}>
+                <View style={{flex:1}}><Text style={s.fl}>Age</Text><TextInput style={s.input} value={age} onChangeText={setAge} placeholder="25" placeholderTextColor="#aaa" keyboardType="numeric"/></View>
+                <View style={{flex:1}}>
+                  <Text style={s.fl}>Ville</Text>
+                  <TouchableOpacity style={s.input} onPress={()=>setVillePicker(true)}>
+                    <Text style={{color:"#16242f",fontSize:15}}>{ville}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </>
           )}
           <Text style={s.fl}>Email</Text>
           <TextInput style={s.input} value={email} onChangeText={setEmail} placeholder="email@gmail.com" placeholderTextColor="#aaa" keyboardType="email-address" autoCapitalize="none"/>
@@ -147,8 +186,19 @@ export default function AuthScreen(){
               <Text style={s.fl}>Numero d'urgence (Parent)</Text>
               <TextInput style={s.input} value={phone} onChangeText={setPhone} placeholder="683271688" placeholderTextColor="#aaa" keyboardType="phone-pad"/>
               <Text style={s.fh}>Ce numero permettra a votre proche de se connecter et suivre vos donnees</Text>
-              <Text style={[s.fl,{marginTop:14}]}>Email de votre medecin</Text>
-              <TextInput style={[s.input,doctorEmail&&{borderColor:"#00c896"}]} value={doctorEmail} onChangeText={setDoctorEmail} placeholder="medecin@hopital.cm" placeholderTextColor="#aaa" keyboardType="email-address" autoCapitalize="none"/>
+              <Text style={[s.fl,{marginTop:14}]}>Medecin (dans votre ville)</Text>
+              <TouchableOpacity style={[s.input,{minHeight:50,justifyContent:"center"}]} onPress={()=>setDoctorPicker(true)}>
+                {loadingDoctors?(
+                  <ActivityIndicator size="small" color="#00c896"/>
+                ):selectedDoctor?(
+                  <View>
+                    <Text style={{color:"#16242f",fontSize:14,fontWeight:"700"}}>{selectedDoctor.name}</Text>
+                    <Text style={{color:"#50657a",fontSize:12}}>{selectedDoctor.specialty} - {selectedDoctor.hospital}</Text>
+                  </View>
+                ):(
+                  <Text style={{color:"#aaa",fontSize:14}}>{availableDoctors.length===0?"Aucun medecin disponible dans cette ville":"Selectionner un medecin"}</Text>
+                )}
+              </TouchableOpacity>
             </>
           ):(
             <>
@@ -165,6 +215,43 @@ export default function AuthScreen(){
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <Modal visible={villePicker} transparent animationType="slide" onRequestClose={()=>setVillePicker(false)}>
+        <View style={{flex:1,backgroundColor:"rgba(0,0,0,0.5)",justifyContent:"flex-end"}}>
+          <View style={{backgroundColor:"white",borderTopLeftRadius:24,borderTopRightRadius:24,maxHeight:"60%"}}>
+            <Text style={{fontSize:18,fontWeight:"900",padding:20,paddingBottom:10}}>Choisir une ville</Text>
+            <FlatList data={VILLES} keyExtractor={v=>v} renderItem={({item})=>(
+              <TouchableOpacity style={{padding:16,borderBottomWidth:1,borderBottomColor:"#eef2f7"}} onPress={()=>{setVille(item);setVillePicker(false);}}>
+                <Text style={{fontSize:15,color:"#16242f",fontWeight:ville===item?"800":"400"}}>{item}</Text>
+              </TouchableOpacity>
+            )}/>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={doctorPicker} transparent animationType="slide" onRequestClose={()=>setDoctorPicker(false)}>
+        <View style={{flex:1,backgroundColor:"rgba(0,0,0,0.5)",justifyContent:"flex-end"}}>
+          <View style={{backgroundColor:"white",borderTopLeftRadius:24,borderTopRightRadius:24,maxHeight:"70%",padding:20}}>
+            <Text style={{fontSize:18,fontWeight:"900",marginBottom:14}}>Medecins a {ville}</Text>
+            {availableDoctors.length===0?(
+              <Text style={{color:"#50657a",textAlign:"center",paddingVertical:30}}>Aucun medecin disponible actuellement dans cette ville</Text>
+            ):(
+              <FlatList data={availableDoctors} keyExtractor={d=>d.id} renderItem={({item})=>(
+                <TouchableOpacity style={{padding:14,borderBottomWidth:1,borderBottomColor:"#eef2f7",flexDirection:"row",alignItems:"center",justifyContent:"space-between"}} onPress={()=>{setSelectedDoctor(item);setDoctorPicker(false);}}>
+                  <View>
+                    <Text style={{fontSize:15,fontWeight:"700",color:"#16242f"}}>{item.name}</Text>
+                    <Text style={{fontSize:12,color:"#50657a"}}>{item.specialty} - {item.hospital}</Text>
+                  </View>
+                  <Text style={{fontSize:11,color:"#00c896",fontWeight:"700"}}>{item.patientCount}/7</Text>
+                </TouchableOpacity>
+              )}/>
+            )}
+            <TouchableOpacity onPress={()=>setDoctorPicker(false)} style={{marginTop:14,padding:14,alignItems:"center"}}>
+              <Text style={{color:"#50657a",fontWeight:"700"}}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -183,4 +270,3 @@ const s=StyleSheet.create({
   btn:{backgroundColor:"#00c896",borderRadius:14,padding:16,alignItems:"center",marginTop:4,elevation:4},
   btnTxt:{color:"white",fontWeight:"900",fontSize:14,letterSpacing:0.5},
 });
-

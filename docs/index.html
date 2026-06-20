@@ -793,6 +793,9 @@ canvas { width: 100% !important; }
         <div class="nav-item" onclick="showPage('ordonnances')">
           <span class="nav-icon">📋</span> Ordonnances
         </div>
+        <div class="nav-item" onclick="showPage('notes')">
+          <span class="nav-icon">📝</span> Notes medicales
+        </div>
         <div class="nav-item" onclick="showPage('reminders')">
           <span class="nav-icon">⏰</span> Rappels
         </div>
@@ -1157,6 +1160,34 @@ canvas { width: 100% !important; }
             <div class="card-title text-muted" style="margin-bottom:16px">📜 HISTORIQUE ORDONNANCES</div>
             <div id="ord-history">
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTES MEDICALES PAGE -->
+      <div class="page" id="page-notes">
+        <div class="page-header">
+          <div class="page-title">NOTES MEDICALES</div>
+          <div class="page-sub">Observations visibles par le patient et son proche</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title text-muted" style="margin-bottom:20px">📝 NOUVELLE NOTE</div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Patient</label>
+              <select class="form-select" id="note-patient">
+                <option value="">Sélectionner...</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Observation</label>
+              <textarea class="form-textarea" id="note-text" placeholder="Etat general stable, continuer le traitement actuel..." style="min-height:140px"></textarea>
+            </div>
+            <button class="btn btn-teal" style="width:100%" onclick="addMedicalNote()">📝 Enregistrer la note</button>
+          </div>
+          <div class="card">
+            <div class="card-title text-muted" style="margin-bottom:16px">📜 HISTORIQUE DES NOTES</div>
+            <div id="notes-history"></div>
           </div>
         </div>
       </div>
@@ -1921,11 +1952,53 @@ function renderOrdonnances() {
 }
 
 function populatePatientSelects() {
-  ['ord-patient','rem-patient','rdv-patient'].forEach(id => {
+  ['ord-patient','rem-patient','rdv-patient','note-patient'].forEach(id => {
     const sel = document.getElementById(id);
     if(sel) sel.innerHTML = '<option value="">Sélectionner...</option>' +
       window._patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   });
+}
+
+window.addMedicalNote = async function() {
+  const patientId = document.getElementById('note-patient').value;
+  const text = document.getElementById('note-text').value.trim();
+  if(!patientId || !text) { showToast('Selectionnez un patient et ecrivez une note','error'); return; }
+  const p = window._patients.find(x => x.id === patientId);
+  const patientName = p ? p.name : 'Patient inconnu';
+  try {
+    await addDoc(collection(db,'medicalNotes'), {
+      patientId, patientName, text,
+      createdAt: serverTimestamp(),
+      doctorId: window._currentUser?.uid,
+      doctorName: window._doctorName || 'Médecin'
+    });
+    document.getElementById('note-text').value = '';
+    showToast('✅ Note enregistree et synchronisee!', 'success');
+    renderNotesHistory();
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur enregistrement note', 'error');
+  }
+};
+
+function renderNotesHistory() {
+  const el = document.getElementById('notes-history');
+  if(!el) return;
+  el.innerHTML = '<div class="text-muted" style="padding:20px;text-align:center">Chargement...</div>';
+  getDocs(query(collection(db,'medicalNotes'), orderBy('createdAt','desc'), limit(30))).then(snap=>{
+    const notes = [];
+    snap.forEach(d=>notes.push({id:d.id, ...d.data()}));
+    if(notes.length===0){ el.innerHTML = '<div class="text-muted" style="padding:20px;text-align:center">Aucune note</div>'; return; }
+    el.innerHTML = notes.map(n=>`
+      <div style="padding:14px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <strong>${n.patientName}</strong>
+          <span class="text-muted" style="font-size:12px;">${n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('fr-FR') : ''}</span>
+        </div>
+        <div style="font-size:14px;">${n.text}</div>
+      </div>
+    `).join('');
+  }).catch(()=>{ el.innerHTML = '<div class="text-muted" style="padding:20px;text-align:center">Erreur de chargement</div>'; });
 }
 
 window.emitOrdonnance = async function() {
@@ -2103,6 +2176,7 @@ window.showPage = function(page) {
   if(page==='alerts') renderAlerts();
   if(page==='medications') renderRdv();
   if(page==='ordonnances') { renderOrdonnances(); populatePatientSelects(); }
+  if(page==='notes') { renderNotesHistory(); populatePatientSelects(); }
   if(page==='reminders') { renderReminders(); populatePatientSelects(); }
 };
 
