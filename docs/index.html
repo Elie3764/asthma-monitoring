@@ -1369,8 +1369,10 @@ window.doRegister = async function() {
   document.getElementById('reg-btn-text').innerHTML = '<span class="loading-spinner"></span>';
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-    await setDoc(doc(db, 'medecins', cred.user.uid), {
-      name, email, role: 'medecin', createdAt: serverTimestamp(), institution: 'ENSP Yaoundé'
+    await setDoc(doc(db, 'doctors', cred.user.uid), {
+      name, email, uid: cred.user.uid, role: 'doctor', online: true,
+      specialty: 'Medecin generaliste', hospital: 'ENSP Yaounde',
+      createdAt: serverTimestamp()
     });
     showToast('✅ Compte créé avec succès!', 'success');
   } catch(e) {
