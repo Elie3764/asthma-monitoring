@@ -1,14 +1,12 @@
-import React,{useState,useRef,useEffect}from"react";
-import{View,Text,StyleSheet,FlatList,TouchableOpacity,TextInput,Alert,ActivityIndicator,StatusBar,PermissionsAndroid,Platform}from"react-native";
+ï»¿import React,{useState,useRef,useEffect}from"react";
+import{View,Text,FlatList,TouchableOpacity,TextInput,Alert,ActivityIndicator,StatusBar,PermissionsAndroid,Platform}from"react-native";
 import{BleManager}from"react-native-ble-plx";
 import{Buffer}from"buffer";
 import database from"@react-native-firebase/database";
 import{useStore}from"../store/useStore";
-import{getTheme}from"../utils/theme";
 import{ALERT_THRESHOLDS}from"../services/firebase";
 
-let ble=null;
-const getBle=()=>{if(!ble)ble=new BleManager();return ble;};
+const ble=new BleManager();
 const HR_SERVICE="0000180d-0000-1000-8000-00805f9b34fb";
 const HR_CHAR="00002a37-0000-1000-8000-00805f9b34fb";
 const SPO2_SERVICE="00001822-0000-1000-8000-00805f9b34fb";
@@ -35,7 +33,7 @@ export default function WatchScreen({navigation}){
   const bleDevice=useRef(null);
 
   useEffect(()=>()=>{
-    getBle().stopDeviceScan();
+    ble.stopDeviceScan();
     if(gsmT.current)clearInterval(gsmT.current);
     if(simT.current)clearInterval(simT.current);
     if(bleDevice.current)bleDevice.current.cancelConnection().catch(()=>{});
@@ -56,28 +54,27 @@ export default function WatchScreen({navigation}){
     setScanning(true);
     setDevices([]);
     const found=new Set();
-    getBle().startDeviceScan(null,{allowDuplicates:false},(err,dev)=>{
-      if(err){setScanning(false);Alert.alert("Erreur BLE",err.message);return;}
+    ble.startDeviceScan(null,{allowDuplicates:false},(err,dev)=>{
+      if(err){setScanning(false);Alert.alert("Erreur Bluetooth",err.message);return;}
       if(!dev||found.has(dev.id))return;
       found.add(dev.id);
       setDevices(p=>[...p,{id:dev.id,name:dev.name||dev.localName||"Appareil inconnu",rssi:dev.rssi||0,raw:dev}]);
     });
-    setTimeout(()=>{getBle().stopDeviceScan();setScanning(false);},15000);
+    setTimeout(()=>{ble.stopDeviceScan();setScanning(false);},15000);
   };
 
   const connectBLE=async(item)=>{
-    getBle().stopDeviceScan();
+    ble.stopDeviceScan();
     setScanning(false);
     setConnecting(true);
     try{
-      const dev=await getBle().connectToDevice(item.id,{autoConnect:false});
+      const dev=await ble.connectToDevice(item.id,{autoConnect:false});
       await dev.discoverAllServicesAndCharacteristics();
       bleDevice.current=dev;
       setConnectedDevice({id:item.id,name:item.name},"ble");
       setConnecting(false);
-      Alert.alert("Connecte !",item.name+" est connecte.");
+      Alert.alert("Connecte","L'appareil "+item.name+" est connecte.");
 
-      // Subscribe to Heart Rate
       dev.monitorCharacteristicForService(HR_SERVICE,HR_CHAR,(err,char)=>{
         if(err||!char)return;
         try{
@@ -89,7 +86,6 @@ export default function WatchScreen({navigation}){
         }catch{}
       });
 
-      // Subscribe to SpO2
       dev.monitorCharacteristicForService(SPO2_SERVICE,SPO2_CHAR,(err,char)=>{
         if(err||!char)return;
         try{
@@ -100,13 +96,11 @@ export default function WatchScreen({navigation}){
         }catch{}
       });
 
-      // Battery level
       try{
         const bat=await dev.readCharacteristicForService(BATTERY_SERVICE,BATTERY_CHAR);
         if(bat){const b=Buffer.from(bat.value,"base64")[0];setBleVitals(v=>({...v,battery:b}));}
       }catch{}
 
-      // Disconnect handler
       dev.onDisconnected(()=>{
         setBleVitals({hr:null,spo2:null,battery:null});
         disconnect();
@@ -153,8 +147,8 @@ export default function WatchScreen({navigation}){
     gsmT.current=setInterval(poll,30000);
   };
 
-  const doDisconnect=()=>Alert.alert("Deconnecter ?","",[{text:"Annuler",style:"cancel"},{text:"Oui",style:"destructive",onPress:()=>{
-    getBle().stopDeviceScan();
+  const doDisconnect=()=>Alert.alert("Deconnecter","Voulez-vous deconnecter cet appareil ?",[{text:"Annuler",style:"cancel"},{text:"Oui",style:"destructive",onPress:()=>{
+    ble.stopDeviceScan();
     if(bleDevice.current)bleDevice.current.cancelConnection().catch(()=>{});
     if(gsmT.current)clearInterval(gsmT.current);
     if(simT.current)clearInterval(simT.current);
@@ -170,11 +164,11 @@ export default function WatchScreen({navigation}){
       <StatusBar barStyle={isLight?"dark-content":"light-content"} backgroundColor={bg}/>
       <View style={{flexDirection:"row",alignItems:"center",padding:20,paddingTop:52}}>
         <TouchableOpacity onPress={()=>navigation.goBack()} style={{marginRight:12}}>
-          <Text style={{fontSize:16,color:"#00c896",fontWeight:"700"}}>?</Text>
+          <Text style={{fontSize:16,color:"#00c896",fontWeight:"700"}}>retour</Text>
         </TouchableOpacity>
         <View style={{flex:1}}>
           <Text style={{fontSize:22,fontWeight:"900",color:text}}>Connexion Appareil</Text>
-          <Text style={{fontSize:12,color:text2}}>Bluetooth BLE · GSM/WiFi · Simulation</Text>
+          <Text style={{fontSize:12,color:text2}}>Bluetooth Â· GSM/WiFi Â· Simulation</Text>
         </View>
       </View>
 
@@ -183,7 +177,7 @@ export default function WatchScreen({navigation}){
           <View style={{width:10,height:10,borderRadius:5,backgroundColor:"#00c896"}}/>
           <View style={{flex:1}}>
             <Text style={{fontSize:14,fontWeight:"700",color:"#00a878"}}>{connectedDevice.name}</Text>
-            <Text style={{fontSize:11,color:"#00a878"}}>{connectionType?.toUpperCase()} · Actif{bleVitals.battery!=null?" · Batterie "+bleVitals.battery+"%":""}</Text>
+            <Text style={{fontSize:11,color:"#00a878"}}>{connectionType?.toUpperCase()} actif{bleVitals.battery!=null?" - Batterie "+bleVitals.battery+"%":""}</Text>
           </View>
           <TouchableOpacity onPress={doDisconnect} style={{paddingHorizontal:10,paddingVertical:6,borderRadius:8,borderWidth:1,borderColor:"#d6304a40"}}>
             <Text style={{fontSize:12,color:"#d6304a",fontWeight:"700"}}>Deconnecter</Text>
@@ -211,14 +205,16 @@ export default function WatchScreen({navigation}){
         <View style={{flex:1}}>
           <View style={{flexDirection:"row",gap:10,marginHorizontal:16,marginBottom:12}}>
             <TouchableOpacity style={{flex:1,padding:14,borderRadius:12,alignItems:"center",backgroundColor:scanning?"#d6304a":"#00c896"}}
-              onPress={scanning?()=>{getBle().stopDeviceScan();setScanning(false);}:startScan}>
+              onPress={scanning?()=>{ble.stopDeviceScan();setScanning(false);}:startScan}>
               {scanning?<ActivityIndicator color="white" size="small"/>:<Text style={{color:"white",fontWeight:"800",fontSize:14}}>Scanner Bluetooth</Text>}
             </TouchableOpacity>
           </View>
-          {scanning&&<Text style={{textAlign:"center",color:text2,fontSize:12,marginBottom:8}}>Recherche en cours... (15s)</Text>}
+          {scanning&&<Text style={{textAlign:"center",color:text2,fontSize:12,marginBottom:8}}>Recherche en cours (15s)</Text>}
           {devices.length===0&&!scanning&&(
             <View style={{flex:1,alignItems:"center",justifyContent:"center",gap:10,padding:30}}>
-              <Text style={{fontSize:48}}>BT</Text>
+              <View style={{width:64,height:64,borderRadius:32,backgroundColor:"#00c89620",alignItems:"center",justifyContent:"center"}}>
+                <Text style={{fontSize:24,fontWeight:"900",color:"#00c896"}}>BT</Text>
+              </View>
               <Text style={{fontSize:16,fontWeight:"700",color:text2}}>Aucun appareil detecte</Text>
               <Text style={{fontSize:13,textAlign:"center",color:text2}}>Activez le Bluetooth sur votre montre et appuyez sur Scanner</Text>
             </View>
@@ -248,7 +244,7 @@ export default function WatchScreen({navigation}){
           <View style={{backgroundColor:card,borderRadius:14,borderWidth:1,borderColor:border,padding:18,gap:10}}>
             <Text style={{fontSize:14,fontWeight:"700",color:text}}>URL de votre appareil ESP32/Arduino</Text>
             <TextInput style={{backgroundColor:bg,borderRadius:12,borderWidth:1.5,borderColor:border,padding:12,fontSize:14,color:text}} value={gsmUrl} onChangeText={setGsmUrl} placeholder="http://192.168.1.100:3000" placeholderTextColor={text2} autoCapitalize="none" autoCorrect={false}/>
-            <Text style={{fontSize:11,color:text2}}>Format attendu: GET /vitals ? JSON avec spo2, hr, temp, resp</Text>
+            <Text style={{fontSize:11,color:text2}}>Format attendu: GET /vitals avec JSON contenant spo2, hr, temp, resp</Text>
             <TouchableOpacity style={{padding:14,borderRadius:12,alignItems:"center",backgroundColor:"#00c896"}} onPress={connectGSM} disabled={connecting}>
               {connecting?<ActivityIndicator color="white" size="small"/>:<Text style={{color:"white",fontWeight:"800",fontSize:14}}>Connecter via WiFi/GSM</Text>}
             </TouchableOpacity>
@@ -272,11 +268,10 @@ export default function WatchScreen({navigation}){
         <View style={{position:"absolute",top:0,left:0,right:0,bottom:0,backgroundColor:"rgba(0,0,0,0.6)",alignItems:"center",justifyContent:"center"}}>
           <View style={{backgroundColor:card,borderRadius:18,padding:30,alignItems:"center",gap:12}}>
             <ActivityIndicator size="large" color="#00c896"/>
-            <Text style={{fontWeight:"700",color:text}}>Connexion en cours...</Text>
+            <Text style={{fontWeight:"700",color:text}}>Connexion en cours</Text>
           </View>
         </View>
       )}
     </View>
   );
 }
-

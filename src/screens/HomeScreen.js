@@ -1,4 +1,4 @@
-ï»¿import React,{useEffect,useRef,useState}from"react";
+import React,{useEffect,useRef,useState}from"react";
 import{View,Text,ScrollView,TouchableOpacity,Animated,StatusBar,RefreshControl,Modal}from"react-native";
 import{useStore}from"../store/useStore";
 export default function HomeScreen({navigation}){
@@ -27,7 +27,8 @@ export default function HomeScreen({navigation}){
   const r=risk();
   const spo2=vitals.spo2||0;
   const spo2Color=spo2<88?"#d6304a":spo2<92?"#d96a1f":spo2<95?"#b88a00":"#00c896";
-  const menuItems=[["Accueil","MainTabs"],["Mon Medecin","Chat"],["Mes Donnees","Vitaux"],["Montre","Watch"],["Rappels","Reminders"],["Reglages","Profile"]];
+  const menuItems=[["Accueil","MainTabs"],["Messages","Chat"],["Mes Donnees","Vitaux"],["Connexion","Watch"],["Rappels","Reminders"],["Reglages","Profile"]];
+  const quickActions=[["Journal","Vitaux"],["Connexion","Watch"],["Messages","Chat"],["IA","AI"]];
   return(
     <View style={{flex:1,backgroundColor:bg}}>
       <StatusBar barStyle={isLight?"dark-content":"light-content"} backgroundColor={bg}/>
@@ -58,7 +59,7 @@ export default function HomeScreen({navigation}){
             ))}
             <View style={{position:"absolute",bottom:30,left:20,right:20}}>
               <Text style={{fontSize:12,color:text2}}>{userProfile?.name||"Patient"}</Text>
-              <Text style={{fontSize:11,color:text2,marginTop:2}}>Patient Â· Asthmatique</Text>
+              <Text style={{fontSize:11,color:text2,marginTop:2}}>Patient · Asthmatique</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -73,14 +74,14 @@ export default function HomeScreen({navigation}){
         )}
         <View style={{backgroundColor:isLight?"#e8faf5":"#0a2a20",margin:16,borderRadius:12,padding:10,flexDirection:"row",alignItems:"center",gap:8}}>
           <View style={{width:8,height:8,borderRadius:4,backgroundColor:"#00c896"}}/>
-          <Text style={{fontSize:12,fontWeight:"700",color:"#00a878",flex:1}}>{connectedDevice?"Bracelet connecte Â· "+connectionType?.toUpperCase():"Tous vos parametres sont normaux"}</Text>
+          <Text style={{fontSize:12,fontWeight:"700",color:"#00a878",flex:1}}>{connectedDevice?"Bracelet connecte · "+connectionType?.toUpperCase():"Tous vos parametres sont normaux"}</Text>
           <Text style={{fontSize:11,color:"#00a878"}}>Mis a jour</Text>
         </View>
         <View style={{flexDirection:"row",justifyContent:"space-around",paddingHorizontal:16,marginBottom:16}}>
-          {[["Journal","Vitaux"],["RDV","Watch"],["Appel","Chat"],["Exporter","AI"]].map(([label,screen])=>(
+          {quickActions.map(([label,screen])=>(
             <TouchableOpacity key={label} onPress={()=>navigation.navigate(screen)} style={{alignItems:"center",gap:6}}>
               <View style={{width:52,height:52,borderRadius:14,backgroundColor:card,borderWidth:1,borderColor:border,alignItems:"center",justifyContent:"center",elevation:2}}>
-                <Text style={{fontSize:13,fontWeight:"900",color:"#00c896"}}>{label[0]}</Text>
+                <Text style={{fontSize:12,fontWeight:"900",color:"#00c896"}}>{label[0]}</Text>
               </View>
               <Text style={{fontSize:11,fontWeight:"600",color:text2}}>{label}</Text>
             </TouchableOpacity>
@@ -122,7 +123,7 @@ export default function HomeScreen({navigation}){
               <Text style={{fontSize:14,fontWeight:"700",color:"#00a878"}}>Connecter un bracelet</Text>
               <Text style={{fontSize:12,color:"#00a878",marginTop:2,opacity:0.8}}>Bluetooth BLE ou GSM</Text>
             </View>
-            <Text style={{fontSize:18,color:"#00c896"}}>â€º</Text>
+            <Text style={{fontSize:18,color:"#00c896"}}>›</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -132,3 +133,4 @@ export default function HomeScreen({navigation}){
     </View>
   );
 }
+

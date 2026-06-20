@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Text, View } from "react-native";
@@ -13,10 +13,11 @@ import ProfileScreen from "../screens/ProfileScreen";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 function TabIcon({ label, focused, color }) {
+  const icons = { "Sante":"S","Messages":"M","IA":"IA","Reglages":"R" };
   return (
     <View style={{ alignItems:"center", gap:2, paddingTop:4 }}>
       <View style={{ width:28, height:28, borderRadius:8, backgroundColor:focused?"#00c89620":"transparent", alignItems:"center", justifyContent:"center" }}>
-        <Text style={{ fontSize:12, fontWeight:"900", color:focused?"#00c896":color }}>{label[0]}</Text>
+        <Text style={{ fontSize:12, fontWeight:"900", color:focused?"#00c896":color }}>{icons[label]}</Text>
       </View>
       <Text style={{ fontSize:9, fontWeight:focused?"800":"500", color:focused?"#00c896":color }}>{label}</Text>
     </View>
@@ -45,9 +46,9 @@ function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen}
         options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Sante" focused={focused} color={color}/> }}/>
       <Tab.Screen name="Chat" component={ChatScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Medecin" focused={focused} color={color}/> }}/>
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Messages" focused={focused} color={color}/> }}/>
       <Tab.Screen name="AI" component={AIScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Forum" focused={focused} color={color}/> }}/>
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="IA" focused={focused} color={color}/> }}/>
       <Tab.Screen name="Profile" component={ProfileScreen}
         options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Reglages" focused={focused} color={color}/> }}/>
     </Tab.Navigator>
@@ -63,3 +64,4 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
+
