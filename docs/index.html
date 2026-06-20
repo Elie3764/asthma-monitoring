@@ -2036,7 +2036,16 @@ window.emitOrdonnance = async function() {
       doctorId: window._currentUser?.uid,
       doctorName: window._doctorName || 'Médecin'
     });
-    showToast('✅ Ordonnance émise et synchronisée avec l\'app!','success');
+    // Crée automatiquement un rappel correspondant à ce médicament
+    await addDoc(collection(db,'doctorReminders'), {
+      patientId, patientName, med,
+      time: '08:00', freq: dosage || '1x/jour', active: true,
+      fromOrdonnance: true,
+      createdAt: serverTimestamp(),
+      doctorId: window._currentUser?.uid,
+      doctorName: window._doctorName || 'Médecin'
+    });
+    showToast('✅ Ordonnance émise, synchronisée et rappel programmé!','success');
   } catch(e) {
     console.error(e);
     showToast('Erreur synchronisation, sauvegardé localement', 'error');
