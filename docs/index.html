@@ -1846,16 +1846,31 @@ function formatRdvDate(d) {
   return date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
 }
 
-window.addRdv = function() {
-  const patient = document.getElementById('rdv-patient').value;
+window.addRdv = async function() {
+  const patientId = document.getElementById('rdv-patient').value;
   const date = document.getElementById('rdv-date').value;
   const time = document.getElementById('rdv-time').value || '09:00';
   const motif = document.getElementById('rdv-motif').value;
-  if (!patient || !date) { showToast('Sélectionnez un patient et une date', 'error'); return; }
-  window._rdvs.push({ id: 'rdv'+Date.now(), patient, date, time, motif });
+  if (!patientId || !date) { showToast('Sélectionnez un patient et une date', 'error'); return; }
+  const p = window._patients.find(x => x.id === patientId);
+  const patientName = p ? p.name : 'Patient inconnu';
+  const localEntry = { id: 'rdv'+Date.now(), patient: patientName, date, time, motif };
+  window._rdvs.push(localEntry);
   renderRdv();
   document.getElementById('rdv-motif').value = '';
-  showToast('✅ Rendez-vous programmé', 'success');
+  try {
+    await addDoc(collection(db,'rdvs'), {
+      patientId, patientName, date, time, motif,
+      createdAt: serverTimestamp(),
+      doctorId: window._currentUser?.uid,
+      doctorName: window._doctorName || 'Médecin',
+      status: 'confirmé'
+    });
+    showToast('✅ Rendez-vous programmé et synchronisé avec l\'app!', 'success');
+  } catch(e) {
+    console.error(e);
+    showToast('Rendez-vous sauvegardé localement (erreur sync)', 'error');
+  }
 };
 
 window.cancelRdv = function(id) {
@@ -1883,26 +1898,34 @@ function populatePatientSelects() {
   ['ord-patient','rem-patient','rdv-patient'].forEach(id => {
     const sel = document.getElementById(id);
     if(sel) sel.innerHTML = '<option value="">Sélectionner...</option>' +
-      window._patients.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+      window._patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   });
 }
 
-window.emitOrdonnance = function() {
-  const patient = document.getElementById('ord-patient').value;
+window.emitOrdonnance = async function() {
+  const patientId = document.getElementById('ord-patient').value;
   const med     = document.getElementById('ord-med').value;
   const dosage  = document.getElementById('ord-dosage').value || '1× par jour';
   const dur     = document.getElementById('ord-duration').value;
-  if(!patient) { showToast('Sélectionnez un patient','error'); return; }
+  if(!patientId) { showToast('Sélectionnez un patient','error'); return; }
+  const p = window._patients.find(x => x.id === patientId);
+  const patientName = p ? p.name : 'Patient inconnu';
   const now = new Date();
   const date = now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear();
-  window._ordonnances.unshift({patient, med, dosage, duration:dur, date, doctor:'Dr. Médecin'});
+  window._ordonnances.unshift({patient: patientName, med, dosage, duration:dur, date, doctor: window._doctorName || 'Médecin'});
   renderOrdonnances();
-  // Firebase sync
   try {
-    const {db,collection,addDoc,serverTimestamp} = window._firebase;
-    addDoc(collection(db,'ordonnances'),{patient,med,dosage,duration:dur,date,createdAt:serverTimestamp(),doctorId:window._currentUser?.uid});
-  } catch(e) {}
-  showToast('✅ Ordonnance émise et synchronisée!','success');
+    await addDoc(collection(db,'ordonnances'),{
+      patientId, patientName, med, dosage, duration:dur, date,
+      createdAt: serverTimestamp(),
+      doctorId: window._currentUser?.uid,
+      doctorName: window._doctorName || 'Médecin'
+    });
+    showToast('✅ Ordonnance émise et synchronisée avec l\'app!','success');
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur synchronisation, sauvegardé localement', 'error');
+  }
 };
 
 // ===== REMINDERS =====
