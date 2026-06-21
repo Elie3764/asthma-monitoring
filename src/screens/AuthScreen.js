@@ -3,6 +3,7 @@ import{View,Text,StyleSheet,TextInput,TouchableOpacity,KeyboardAvoidingView,Plat
 import auth from"@react-native-firebase/auth";
 import firestore from"@react-native-firebase/firestore";
 import{useStore}from"../store/useStore";
+import LungLogo from"../components/LungLogo";
 const VILLES=["Yaounde","Douala","Bafoussam","Garoua","Bamenda","Maroua","Ngaoundere","Bertoua","Ebolowa","Buea"];
 export default function AuthScreen(){
   const[mode,setMode]=useState("login");
@@ -111,7 +112,7 @@ export default function AuthScreen(){
       <StatusBar barStyle="dark-content" backgroundColor="#f4f7fb"/>
       <ScrollView contentContainerStyle={s.inner} keyboardShouldPersistTaps="handled">
         <View style={s.logoWrap}>
-          <View style={s.logoBox}><Text style={{fontSize:36,color:"white",fontWeight:"900"}}>+</Text></View>
+          <View style={s.logoBox}><LungLogo size={50}/></View>
           <Text style={s.appName}>ASTHMA MONITORING</Text>
           <Text style={s.tagline}>Surveillez. Prevenez. Vivez.</Text>
         </View>
@@ -257,7 +258,7 @@ const s=StyleSheet.create({
   c:{flex:1,backgroundColor:"#f4f7fb"},
   inner:{padding:24,paddingTop:60,paddingBottom:40},
   logoWrap:{alignItems:"center",marginBottom:32},
-  logoBox:{width:72,height:72,borderRadius:20,backgroundColor:"#00c896",alignItems:"center",justifyContent:"center",marginBottom:12,elevation:8},
+  logoBox:{width:84,height:84,borderRadius:42,backgroundColor:"#eefaf7",alignItems:"center",justifyContent:"center",marginBottom:12,elevation:8,borderWidth:2,borderColor:"#4fc3b0"},
   appName:{fontSize:20,fontWeight:"900",color:"#16242f",letterSpacing:1},
   tagline:{fontSize:13,color:"#50657a",marginTop:4,fontStyle:"italic"},
   card:{backgroundColor:"#ffffff",borderRadius:20,padding:20,elevation:2},
@@ -268,3 +269,4 @@ const s=StyleSheet.create({
   btn:{backgroundColor:"#00c896",borderRadius:14,padding:16,alignItems:"center",marginTop:4,elevation:4},
   btnTxt:{color:"white",fontWeight:"900",fontSize:14,letterSpacing:0.5},
 });
+

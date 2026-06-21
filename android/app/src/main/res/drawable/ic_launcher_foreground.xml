@@ -1,0 +1,58 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="512dp"
+    android:height="512dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <path
+        android:pathData="M256,0 C397,0 512,115 512,256 C512,397 397,512 256,512 C115,512 0,397 0,256 C0,115 115,0 256,0Z"
+        android:fillColor="#D8EEF2"/>
+
+    <!-- Trachea -->
+    <path
+        android:pathData="M246,118 L266,118 A10,10 0 0 1 266,174 L246,174 A10,10 0 0 1 246,118Z"
+        android:fillColor="#9FDCCB"/>
+
+    <!-- Left lung -->
+    <path
+        android:pathData="M252,170
+            C 214,170 178,188 158,222
+            C 138,256 134,298 142,336
+            C 148,366 166,388 192,392
+            C 214,395 230,380 234,356
+            C 237,338 235,318 230,300
+            C 245,304 252,296 252,280
+            C 252,244 250,204 252,170 Z"
+        android:fillColor="#4FC3B0"/>
+
+    <!-- Right lung -->
+    <path
+        android:pathData="M260,170
+            C 298,170 334,188 354,222
+            C 374,256 378,298 370,336
+            C 364,366 346,388 320,392
+            C 298,395 282,380 278,356
+            C 275,338 277,318 282,300
+            C 267,304 260,296 260,280
+            C 260,244 262,204 260,170 Z"
+        android:fillColor="#52AEE0"/>
+
+    <!-- Creases -->
+    <path android:pathData="M188,230 C172,260 165,295 170,330" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeAlpha="0.3" android:strokeLineCap="round"/>
+    <path android:pathData="M324,230 C340,260 347,295 342,330" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeAlpha="0.3" android:strokeLineCap="round"/>
+
+    <!-- Heart -->
+    <path
+        android:pathData="M256,332
+            C249,317 230,307 230,292
+            C230,280 239,272 249,272
+            C254,272 258,275 256,280
+            C254,275 258,272 263,272
+            C273,272 282,280 282,292
+            C282,307 263,317 256,332 Z"
+        android:fillColor="#F2667E"/>
+
+    <!-- Breath arcs -->
+    <path android:pathData="M150,412 C200,426 312,426 362,412" android:strokeColor="#FFFFFF" android:strokeWidth="5" android:strokeAlpha="0.55" android:strokeLineCap="round"/>
+    <path android:pathData="M168,432 C210,442 302,442 344,432" android:strokeColor="#FFFFFF" android:strokeWidth="4" android:strokeAlpha="0.4" android:strokeLineCap="round"/>
+</vector>

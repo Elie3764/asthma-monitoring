@@ -8,14 +8,18 @@ import{useStore}from"./src/store/useStore";
 import AppNavigator from"./src/navigation/AppNavigator";
 import ParentNavigator from"./src/navigation/ParentNavigator";
 import AuthScreen from"./src/screens/AuthScreen";
+import SplashScreen from"./src/screens/SplashScreen";
 const Stack=createNativeStackNavigator();
 export default function App(){
   const{setUser,setUserProfile,userProfile,loadPersistedData}=useStore();
   const[initializing,setInitializing]=useState(true);
+  const[showSplash,setShowSplash]=useState(true);
   const[user,setLocalUser]=useState(null);
   const[role,setRole]=useState(null);
   useEffect(()=>{
     loadPersistedData();
+    const t=setTimeout(()=>setShowSplash(false),2800);
+    return()=>clearTimeout(t);
   },[]);
   useEffect(()=>{
     const unsub=auth().onAuthStateChanged(async u=>{
@@ -46,19 +50,15 @@ export default function App(){
       }
     }catch(e){}
   };
-  // Re-check role whenever userProfile changes (e.g. right after registration)
   useEffect(()=>{
     if(user&&!role){
       const t=setTimeout(()=>checkRole(user.uid),800);
       return()=>clearTimeout(t);
     }
   },[user,role,userProfile]);
-  if(initializing){
-    return(
-      <View style={{flex:1,alignItems:"center",justifyContent:"center",backgroundColor:"#0d1829"}}>
-        <ActivityIndicator size="large"color="#00c9a7"/>
-      </View>
-    );
+
+  if(showSplash||initializing){
+    return<SplashScreen/>;
   }
   return(
     <NavigationContainer>
