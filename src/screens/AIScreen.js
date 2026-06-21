@@ -1,7 +1,7 @@
 ﻿import React,{useState}from"react";
 import{View,Text,ScrollView,TouchableOpacity,StatusBar,TextInput,ActivityIndicator,Alert}from"react-native";
 import{useStore}from"../store/useStore";
-const GEMINI_API_KEY="AQ.Ab8RN6IBdhG2_FFQlPzQZN2URF_49jBShDIXq3qmbpZj4g9yTQ";
+const GEMINI_API_KEY="VOTRE_CLE_API_GEMINI_ICI"; // Remplacez par votre propre cle: https://aistudio.google.com/apikey
 export default function AIScreen({navigation}){
   const{theme,vitals,aiAnalysis,aiLoading,setAiAnalysis,setAiLoading}=useStore();
   const isLight=theme==="light";
@@ -85,6 +85,7 @@ export default function AIScreen({navigation}){
     </View>
   );
 }
+
 
 
 
