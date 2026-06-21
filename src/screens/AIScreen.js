@@ -1,6 +1,7 @@
 ﻿import React,{useState}from"react";
 import{View,Text,ScrollView,TouchableOpacity,StatusBar,TextInput,ActivityIndicator,Alert}from"react-native";
 import{useStore}from"../store/useStore";
+const GEMINI_API_KEY="AQ.Ab8RN6IBdhG2_FFQlPzQZN2URF_49jBShDIXq3qmbpZj4g9yTQ";
 export default function AIScreen({navigation}){
   const{theme,vitals,aiAnalysis,aiLoading,setAiAnalysis,setAiLoading}=useStore();
   const isLight=theme==="light";
@@ -16,13 +17,16 @@ export default function AIScreen({navigation}){
     setAiLoading(true);
     setAiAnalysis(null);
     try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
+      const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+GEMINI_API_KEY,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:500,messages:[{role:"user",content:"Tu es un assistant medical specialise en asthme. "+prompt}]})
+        body:JSON.stringify({
+          contents:[{parts:[{text:"Tu es un assistant medical specialise en asthme. Reponds en francais, de maniere courte et pratique. "+prompt}]}]
+        })
       });
       const d=await res.json();
-      setAiAnalysis(d.content?.[0]?.text||"Analyse indisponible");
+      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text;
+      setAiAnalysis(txt||"Analyse temporairement indisponible. Reessayez plus tard.");
     }catch{setAiAnalysis("Erreur de connexion. Verifiez votre internet.");}
     finally{setAiLoading(false);}
   };
@@ -35,7 +39,7 @@ export default function AIScreen({navigation}){
         </TouchableOpacity>
         <View style={{flex:1}}>
           <Text style={{fontSize:22,fontWeight:"900",color:text}}>Analyse IA</Text>
-          <Text style={{fontSize:12,color:text2}}>Powered by Claude AI · SUPPTIC ENSP</Text>
+          <Text style={{fontSize:12,color:text2}}>Powered by Gemini - SUPPTIC </Text>
         </View>
       </View>
       <ScrollView contentContainerStyle={{padding:16,paddingBottom:120}}>
@@ -76,8 +80,11 @@ export default function AIScreen({navigation}){
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={{fontSize:11,color:text2,textAlign:"center",marginTop:16,lineHeight:18}}>Analyse informative uniquement. En cas d'urgence, consultez un medecin.{"\n"}SUPPTIC · ENSP Yaounde · Cameroun</Text>
+        <Text style={{fontSize:11,color:text2,textAlign:"center",marginTop:16,lineHeight:18}}>Analyse informative uniquement. En cas d'urgence, consultez un medecin.{"\n"}SUPPTIC -  Yaounde - Cameroun</Text>
       </ScrollView>
     </View>
   );
 }
+
+
+

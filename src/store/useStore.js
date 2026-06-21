@@ -1,4 +1,5 @@
 ﻿import {create} from "zustand";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export const useStore=create((set,get)=>({
   user:null,userProfile:null,setUser:u=>set({user:u}),setUserProfile:p=>set({userProfile:p}),
   vitals:{spo2:null,hr:null,temp:null,resp:null},vitalsHistory:[],
@@ -10,9 +11,13 @@ export const useStore=create((set,get)=>({
   connectedDevice:null,connectionType:null,
   setConnectedDevice:(d,t)=>set({connectedDevice:d,connectionType:t}),
   disconnect:()=>set({connectedDevice:null,connectionType:null}),
-  reminders:[],setReminders:r=>{set({reminders:r});},
+  reminders:[],
+  setReminders:r=>{
+    set({reminders:r});
+    AsyncStorage.setItem("@reminders",JSON.stringify(r)).catch(()=>{});
+  },
   toggleReminder:id=>{const u=get().reminders.map(r=>r.id===id?{...r,active:!r.active}:r);get().setReminders(u);},
-  theme:"light",setTheme:t=>{set({theme:t})},
+  theme:"light",setTheme:t=>{set({theme:t});AsyncStorage.setItem("@theme",t).catch(()=>{});},
   profilePhoto:null,wallpaper:null,
   setProfilePhoto:u=>{set({profilePhoto:u})},
   setWallpaper:u=>{set({wallpaper:u})},
@@ -22,5 +27,12 @@ export const useStore=create((set,get)=>({
   gpsLocation:null,setGpsLocation:loc=>set({gpsLocation:loc}),
   aiAnalysis:null,aiLoading:false,setAiAnalysis:a=>set({aiAnalysis:a}),setAiLoading:v=>set({aiLoading:v}),
   manualHistory:[],addManualVital:v=>{const e={...v,timestamp:Date.now(),source:"manual"};set(s=>({manualHistory:[e,...s.manualHistory.slice(0,99)]}));},
-  loadPersistedData:async()=>{},
+  loadPersistedData:async()=>{
+    try{
+      const r=await AsyncStorage.getItem("@reminders");
+      if(r)set({reminders:JSON.parse(r)});
+      const t=await AsyncStorage.getItem("@theme");
+      if(t)set({theme:t});
+    }catch(e){}
+  },
 }));

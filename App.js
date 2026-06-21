@@ -10,10 +10,13 @@ import ParentNavigator from"./src/navigation/ParentNavigator";
 import AuthScreen from"./src/screens/AuthScreen";
 const Stack=createNativeStackNavigator();
 export default function App(){
-  const{setUser,setUserProfile,userProfile}=useStore();
+  const{setUser,setUserProfile,userProfile,loadPersistedData}=useStore();
   const[initializing,setInitializing]=useState(true);
   const[user,setLocalUser]=useState(null);
   const[role,setRole]=useState(null);
+  useEffect(()=>{
+    loadPersistedData();
+  },[]);
   useEffect(()=>{
     const unsub=auth().onAuthStateChanged(async u=>{
       setUser(u);
