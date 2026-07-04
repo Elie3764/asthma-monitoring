@@ -1357,7 +1357,7 @@ canvas { width: 100% !important; }
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getDatabase, ref, onValue, set, push, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 // ===== FIREBASE CONFIG (ASTHMA MONITORING) =====
@@ -1489,7 +1489,20 @@ function subscribeToPatientVitals(patientId) {
       const ageMs = Date.now() - (v.timestamp || 0);
       const isOnline = ageMs < 60000; // considered online if updated in last 60s
       const wasCritical = window._patients[idx].spo2 != null && window._patients[idx].spo2 < 88;
+      const wasHrCritical = window._patients[idx].hr != null && window._patients[idx].hr >= 120;
+      const isHrCritical = v.hr != null && v.hr >= 120;
+      const isHrWarn = v.hr != null && v.hr >= 100;
       const isCritical = v.spo2 != null && v.spo2 < 88;
+      if(isHrCritical && !wasHrCritical && isOnline){
+        window.playAlertSound && window.playAlertSound();
+        window.showToast && window.showToast('🔴 ALERTE: '+window._patients[idx].name+' Tachycardie critique ('+v.hr+' bpm)', 'error');
+        const hrAlert = {id:'hr'+Date.now(), type:'crit', patient:window._patients[idx].name, msg:'Tachycardie critique: '+v.hr+' bpm — FC ≥ 120', time:'Maintenant', value:v.hr+' bpm'};
+        window._alerts.unshift(hrAlert);
+      } else if(isHrWarn && !isHrCritical && !wasHrCritical && isOnline){
+        window.showToast && window.showToast('🟠 Avertissement: '+window._patients[idx].name+' Tachycardie ('+v.hr+' bpm)', 'info');
+        const hrWarn = {id:'hrw'+Date.now(), type:'warn', patient:window._patients[idx].name, msg:'Tachycardie: '+v.hr+' bpm — FC ≥ 100', time:'Maintenant', value:v.hr+' bpm'};
+        window._alerts.unshift(hrWarn);
+      }
       if(isCritical && !wasCritical && isOnline){
         window.playAlertSound && window.playAlertSound();
         if(navigator.vibrate) navigator.vibrate([400,200,400,200,400]);
@@ -1564,12 +1577,37 @@ const DEMO_MEDS = [
   { name:'Prednisolone', class:'Corticostéroïde oral', desc:'Corticostéroïde systémique pour les exacerbations sévères et le contrôle rapide de l\'inflammation aiguë.', icon:'🔴', tags:['Oral','Systémique','Exacerbation','Court terme'], color:'#ff3d5a' },
 ];
 
-const DEMO_ORDONNANCES = [
-  { patient:'Marie Essomba', med:'Salbutamol 100µg', dosage:'2 bouffées si crise', duration:'Chronique', date:'28/05/2025', doctor:'Dr. Médecin' },
-  { patient:'Paul Nkomo', med:'Budésonide 200µg', dosage:'1 bouffée · 2×/jour', duration:'3 mois', date:'25/05/2025', doctor:'Dr. Médecin' },
-  { patient:'Aline Tchinda', med:'Salmétérol/Fluticasone', dosage:'1 bouffée · 2×/jour', duration:'1 mois', date:'20/05/2025', doctor:'Dr. Médecin' },
-];
-window._ordonnances = [...DEMO_ORDONNANCES];
+window._ordonnances = []; // charge depuis Firestore
+
+async function loadOrdonnancesFromFirestore() {
+  try {
+    const snap = await getDocs(query(collection(db,'ordonnances'), orderBy('createdAt','desc'), limit(50)));
+    const ords = [];
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      let dateStr = d.date || '';
+      if (!dateStr && d.createdAt && d.createdAt.toDate) {
+        const dt = d.createdAt.toDate();
+        dateStr = dt.getDate().toString().padStart(2,'0')+'/'+(dt.getMonth()+1).toString().padStart(2,'0')+'/'+dt.getFullYear();
+      }
+      ords.push({
+        id: docSnap.id,
+        patient: d.patientName || d.patient || 'Patient inconnu',
+        med: d.med || '--',
+        dosage: d.dosage || '--',
+        duration: d.duration || '--',
+        date: dateStr,
+        doctor: d.doctorName || 'Médecin',
+        instructions: d.instructions || '',
+        synced: true
+      });
+    });
+    window._ordonnances = ords;
+    renderOrdonnances();
+  } catch(e) {
+    console.error('Erreur chargement ordonnances:', e);
+  }
+}
 
 const DEMO_REMINDERS = [
   { id:'r1', patient:'Marie Essomba', med:'Salbutamol 100µg', time:'08:00', freq:'2×/jour', active:true },
@@ -1587,10 +1625,10 @@ window._activeChatPatient = null;
 // ===== LOAD DASHBOARD =====
 function loadDashboard() {
   loadPatientsFromFirestore();
+  loadOrdonnancesFromFirestore();
+  loadRdvsFromFirestore();
   renderAlerts();
   renderChatList();
-  renderRdv();
-  renderOrdonnances();
   renderReminders();
   initCharts();
   populatePatientSelects();
@@ -1666,7 +1704,7 @@ function renderHomeCriticalPatients() {
   }
   section.style.display = 'block';
   grid.innerHTML = atRisk.map(p => {
-    const crit = p.spo2 < 88;
+    const crit = p.spo2 < 88 || p.hr >= 120;
     return `<div class="alert-item ${crit?'crit':'warn'}" style="margin-bottom:0">
       <div class="alert-icon">${crit?'🚨':'⚠️'}</div>
       <div class="alert-info">
@@ -1688,6 +1726,7 @@ window.renderPatientsTable = function() {
   tbody.innerHTML = filtered.map(p => {
     const hasData = p.spo2 != null;
     const spo2Class = !hasData ? '' : p.spo2 < 88 ? 'text-red' : p.spo2 < 92 ? 'text-orange' : 'text-green';
+    const hrClass = !hasData ? '' : p.hr >= 120 ? 'text-red' : p.hr >= 100 ? 'text-orange' : 'text-green';
     const statusBadge = p.online
       ? '<span class="badge badge-green">● En ligne</span>'
       : '<span class="badge" style="background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)">○ Hors ligne</span>';
@@ -1700,7 +1739,7 @@ window.renderPatientsTable = function() {
       </div></td>
       <td>${statusBadge}</td>
       <td><span class="vital-mini ${spo2Class}">${hasData ? p.spo2+'%' : '--'}</span></td>
-      <td><span class="vital-mini" style="color:var(--orange)">${hasData ? p.hr+' bpm' : '--'}</span></td>
+      <td><span class="vital-mini ${hrClass}">${hasData ? p.hr+" bpm" : "--"}</span></td>
       <td><span class="vital-mini text-yellow">${hasData ? p.temp+'°C' : '--'}</span></td>
       <td><span class="vital-mini" style="color:#a78bfa">${hasData ? p.resp+'/min' : '--'}</span></td>
       <td><span style="font-size:12px;color:var(--text2)">${p.device}</span></td>
@@ -1890,10 +1929,30 @@ window.filterChats = function(val) {
 };
 
 // ===== RENDEZ-VOUS =====
-window._rdvs = [
-  { id:'rdv1', patient:'Marie Essomba', date:'2026-06-20', time:'09:00', motif:'Contrôle de routine' },
-  { id:'rdv2', patient:'Paul Nkomo', date:'2026-06-18', time:'14:30', motif:'Suivi post-crise' },
-];
+window._rdvs = []; // charge depuis Firestore
+
+async function loadRdvsFromFirestore() {
+  try {
+    const snap = await getDocs(query(collection(db,'rdvs'), orderBy('createdAt','desc'), limit(50)));
+    const rdvs = [];
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      rdvs.push({
+        id: docSnap.id,
+        patient: d.patientName || d.patient || 'Patient inconnu',
+        date: d.date || '',
+        time: d.time || '09:00',
+        motif: d.motif || 'Consultation',
+        status: d.status || 'confirme',
+        patientId: d.patientId || ''
+      });
+    });
+    window._rdvs = rdvs;
+    renderRdv();
+  } catch(e) {
+    console.error('Erreur chargement rendez-vous:', e);
+  }
+}
 
 function renderRdv() {
   const list = document.getElementById('rdv-list');
@@ -1940,30 +1999,43 @@ window.addRdv = async function() {
       status: 'confirmé'
     });
     showToast('✅ Rendez-vous programmé et synchronisé avec l\'app!', 'success');
+    await loadRdvsFromFirestore();
   } catch(e) {
     console.error(e);
     showToast('Rendez-vous sauvegardé localement (erreur sync)', 'error');
   }
 };
 
-window.cancelRdv = function(id) {
+window.cancelRdv = async function(id) {
   window._rdvs = window._rdvs.filter(r => r.id !== id);
   renderRdv();
-  showToast('Rendez-vous annulé', 'info');
+  try {
+    await deleteDoc(doc(db, 'rdvs', id));
+    showToast('Rendez-vous annulé et supprimé', 'info');
+  } catch(e) {
+    showToast('Rendez-vous annulé localement', 'info');
+  }
 };
 
 // ===== ORDONNANCES =====
 function renderOrdonnances() {
   const hist = document.getElementById('ord-history');
+  if (!hist) return;
+  if (window._ordonnances.length === 0) {
+    hist.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:13px;text-align:center">Aucune ordonnance enregistrée</div>';
+    return;
+  }
   hist.innerHTML = window._ordonnances.map(o=>`
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="font-weight:600;font-size:13px">${o.patient}</span>
+        <span style="font-weight:700;font-size:14px">${o.patient}</span>
         <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${o.date}</span>
       </div>
-      <div style="font-size:13px;color:var(--teal)">${o.med}</div>
+      <div style="font-size:13px;color:var(--teal);font-weight:600">${o.med}</div>
       <div style="font-size:12px;color:var(--text2);margin-top:3px">${o.dosage} · ${o.duration}</div>
-      <div style="margin-top:8px"><span class="badge badge-green">✓ Synchronisé app</span></div>
+      ${o.instructions ? `<div style="font-size:12px;color:var(--text3);margin-top:4px;font-style:italic">${o.instructions}</div>` : ''}
+      ${o.doctor ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">${o.doctor}</div>` : ''}
+      <div style="margin-top:8px">${o.synced ? '<span class="badge badge-green">✓ Synchronisé app</span>' : '<span class="badge badge-yellow">⏳ En attente</span>'}</div>
     </div>`).join('');
 }
 
@@ -2027,7 +2099,7 @@ window.emitOrdonnance = async function() {
   const patientName = p ? p.name : 'Patient inconnu';
   const now = new Date();
   const date = now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear();
-  window._ordonnances.unshift({patient: patientName, med, dosage, duration:dur, date, doctor: window._doctorName || 'Médecin'});
+  window._ordonnances.unshift({patient: patientName, med, dosage, duration:dur, date, doctor: window._doctorName || 'Médecin', instructions: document.getElementById('ord-instructions').value||'', synced: false});
   renderOrdonnances();
   try {
     await addDoc(collection(db,'ordonnances'),{
@@ -2046,6 +2118,7 @@ window.emitOrdonnance = async function() {
       doctorName: window._doctorName || 'Médecin'
     });
     showToast('✅ Ordonnance émise, synchronisée et rappel programmé!','success');
+    await loadOrdonnancesFromFirestore(); // recharger depuis Firestore
   } catch(e) {
     console.error(e);
     showToast('Erreur synchronisation, sauvegardé localement', 'error');
@@ -2135,8 +2208,9 @@ function updateLiveVitals(pid) {
   const spo2Status = p.spo2 < 88 ? '🔴 CRITIQUE' : p.spo2 < 92 ? '🟠 Avertissement' : '🟢 Normal';
   document.getElementById('live-spo2-status').textContent = spo2Status;
   document.getElementById('live-spo2-card').className = 'vital-card spo2' + (p.spo2<88?' alert-crit':p.spo2<92?' alert-warn':'');
+  document.getElementById('live-hr-card').className = 'vital-card hr' + (p.hr>=120?' alert-crit':p.hr>=100?' alert-warn':'');
 
-  document.getElementById('live-hr-status').textContent = p.hr > 100 ? '🟠 Tachycardie' : '🟢 Normal';
+  document.getElementById('live-hr-status').textContent = p.hr >= 120 ? '🔴 CRITIQUE Tachycardie' : p.hr >= 100 ? '🟠 Tachycardie' : '🟢 Normal';
   document.getElementById('live-temp-status').textContent = p.temp >= 38 ? '🟡 Fièvre' : '🟢 Normal';
   document.getElementById('live-resp-status').textContent = p.resp > 20 ? '🟠 Tachypnée' : '🟢 Normal';
 }
@@ -2212,8 +2286,8 @@ window.showPage = function(page) {
   if(page==='patients') renderPatientsTable();
   if(page==='vitals') renderPatientSelector();
   if(page==='alerts') renderAlerts();
-  if(page==='medications') renderRdv();
-  if(page==='ordonnances') { renderOrdonnances(); populatePatientSelects(); }
+  if(page==='medications') { renderRdv(); loadRdvsFromFirestore(); }
+  if(page==='ordonnances') { loadOrdonnancesFromFirestore(); populatePatientSelects(); }
   if(page==='notes') { renderNotesHistory(); populatePatientSelects(); }
   if(page==='reminders') { renderReminders(); populatePatientSelects(); }
 };
