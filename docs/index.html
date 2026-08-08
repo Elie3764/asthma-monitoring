@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ASTHMA MONITORING â€” Dashboard MÃ©dical</title>
+<title>ASTHMA MONITORING — Dashboard Medical</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -664,48 +664,48 @@ canvas { width: 100% !important; }
 <!-- AUTH -->
 <div id="auth-overlay">
   <div class="auth-grid"></div>
-  <!-- Toggle thÃ¨me sur la page auth -->
-  <button onclick="toggleTheme()" style="position:fixed;top:16px;right:16px;z-index:9999;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:inherit;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;backdrop-filter:blur(8px)" id="auth-theme-btn">â˜€ï¸ Clair</button>
+  <!-- Toggle theme sur la page auth -->
+  <button onclick="toggleTheme()" style="position:fixed;top:16px;right:16px;z-index:9999;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:inherit;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;backdrop-filter:blur(8px)" id="auth-theme-btn">☀ Clair</button>
   <div class="auth-card">
     <div class="auth-logo">
-      <div class="auth-logo-icon">ðŸ«</div>
+      <div class="auth-logo-icon">🫁</div>
       <div class="auth-title">ASTHMA MONITORING</div>
-      <div class="auth-sub">Dashboard MÃ©dical â€” ENSP YaoundÃ©</div>
+      <div class="auth-sub">Dashboard Medical — SUP'PTIC Yaounde</div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Connexion</button>
-      <button class="auth-tab" onclick="switchAuthTab('register')">CrÃ©er compte</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Creer compte</button>
     </div>
     <div id="auth-error" class="auth-error"></div>
     <div id="login-form">
       <div class="auth-form-group">
-        <label class="auth-label">Email mÃ©decin</label>
+        <label class="auth-label">Email medecin</label>
         <input type="email" id="login-email" class="auth-input" placeholder="docteur@ensp.cm">
       </div>
       <div class="auth-form-group">
         <label class="auth-label">Mot de passe</label>
-        <input type="password" id="login-password" class="auth-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+        <input type="password" id="login-password" class="auth-input" placeholder="••••••••">
       </div>
-      <button class="auth-btn" id="login-btn" onclick="if(window.doLogin)window.doLogin();else alert('Chargement en cours, rÃ©essayez')">
+      <button class="auth-btn" id="login-btn" onclick="if(window.doLogin)window.doLogin();else alert('Chargement en cours, reessayez')">
         <span id="login-btn-text">Se connecter</span>
       </button>
     </div>
     <div id="register-form" style="display:none">
       <div class="auth-form-group">
         <label class="auth-label">Nom complet</label>
-        <input type="text" id="reg-name" class="auth-input" placeholder="Dr. Jean Mbarga">
+        <input type="text" id="reg-name" class="auth-input" placeholder="Dr. Mbarga">
       </div>
       <div class="auth-form-group">
         <label class="auth-label">Email</label>
-        <input type="email" id="reg-email" class="auth-input" placeholder="medecin@ensp.cm">
+        <input type="email" id="reg-email" class="auth-input" placeholder="medecin@sup'ptic.cm">
       </div>
       <div class="auth-form-group">
         <label class="auth-label">Mot de passe</label>
-        <input type="password" id="reg-password" class="auth-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+        <input type="password" id="reg-password" class="auth-input" placeholder="••••••••">
       </div>
       <div class="auth-form-group">
         <label class="auth-label">Ville</label>
-        <select id="reg-ville" class="auth-input">
+        <select id="reg-ville" class="auth-input" onchange="updateHospitalOptions()">
           <option value="Yaounde">Yaounde</option>
           <option value="Douala">Douala</option>
           <option value="Bafoussam">Bafoussam</option>
@@ -719,18 +719,38 @@ canvas { width: 100% !important; }
         </select>
       </div>
       <div class="auth-form-group">
+        <label class="auth-label">Numero d'ordre</label>
+        <input type="text" id="reg-numordre" class="auth-input" placeholder="ONMC-2024-0055">
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">
+          Doit correspondre a un numero enregistre a l'Ordre National des Medecins
+        </div>
+      </div>
+      <div class="auth-form-group">
         <label class="auth-label">Specialite</label>
-        <input type="text" id="reg-specialty" class="auth-input" placeholder="Pneumologue, Generaliste...">
+        <input type="text" id="reg-specialty" class="auth-input" list="specialty-options" placeholder="Choisir ou saisir une specialite">
+        <datalist id="specialty-options">
+          <option value="Medecin generaliste">
+          <option value="Pneumologue">
+          <option value="Allergologue">
+          <option value="Pediatre">
+          <option value="Cardiologue">
+          <option value="ORL">
+          <option value="Interniste">
+          <option value="Medecin urgentiste">
+          <option value="Medecin de famille">
+          <option value="Kinesitherapeute respiratoire">
+        </datalist>
       </div>
       <div class="auth-form-group">
         <label class="auth-label">Hopital / Clinique</label>
-        <input type="text" id="reg-hospital" class="auth-input" placeholder="Hopital Central">
+        <input type="text" id="reg-hospital" class="auth-input" list="hospital-options" placeholder="Choisir ou saisir un etablissement">
+        <datalist id="hospital-options"></datalist>
       </div>
-      <button class="auth-btn" id="reg-btn" onclick="if(window.doRegister)window.doRegister();else alert('Chargement en cours, rÃ©essayez')">
-        <span id="reg-btn-text">CrÃ©er le compte</span>
+      <button class="auth-btn" id="reg-btn" onclick="if(window.doRegister)window.doRegister();else alert('Chargement en cours, reessayez')">
+        <span id="reg-btn-text">Creer le compte</span>
       </button>
     </div>
-    <div class="auth-project-badge">SUPPTIC Â· ENSP Â· YaoundÃ© Â· Cameroun</div>
+    <div class="auth-project-badge">SUPPTIC · Yaounde · Cameroun</div>
   </div>
 </div>
 
@@ -739,25 +759,25 @@ canvas { width: 100% !important; }
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-brand">
-      <div class="topbar-icon">ðŸ«</div>
+      <div class="topbar-icon">🫁</div>
       <div>
         <div class="topbar-name">ASTHMA MONITOR</div>
-        <div class="topbar-env">ENSP YaoundÃ©</div>
+        <div class="topbar-env">SUP'PTIC Yaounde</div>
       </div>
     </div>
     <div class="topbar-status">
       <div class="topbar-dot"></div>
-      <span id="live-patients-count">0 patients connectÃ©s</span>
+      <span id="live-patients-count">0 patients connectes</span>
     </div>
     <div class="topbar-spacer"></div>
     <div class="topbar-time" id="topbar-clock">--:--:--</div>
-    <div class="topbar-alert-badge" id="alert-badge">âš  Alertes</div>
-    <button class="logout-btn" id="theme-toggle-btn" onclick="toggleTheme()" style="margin-right:4px">ðŸŒ™ Sombre</button>
+    <div class="topbar-alert-badge" id="alert-badge">⚠ Alertes</div>
+    <button class="logout-btn" id="theme-toggle-btn" onclick="toggleTheme()" style="margin-right:4px">🌙 Sombre</button>
     <div class="user-pill">
       <div class="user-avatar" id="user-av">D</div>
-      <span class="user-name" id="user-display-name">MÃ©decin</span>
+      <span class="user-name" id="user-display-name">Medecin</span>
     </div>
-    <button class="logout-btn" onclick="doLogout()">DÃ©connexion</button>
+    <button class="logout-btn" onclick="doLogout()">Deconnexion</button>
   </div>
 
   <div class="main-body">
@@ -766,17 +786,17 @@ canvas { width: 100% !important; }
       <div class="sidebar-section">
         <div class="sidebar-section-label">Principal</div>
         <div class="nav-item active" onclick="showPage('home')">
-          <span class="nav-icon">ðŸ </span> Accueil
+          <span class="nav-icon">🏠</span> Accueil
         </div>
         <div class="nav-item" onclick="showPage('patients')">
-          <span class="nav-icon">ðŸ‘¥</span> Patients
+          <span class="nav-icon">👥</span> Patients
           <span class="nav-badge green" id="patients-nav-badge">0</span>
         </div>
         <div class="nav-item" onclick="showPage('vitals')">
-          <span class="nav-icon">ðŸ’“</span> Vitaux Live
+          <span class="nav-icon">💓</span> Vitaux Live
         </div>
         <div class="nav-item" onclick="showPage('alerts')">
-          <span class="nav-icon">âš ï¸</span> Alertes
+          <span class="nav-icon">⚠</span> Alertes
           <span class="nav-badge" id="alerts-nav-badge" style="display:none">0</span>
         </div>
       </div>
@@ -784,32 +804,32 @@ canvas { width: 100% !important; }
       <div class="sidebar-section">
         <div class="sidebar-section-label">Clinique</div>
         <div class="nav-item" onclick="showPage('chat')">
-          <span class="nav-icon">ðŸ’¬</span> Chat
+          <span class="nav-icon">💬</span> Chat
           <span class="nav-badge" id="chat-nav-badge">2</span>
         </div>
         <div class="nav-item" onclick="showPage('medications')">
-          <span class="nav-icon">ðŸ“…</span> Rendez-vous
+          <span class="nav-icon">📅</span> Rendez-vous
         </div>
         <div class="nav-item" onclick="showPage('ordonnances')">
-          <span class="nav-icon">ðŸ“‹</span> Ordonnances
+          <span class="nav-icon">📋</span> Ordonnances
         </div>
         <div class="nav-item" onclick="showPage('notes')">
-          <span class="nav-icon">ðŸ“</span> Notes medicales
+          <span class="nav-icon">📝</span> Notes medicales
         </div>
         <div class="nav-item" onclick="showPage('reminders')">
-          <span class="nav-icon">â°</span> Rappels
+          <span class="nav-icon">🔔</span> Rappels
         </div>
       </div>
       <hr class="sidebar-divider">
       <div class="sidebar-section">
-        <div class="sidebar-section-label">SystÃ¨me</div>
+        <div class="sidebar-section-label">Systeme</div>
         <div class="nav-item" onclick="showPage('settings')">
-          <span class="nav-icon">âš™ï¸</span> ParamÃ¨tres
+          <span class="nav-icon">⚙</span> Parametres
         </div>
       </div>
       <div class="sidebar-footer">
         Firebase: asthma-monitoring<br>
-        v2.0 Â· SUPPTIC 2026
+        v2.0 · SUPPTIC 2026
       </div>
     </div>
 
@@ -823,14 +843,14 @@ canvas { width: 100% !important; }
             <div class="page-title">TABLEAU DE BORD</div>
             <div class="page-sub" id="home-date">Chargement...</div>
           </div>
-          <button class="btn btn-teal" onclick="refreshData()">ðŸ”„ Actualiser</button>
+          <button class="btn btn-teal" onclick="refreshData()">🔄 Actualiser</button>
         </div>
 
         <div class="live-banner">
           <div class="live-dot"></div>
           <div>
-            <div class="live-text">â— SURVEILLANCE EN TEMPS RÃ‰EL</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px">DonnÃ©es Firebase Realtime DB Â· Synchro toutes les 5s</div>
+            <div class="live-text"> SURVEILLANCE EN TEMPS REEL</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Donnees Firebase Realtime DB · Synchro toutes les 5s</div>
           </div>
           <div style="margin-left:auto;text-align:right">
             <div class="live-count" id="home-online-count">0</div>
@@ -839,7 +859,7 @@ canvas { width: 100% !important; }
         </div>
 
         <div id="home-critical-section" style="display:none">
-          <div class="card-title text-muted mt-20" style="margin-bottom:12px">ðŸš¨ PATIENTS EN ALERTE</div>
+          <div class="card-title text-muted mt-20" style="margin-bottom:12px">🚨 PATIENTS EN ALERTE</div>
           <div class="grid-2" id="home-critical-patients" style="margin-bottom:8px">
           </div>
         </div>
@@ -847,53 +867,53 @@ canvas { width: 100% !important; }
         <!-- Stats Row -->
         <div class="grid-4 section-gap">
           <div class="card">
-            <div class="card-header"><div class="card-title">Patients Total</div><span>ðŸ‘¥</span></div>
+            <div class="card-header"><div class="card-title">Patients Total</div><span>👥</span></div>
             <div class="stat-big text-teal" id="stat-total">8</div>
-            <div class="stat-label">inscrits dans le systÃ¨me</div>
+            <div class="stat-label">inscrits dans le systeme</div>
           </div>
           <div class="card">
-            <div class="card-header"><div class="card-title">En Ligne</div><span>ðŸŸ¢</span></div>
+            <div class="card-header"><div class="card-title">En Ligne</div><span>🟢</span></div>
             <div class="stat-big text-green" id="stat-online">0</div>
-            <div class="stat-label">connectÃ©s maintenant</div>
+            <div class="stat-label">connectes maintenant</div>
           </div>
           <div class="card">
-            <div class="card-header"><div class="card-title">Alertes Actives</div><span>âš ï¸</span></div>
+            <div class="card-header"><div class="card-title">Alertes Actives</div><span>⚠</span></div>
             <div class="stat-big text-orange" id="stat-alerts">2</div>
-            <div class="stat-label">nÃ©cessitent attention</div>
+            <div class="stat-label">necessitent attention</div>
           </div>
           <div class="card">
-            <div class="card-header"><div class="card-title">Rappels Actifs</div><span>ðŸ’Š</span></div>
+            <div class="card-header"><div class="card-title">Rappels Actifs</div><span>💊</span></div>
             <div class="stat-big text-yellow" id="stat-reminders">5</div>
-            <div class="stat-label">mÃ©dicaments programmÃ©s</div>
+            <div class="stat-label">medicaments programmes</div>
           </div>
         </div>
 
         <!-- Vitaux moyens -->
-        <div class="card-title text-muted mt-20" style="margin-bottom:12px">âš¡ MOYENNES VITAUX â€” PATIENTS ACTIFS</div>
+        <div class="card-title text-muted mt-20" style="margin-bottom:12px">⚡ MOYENNES VITAUX — PATIENTS ACTIFS</div>
         <div class="grid-4 section-gap">
           <div class="vital-card spo2">
             <div class="vital-label">SpO2 Moyen</div>
             <div class="vital-value text-teal" id="avg-spo2">96</div>
             <div class="vital-unit">% saturation</div>
-            <div class="vital-trend text-green">â†‘ Normal</div>
+            <div class="vital-trend text-green">↑ Normal</div>
           </div>
           <div class="vital-card hr">
             <div class="vital-label">FC Moyenne</div>
             <div class="vital-value" style="color:var(--orange)" id="avg-hr">78</div>
             <div class="vital-unit">bpm</div>
-            <div class="vital-trend text-green">â†’ Normal</div>
+            <div class="vital-trend text-green">→ Normal</div>
           </div>
           <div class="vital-card temp">
             <div class="vital-label">Temp. Moyenne</div>
             <div class="vital-value text-yellow" id="avg-temp">36.7</div>
-            <div class="vital-unit">Â°C</div>
-            <div class="vital-trend text-green">â†’ Normal</div>
+            <div class="vital-unit">°C</div>
+            <div class="vital-trend text-green">→ Normal</div>
           </div>
           <div class="vital-card resp">
             <div class="vital-label">FR Moyenne</div>
             <div class="vital-value" style="color:#a78bfa" id="avg-resp">17</div>
             <div class="vital-unit">resp/min</div>
-            <div class="vital-trend text-green">â†’ Normal</div>
+            <div class="vital-trend text-green">→ Normal</div>
           </div>
         </div>
 
@@ -901,7 +921,7 @@ canvas { width: 100% !important; }
         <div class="grid-2">
           <div class="card">
             <div class="card-header">
-              <div class="card-title">Ã‰volution SpO2 (24h)</div>
+              <div class="card-title">Evolution SpO2 (24h)</div>
               <span class="badge badge-teal">Live</span>
             </div>
             <div class="chart-container">
@@ -910,7 +930,7 @@ canvas { width: 100% !important; }
           </div>
           <div class="card">
             <div class="card-header">
-              <div class="card-title">Alertes RÃ©centes</div>
+              <div class="card-title">Alertes Recentes</div>
               <button class="btn btn-outline" style="font-size:12px;padding:5px 10px" onclick="showPage('alerts')">Voir tout</button>
             </div>
             <div id="recent-alerts-list">
@@ -925,10 +945,11 @@ canvas { width: 100% !important; }
         <div class="page-header">
           <div>
             <div class="page-title">PATIENTS</div>
-            <div class="page-sub">Surveillance en temps rÃ©el</div>
+            <div class="page-sub">Surveillance en temps reel</div>
           </div>
           <div class="flex-row">
-            <input type="text" id="patient-search" class="chat-search" style="width:220px;margin:0" placeholder="ðŸ” Rechercher..." oninput="filterPatients()">
+            <input type="text" id="patient-search" class="chat-search" style="width:220px;margin:0" placeholder=" Rechercher..." oninput="filterPatients()">
+            <button class="btn btn-outline" onclick="openChoosePatientsModal()">Choisir mes patients</button>
             <button class="btn btn-teal" onclick="openAddPatientModal()">+ Ajouter</button>
           </div>
         </div>
@@ -944,7 +965,7 @@ canvas { width: 100% !important; }
                   <th>Temp</th>
                   <th>FR</th>
                   <th>Appareil</th>
-                  <th>DerniÃ¨re MAJ</th>
+                  <th>Derniere MAJ</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -960,9 +981,9 @@ canvas { width: 100% !important; }
         <div class="page-header">
           <div>
             <div class="page-title">VITAUX EN DIRECT</div>
-            <div class="page-sub">Flux temps rÃ©el depuis Firebase Realtime DB</div>
+            <div class="page-sub">Flux temps reel depuis Firebase Realtime DB</div>
           </div>
-          <div id="selected-patient-name" class="badge badge-teal">SÃ©lectionner un patient</div>
+          <div id="selected-patient-name" class="badge badge-teal">Selectionner un patient</div>
         </div>
 
         <div class="card section-gap" style="padding:14px 20px">
@@ -978,19 +999,19 @@ canvas { width: 100% !important; }
             <div class="vital-trend" id="live-spo2-status">En attente...</div>
           </div>
           <div class="vital-card hr">
-            <div class="vital-label">FrÃ©q. Cardiaque</div>
+            <div class="vital-label">Freq. Cardiaque</div>
             <div class="vital-value" style="color:var(--orange)" id="live-hr">--</div>
             <div class="vital-unit">bpm</div>
             <div class="vital-trend" id="live-hr-status">En attente...</div>
           </div>
           <div class="vital-card temp">
-            <div class="vital-label">TempÃ©rature</div>
+            <div class="vital-label">Temperature</div>
             <div class="vital-value text-yellow" id="live-temp">--</div>
-            <div class="vital-unit">Â°C</div>
+            <div class="vital-unit">°C</div>
             <div class="vital-trend" id="live-temp-status">En attente...</div>
           </div>
           <div class="vital-card resp">
-            <div class="vital-label">FrÃ©q. Respiratoire</div>
+            <div class="vital-label">Freq. Respiratoire</div>
             <div class="vital-value" style="color:#a78bfa" id="live-resp">--</div>
             <div class="vital-unit">resp/min</div>
             <div class="vital-trend" id="live-resp-status">En attente...</div>
@@ -1000,15 +1021,15 @@ canvas { width: 100% !important; }
         <div class="grid-2">
           <div class="card">
             <div class="card-header">
-              <div class="card-title">SpO2 â€” Tendance</div>
-              <span class="badge badge-teal">â— LIVE</span>
+              <div class="card-title">SpO2 — Tendance</div>
+              <span class="badge badge-teal"> LIVE</span>
             </div>
             <div class="chart-container"><canvas id="live-spo2-chart"></canvas></div>
           </div>
           <div class="card">
             <div class="card-header">
-              <div class="card-title">FC â€” Tendance</div>
-              <span class="badge badge-teal">â— LIVE</span>
+              <div class="card-title">FC — Tendance</div>
+              <span class="badge badge-teal"> LIVE</span>
             </div>
             <div class="chart-container"><canvas id="live-hr-chart"></canvas></div>
           </div>
@@ -1022,7 +1043,7 @@ canvas { width: 100% !important; }
             <div class="page-title">ALERTES</div>
             <div class="page-sub">Alertes critiques et avertissements</div>
           </div>
-          <button class="btn btn-outline" onclick="clearAlerts()">âœ“ Tout acquitter</button>
+          <button class="btn btn-outline" onclick="clearAlerts()">✓ Tout acquitter</button>
         </div>
         <div id="alerts-list">
         </div>
@@ -1032,13 +1053,13 @@ canvas { width: 100% !important; }
       <div class="page" id="page-chat">
         <div class="page-header">
           <div class="page-title">MESSAGERIE</div>
-          <div class="page-sub">Chat bidirectionnel Patient â†” MÃ©decin</div>
+          <div class="page-sub">Chat bidirectionnel Patient ↔ Medecin</div>
         </div>
         <div class="chat-layout">
           <div class="chat-list">
             <div class="chat-list-header">
-              <div class="chat-list-title">ðŸ’¬ Conversations</div>
-              <input class="chat-search" placeholder="ðŸ” Rechercher..." oninput="filterChats(this.value)">
+              <div class="chat-list-title">💬 Conversations</div>
+              <input class="chat-search" placeholder=" Rechercher..." oninput="filterChats(this.value)">
             </div>
             <div class="chat-items" id="chat-items-list">
             </div>
@@ -1047,21 +1068,21 @@ canvas { width: 100% !important; }
             <div class="chat-main-header" id="chat-header">
               <div class="chat-av" id="chat-header-av" style="background:linear-gradient(135deg,var(--teal),var(--green));width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--bg)">?</div>
               <div>
-                <div style="font-weight:600;font-size:14px" id="chat-header-name">SÃ©lectionner une conversation</div>
-                <div class="text-muted" style="font-size:12px" id="chat-header-status">â€”</div>
+                <div style="font-weight:600;font-size:14px" id="chat-header-name">Selectionner une conversation</div>
+                <div class="text-muted" style="font-size:12px" id="chat-header-status">—</div>
               </div>
               <div class="spacer"></div>
               <span class="badge badge-teal" id="chat-header-badge" style="display:none">En ligne</span>
             </div>
             <div class="chat-messages" id="chat-messages-area">
               <div style="margin:auto;text-align:center;color:var(--text3)">
-                <div style="font-size:40px;margin-bottom:10px">ðŸ’¬</div>
-                <div style="font-family:var(--font-mono);font-size:13px">SÃ©lectionner un patient</div>
+                <div style="font-size:40px;margin-bottom:10px">💬</div>
+                <div style="font-family:var(--font-mono);font-size:13px">Selectionner un patient</div>
               </div>
             </div>
             <div class="chat-input-area">
-              <input type="text" id="chat-msg-input" class="chat-input" placeholder="Ã‰crire un message..." onkeydown="if(event.key==='Enter')sendChatMessage()">
-              <button class="chat-send-btn" onclick="sendChatMessage()">Envoyer âž¤</button>
+              <input type="text" id="chat-msg-input" class="chat-input" placeholder="Ecrire un message..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+              <button class="chat-send-btn" onclick="sendChatMessage()">Envoyer ➤</button>
             </div>
           </div>
         </div>
@@ -1075,11 +1096,11 @@ canvas { width: 100% !important; }
         </div>
         <div class="grid-2">
           <div class="ordonnance-form">
-            <div class="card-title text-muted" style="margin-bottom:20px">ðŸ“… NOUVEAU RENDEZ-VOUS</div>
+            <div class="card-title text-muted" style="margin-bottom:20px">📅 NOUVEAU RENDEZ-VOUS</div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label">Patient</label>
               <select class="form-select" id="rdv-patient">
-                <option value="">SÃ©lectionner...</option>
+                <option value="">Selectionner...</option>
               </select>
             </div>
             <div class="form-row">
@@ -1094,12 +1115,12 @@ canvas { width: 100% !important; }
             </div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label">Motif</label>
-              <input type="text" class="form-input" id="rdv-motif" placeholder="ContrÃ´le de routine, crise rÃ©cente...">
+              <input type="text" class="form-input" id="rdv-motif" placeholder="Controle de routine, crise recente...">
             </div>
             <button class="btn btn-teal" style="width:100%" onclick="addRdv()">Programmer le rendez-vous</button>
           </div>
           <div>
-            <div class="card-title text-muted" style="margin-bottom:12px">RENDEZ-VOUS Ã€ VENIR</div>
+            <div class="card-title text-muted" style="margin-bottom:12px">RENDEZ-VOUS A VENIR</div>
             <div id="rdv-list">
             </div>
           </div>
@@ -1110,26 +1131,26 @@ canvas { width: 100% !important; }
       <div class="page" id="page-ordonnances">
         <div class="page-header">
           <div class="page-title">ORDONNANCES</div>
-          <div class="page-sub">Ã‰mettre et synchroniser avec l'app mobile</div>
+          <div class="page-sub">Emettre et synchroniser avec l'app mobile</div>
         </div>
         <div class="grid-2">
           <div class="ordonnance-form">
-            <div class="card-title text-muted" style="margin-bottom:20px">ðŸ“‹ NOUVELLE ORDONNANCE</div>
+            <div class="card-title text-muted" style="margin-bottom:20px">📋 NOUVELLE ORDONNANCE</div>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Patient</label>
                 <select class="form-select" id="ord-patient">
-                  <option value="">SÃ©lectionner...</option>
+                  <option value="">Selectionner...</option>
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">MÃ©dicament</label>
+                <label class="form-label">Medicament</label>
                 <select class="form-select" id="ord-med">
-                  <option value="Salbutamol">Salbutamol 100Âµg</option>
-                  <option value="BudÃ©sonide">BudÃ©sonide 200Âµg</option>
-                  <option value="SalmÃ©tÃ©rol">SalmÃ©tÃ©rol/Fluticasone</option>
-                  <option value="Ipratropium">Ipratropium 20Âµg</option>
-                  <option value="ThÃ©ophylline">ThÃ©ophylline 200mg</option>
+                  <option value="Salbutamol">Salbutamol 100μg</option>
+                  <option value="Budesonide">Budesonide 200μg</option>
+                  <option value="Salmeterol">Salmeterol/Fluticasone</option>
+                  <option value="Ipratropium">Ipratropium 20μg</option>
+                  <option value="Theophylline">Theophylline 200mg</option>
                   <option value="Prednisolone">Prednisolone 5mg</option>
                 </select>
               </div>
@@ -1137,10 +1158,10 @@ canvas { width: 100% !important; }
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Posologie</label>
-                <input type="text" class="form-input" id="ord-dosage" placeholder="ex: 2 bouffÃ©es Â· 3Ã—/jour">
+                <input type="text" class="form-input" id="ord-dosage" placeholder="ex: 2 bouffees · 3×/jour">
               </div>
               <div class="form-group">
-                <label class="form-label">DurÃ©e</label>
+                <label class="form-label">Duree</label>
                 <select class="form-select" id="ord-duration">
                   <option value="7 jours">7 jours</option>
                   <option value="14 jours">14 jours</option>
@@ -1151,13 +1172,13 @@ canvas { width: 100% !important; }
               </div>
             </div>
             <div class="form-group" style="margin-bottom:16px">
-              <label class="form-label">Instructions spÃ©ciales</label>
-              <textarea class="form-textarea" id="ord-notes" placeholder="Rincer la bouche aprÃ¨s inhalation. Ã€ prendre avec de l'eau..."></textarea>
+              <label class="form-label">Instructions speciales</label>
+              <textarea class="form-textarea" id="ord-notes" placeholder="Rincer la bouche apres inhalation. A prendre avec de l'eau..."></textarea>
             </div>
-            <button class="btn btn-teal" style="width:100%" onclick="emitOrdonnance()">ðŸ“¤ Ã‰mettre et synchroniser avec app</button>
+            <button class="btn btn-teal" style="width:100%" onclick="emitOrdonnance()">📤 Emettre et synchroniser avec app</button>
           </div>
           <div class="card">
-            <div class="card-title text-muted" style="margin-bottom:16px">ðŸ“œ HISTORIQUE ORDONNANCES</div>
+            <div class="card-title text-muted" style="margin-bottom:16px">📜 HISTORIQUE ORDONNANCES</div>
             <div id="ord-history">
             </div>
           </div>
@@ -1172,21 +1193,21 @@ canvas { width: 100% !important; }
         </div>
         <div class="grid-2">
           <div class="card">
-            <div class="card-title text-muted" style="margin-bottom:20px">ðŸ“ NOUVELLE NOTE</div>
+            <div class="card-title text-muted" style="margin-bottom:20px"> NOUVELLE NOTE</div>
             <div class="form-group" style="margin-bottom:14px">
               <label class="form-label">Patient</label>
               <select class="form-select" id="note-patient">
-                <option value="">SÃ©lectionner...</option>
+                <option value="">Selectionner...</option>
               </select>
             </div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label">Observation</label>
               <textarea class="form-textarea" id="note-text" placeholder="Etat general stable, continuer le traitement actuel..." style="min-height:140px"></textarea>
             </div>
-            <button class="btn btn-teal" style="width:100%" onclick="addMedicalNote()">ðŸ“ Enregistrer la note</button>
+            <button class="btn btn-teal" style="width:100%" onclick="addMedicalNote()"> Enregistrer la note</button>
           </div>
           <div class="card">
-            <div class="card-title text-muted" style="margin-bottom:16px">ðŸ“œ HISTORIQUE DES NOTES</div>
+            <div class="card-title text-muted" style="margin-bottom:16px">📜 HISTORIQUE DES NOTES</div>
             <div id="notes-history"></div>
           </div>
         </div>
@@ -1196,18 +1217,18 @@ canvas { width: 100% !important; }
       <div class="page" id="page-reminders">
         <div class="page-header">
           <div class="page-title">RAPPELS</div>
-          <div class="page-sub">Programmer les mÃ©dicaments depuis le dashboard</div>
+          <div class="page-sub">Programmer les medicaments depuis le dashboard</div>
         </div>
         <div class="grid-2">
           <div class="card">
-            <div class="card-title text-muted" style="margin-bottom:16px">â° NOUVEAU RAPPEL</div>
+            <div class="card-title text-muted" style="margin-bottom:16px"> NOUVEAU RAPPEL</div>
             <div class="form-group" style="margin-bottom:14px">
               <label class="form-label">Patient</label>
               <select class="form-select" id="rem-patient"></select>
             </div>
             <div class="form-group" style="margin-bottom:14px">
-              <label class="form-label">MÃ©dicament</label>
-              <input type="text" class="form-input" id="rem-med" placeholder="Salbutamol 100Âµg">
+              <label class="form-label">Medicament</label>
+              <input type="text" class="form-input" id="rem-med" placeholder="Salbutamol 100μg">
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -1215,11 +1236,11 @@ canvas { width: 100% !important; }
                 <input type="time" class="form-input" id="rem-time" value="08:00">
               </div>
               <div class="form-group">
-                <label class="form-label">FrÃ©quence</label>
+                <label class="form-label">Frequence</label>
                 <select class="form-select" id="rem-freq">
-                  <option value="1Ã—/jour">1Ã— par jour</option>
-                  <option value="2Ã—/jour" selected>2Ã— par jour</option>
-                  <option value="3Ã—/jour">3Ã— par jour</option>
+                  <option value="1×/jour">1× par jour</option>
+                  <option value="2×/jour" selected>2× par jour</option>
+                  <option value="3×/jour">3× par jour</option>
                   <option value="Si besoin">Si besoin</option>
                 </select>
               </div>
@@ -1237,12 +1258,12 @@ canvas { width: 100% !important; }
       <!-- SETTINGS PAGE -->
       <div class="page" id="page-settings">
         <div class="page-header">
-          <div class="page-title">PARAMÃˆTRES</div>
-          <div class="page-sub">Configuration Firebase et systÃ¨me</div>
+          <div class="page-title">PARAMETRES</div>
+          <div class="page-sub">Configuration Firebase et systeme</div>
         </div>
         <div class="grid-2">
           <div class="card">
-            <div class="card-title text-muted" style="margin-bottom:16px">ðŸ”¥ FIREBASE STATUS</div>
+            <div class="card-title text-muted" style="margin-bottom:16px">🔥 FIREBASE STATUS</div>
             <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
               <div class="flex-row">
                 <span class="text-muted">Projet:</span>
@@ -1250,15 +1271,15 @@ canvas { width: 100% !important; }
               </div>
               <div class="flex-row">
                 <span class="text-muted">Auth:</span>
-                <span class="badge badge-green" id="firebase-auth-status">âœ“ ConnectÃ©</span>
+                <span class="badge badge-green" id="firebase-auth-status">✓ Connecte</span>
               </div>
               <div class="flex-row">
                 <span class="text-muted">Firestore:</span>
-                <span class="badge badge-green">âœ“ Actif</span>
+                <span class="badge badge-green">✓ Actif</span>
               </div>
               <div class="flex-row">
                 <span class="text-muted">Realtime DB:</span>
-                <span class="badge badge-green">âœ“ Actif</span>
+                <span class="badge badge-green">✓ Actif</span>
               </div>
               <div class="flex-row">
                 <span class="text-muted">FCM:</span>
@@ -1267,7 +1288,7 @@ canvas { width: 100% !important; }
             </div>
           </div>
           <div class="card">
-            <div class="card-title text-muted" style="margin-bottom:16px">âš™ï¸ SEUILS D'ALERTE</div>
+            <div class="card-title text-muted" style="margin-bottom:16px">⚙ SEUILS D'ALERTE</div>
             <div style="display:flex;flex-direction:column;gap:12px;font-size:13px">
               <div class="flex-row">
                 <span class="text-muted">SpO2 Avertissement:</span>
@@ -1278,26 +1299,26 @@ canvas { width: 100% !important; }
                 <span class="badge badge-red">SpO2 &lt; 88%</span>
               </div>
               <div class="flex-row">
-                <span class="text-muted">FiÃ¨vre:</span>
-                <span class="badge badge-yellow">Temp â‰¥ 38.0Â°C</span>
+                <span class="text-muted">Fievre:</span>
+                <span class="badge badge-yellow">Temp ≥ 38.0°C</span>
               </div>
               <div class="flex-row">
                 <span class="text-muted">Tachycardie Avertissement:</span><span class="badge badge-orange">FC &gt; 100 bpm</span></div><div class="threshold-row"><span class="text-muted">Tachycardie Critique:</span><span class="badge badge-red">FC &gt; 120 bpm</span>
               </div>
               <div class="flex-row">
-                <span class="text-muted">TachypnÃ©e:</span>
+                <span class="text-muted">Tachypnee:</span>
                 <span class="badge badge-yellow">FR &gt; 20/min</span>
               </div>
             </div>
           </div>
         </div>
         <div class="card mt-20">
-          <div class="card-title text-muted" style="margin-bottom:16px">â„¹ï¸ Ã€ PROPOS</div>
+          <div class="card-title text-muted" style="margin-bottom:16px">i A PROPOS</div>
           <div style="font-size:13px;color:var(--text2);line-height:1.8">
             <strong>ASTHMA MONITORING v2.0</strong><br>
-            Projet SUPPTIC â€” Ã‰cole Nationale SupÃ©rieure des Postes, des TÃ©lÃ©communications et des TIC<br>
-            SystÃ¨me de surveillance de l'asthme au Cameroun<br>
-            Stack: React Native Â· Firebase Â· BLE Â· React Web Â· ENSP 2024
+            Projet SUPPTIC — Ecole Nationale Superieure des Postes, des Telecommunications et des TIC<br>
+            Systeme de surveillance de l'asthme au Cameroun<br>
+            Stack: React Native · Firebase · BLE · React Web · SUP'PTIC 2024
           </div>
         </div>
       </div>
@@ -1311,7 +1332,7 @@ canvas { width: 100% !important; }
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title">+ NOUVEAU PATIENT</div>
-      <button class="modal-close" onclick="closeModal('add-patient-modal')">âœ• Fermer</button>
+      <button class="modal-close" onclick="closeModal('add-patient-modal')">✕ Fermer</button>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -1319,33 +1340,53 @@ canvas { width: 100% !important; }
         <input type="text" class="form-input" id="np-name" placeholder="Jean Mbarga">
       </div>
       <div class="form-group">
-        <label class="form-label">TÃ©lÃ©phone (+237)</label>
+        <label class="form-label">Telephone (+237)</label>
         <input type="text" class="form-input" id="np-phone" placeholder="+237 6XX XXX XXX">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Ã‚ge</label>
+        <label class="form-label">Age</label>
         <input type="number" class="form-input" id="np-age" placeholder="35">
       </div>
       <div class="form-group">
         <label class="form-label">Sexe</label>
         <select class="form-select" id="np-sex">
           <option value="M">Masculin</option>
-          <option value="F">FÃ©minin</option>
+          <option value="F">Feminin</option>
         </select>
       </div>
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label class="form-label">SÃ©vÃ©ritÃ© asthme</label>
+      <label class="form-label">Severite asthme</label>
       <select class="form-select" id="np-severity">
         <option value="Intermittent">Intermittent</option>
-        <option value="LÃ©ger persistant">LÃ©ger persistant</option>
-        <option value="ModÃ©rÃ© persistant">ModÃ©rÃ© persistant</option>
-        <option value="SÃ©vÃ¨re persistant">SÃ©vÃ¨re persistant</option>
+        <option value="Leger persistant">Leger persistant</option>
+        <option value="Modere persistant">Modere persistant</option>
+        <option value="Severe persistant">Severe persistant</option>
       </select>
     </div>
     <button class="btn btn-teal" style="width:100%" onclick="addPatient()">Enregistrer le patient</button>
+  </div>
+</div>
+
+<!-- MODAL CHOISIR MES PATIENTS -->
+<div class="modal-overlay" id="choose-patients-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Choisir mes patients</div>
+      <button class="modal-close" onclick="closeModal('choose-patients-modal')">Fermer</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">
+      Cochez les patients que vous suivez. Vous pourrez modifier cette liste plus tard.
+    </div>
+    <div id="choose-patients-count" style="font-family:var(--font-mono);color:var(--teal);font-size:13px;margin-bottom:10px">
+      0 patient(s) selectionne(s)
+    </div>
+    <div id="choose-patients-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <!-- rempli par JS -->
+    </div>
+    <button class="btn btn-teal" style="width:100%" onclick="saveChosenPatients()">Valider ma selection</button>
   </div>
 </div>
 
@@ -1356,7 +1397,7 @@ canvas { width: 100% !important; }
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, updateDoc, getDoc, getDocs, addDoc, deleteDoc, onSnapshot, serverTimestamp, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getDatabase, ref, onValue, set, push, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 // ===== FIREBASE CONFIG (ASTHMA MONITORING) =====
@@ -1375,14 +1416,53 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
-window._firebase = { auth, db, rtdb, set, push, ref, get, onValue, collection, doc, setDoc, getDoc, getDocs, addDoc, onSnapshot, serverTimestamp, query, orderBy, limit };
+window._firebase = { auth, db, rtdb, set, push, ref, get, onValue, collection, doc, setDoc, updateDoc, getDoc, getDocs, addDoc, onSnapshot, serverTimestamp, query, where, orderBy, limit };
+
+// ===== BASE FICTIVE DES NUMEROS D'ORDRE VALIDES =====
+// Simule le registre de l'Ordre National des Medecins du Cameroun (ONMC).
+// Un numero absent de cette liste ne peut pas s'inscrire comme medecin.
+const VALID_NUMEROS_ORDRE = [
+  'ONMC-2019-0142', 'ONMC-2020-0287', 'ONMC-2020-0355', 'ONMC-2021-0091',
+  'ONMC-2021-0418', 'ONMC-2022-0063', 'ONMC-2022-0509', 'ONMC-2022-0612',
+  'ONMC-2023-0027', 'ONMC-2023-0184', 'ONMC-2023-0330', 'ONMC-2024-0055',
+  'ONMC-2024-0199', 'ONMC-2024-0271', 'ONMC-2025-0008', 'ONMC-2025-0146',
+];
+
+// ===== HOPITAUX PAR VILLE (suggestions, saisie libre toujours possible) =====
+const HOSPITALS_BY_VILLE = {
+  Yaounde:    ['Hopital Central de Yaounde', 'Hopital General de Yaounde', 'CHU de Yaounde', 'Hopital de la CASS Ngousso', 'Hopital Jamot', 'Hopital de la Cite Verte'],
+  Douala:     ['Hopital Laquintinie', 'Hopital General de Douala', 'Hopital Deido', 'Polyclinique Bonanjo', 'Hopital Militaire de Douala'],
+  Bafoussam:  ['Hopital Regional de Bafoussam', 'Hopital Protestant de Bafoussam'],
+  Garoua:     ['Hopital Regional de Garoua', 'Hopital Militaire de Garoua'],
+  Bamenda:    ['Regional Hospital Bamenda', 'Bamenda Provincial Hospital'],
+  Maroua:     ['Hopital Regional de Maroua', 'Hopital Provincial de Maroua'],
+  Ngaoundere: ['Hopital Regional de Ngaoundere'],
+  Bertoua:    ['Hopital Regional de Bertoua'],
+  Ebolowa:    ['Hopital Regional d\'Ebolowa'],
+  Buea:       ['Buea Regional Hospital', 'Mount Mary Hospital'],
+};
+
+window.updateHospitalOptions = function() {
+  const ville = document.getElementById('reg-ville')?.value;
+  const list = document.getElementById('hospital-options');
+  if (!list) return;
+  const hopitaux = HOSPITALS_BY_VILLE[ville] || [];
+  list.innerHTML = hopitaux.map(h => `<option value="${h}">`).join('');
+};
 
 // ===== AUTH STATE =====
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
     window._currentUser = user;
     showApp(user);
     loadDashboard();
+    // Premiere connexion : le medecin n'a encore choisi aucun patient
+    try {
+      const docSnap = await getDoc(doc(db, 'doctors', user.uid));
+      if (docSnap.exists() && !docSnap.data().patientCount) {
+        setTimeout(() => window.openChoosePatientsModal(), 600);
+      }
+    } catch(e) { console.error('Verification patientCount:', e); }
   } else {
     window._currentUser = null;
     showAuth();
@@ -1399,10 +1479,10 @@ window.doLogin = async function() {
   document.getElementById('login-btn-text').innerHTML = '<span class="loading-spinner"></span> Connexion...';
   try {
     await signInWithEmailAndPassword(auth, email, pwd);
-    showToast('âœ… Connexion rÃ©ussie!', 'success');
+    showToast('✅ Connexion reussie!', 'success');
   } catch(e) {
     let msg = 'Erreur de connexion';
-    if(e.code === 'auth/user-not-found') msg = 'Compte introuvable. CrÃ©ez un compte.';
+    if(e.code === 'auth/user-not-found') msg = 'Compte introuvable. Creez un compte.';
     else if(e.code === 'auth/wrong-password') msg = 'Mot de passe incorrect';
     else if(e.code === 'auth/invalid-credential') msg = 'Identifiants incorrects';
     showAuthError(msg);
@@ -1416,10 +1496,15 @@ window.doRegister = async function() {
   const email = document.getElementById('reg-email').value.trim();
   const pwd = document.getElementById('reg-password').value;
   const ville = document.getElementById('reg-ville').value;
+  const numeroOrdre = document.getElementById('reg-numordre').value.trim().toUpperCase();
   const specialty = document.getElementById('reg-specialty').value.trim() || 'Medecin generaliste';
   const hospital = document.getElementById('reg-hospital').value.trim() || ville;
-  if(!name||!email||!pwd) { showAuthError('Remplissez tous les champs'); return; }
-  if(pwd.length < 6) { showAuthError('Mot de passe: minimum 6 caractÃ¨res'); return; }
+  if(!name||!email||!pwd||!numeroOrdre) { showAuthError("Remplissez tous les champs, y compris le numero d'ordre"); return; }
+  if(pwd.length < 6) { showAuthError('Mot de passe: minimum 6 caracteres'); return; }
+  if(!VALID_NUMEROS_ORDRE.includes(numeroOrdre)) {
+    showAuthError("Numero d'ordre introuvable au registre. Inscription refusee.");
+    return;
+  }
   const btn = document.getElementById('reg-btn');
   btn.disabled = true;
   document.getElementById('reg-btn-text').innerHTML = '<span class="loading-spinner"></span>';
@@ -1427,29 +1512,29 @@ window.doRegister = async function() {
     const cred = await createUserWithEmailAndPassword(auth, email, pwd);
     await setDoc(doc(db, 'doctors', cred.user.uid), {
       name, email, uid: cred.user.uid, role: 'doctor', online: true,
-      specialty, hospital, ville, patientCount: 0,
+      numeroOrdre, specialty, hospital, ville, patientCount: 0,
       createdAt: serverTimestamp()
     });
-    showToast('âœ… Compte crÃ©Ã© avec succÃ¨s!', 'success');
+    showToast('✅ Compte cree avec succes!', 'success');
   } catch(e) {
-    let msg = 'Erreur crÃ©ation compte';
-    if(e.code === 'auth/email-already-in-use') msg = 'Email dÃ©jÃ  utilisÃ©';
+    let msg = 'Erreur creation compte';
+    if(e.code === 'auth/email-already-in-use') msg = 'Email deja utilise';
     showAuthError(msg);
     btn.disabled = false;
-    document.getElementById('reg-btn-text').textContent = 'CrÃ©er le compte';
+    document.getElementById('reg-btn-text').textContent = 'Creer le compte';
   }
 };
 
 window.doLogout = async function() {
   await signOut(auth);
-  showToast('DÃ©connectÃ©', 'info');
+  showToast('Deconnecte', 'info');
 };
 
 // ===== THEME TOGGLE =====
 window.toggleTheme = function() {
   const isLight = document.body.classList.toggle('light-theme');
   localStorage.setItem('asthma_theme', isLight ? 'light' : 'dark');
-  const label = isLight ? 'â˜€ï¸ Clair' : 'ðŸŒ™ Sombre';
+  const label = isLight ? '☀ Clair' : '🌙 Sombre';
   const btn1 = document.getElementById('theme-toggle-btn');
   const btn2 = document.getElementById('auth-theme-btn');
   if (btn1) btn1.innerHTML = label;
@@ -1462,7 +1547,7 @@ window.toggleTheme = function() {
   }
   document.addEventListener('DOMContentLoaded', () => {
     const isLight = document.body.classList.contains('light-theme');
-    const label = isLight ? 'â˜€ï¸ Clair' : 'ðŸŒ™ Sombre';
+    const label = isLight ? '☀ Clair' : '🌙 Sombre';
     const btn1 = document.getElementById('theme-toggle-btn');
     const btn2 = document.getElementById('auth-theme-btn');
     if (btn1) btn1.innerHTML = label;
@@ -1494,18 +1579,18 @@ function subscribeToPatientVitals(patientId) {
       const isCritical = v.spo2 != null && v.spo2 < 88;
       if(isHrCritical && !wasHrCritical && isOnline){
         window.playAlertSound && window.playAlertSound();
-        window.showToast && window.showToast('ðŸ”´ ALERTE: '+window._patients[idx].name+' Tachycardie critique ('+v.hr+' bpm)', 'error');
-        const hrAlert = {id:'hr'+Date.now(), type:'crit', patient:window._patients[idx].name, msg:'Tachycardie critique: '+v.hr+' bpm â€” FC â‰¥ 120', time:'Maintenant', value:v.hr+' bpm'};
+        window.showToast && window.showToast('🔴 ALERTE: '+window._patients[idx].name+' Tachycardie critique ('+v.hr+' bpm)', 'error');
+        const hrAlert = {id:'hr'+Date.now(), type:'crit', patient:window._patients[idx].name, msg:'Tachycardie critique: '+v.hr+' bpm — FC ≥ 120', time:'Maintenant', value:v.hr+' bpm'};
         window._alerts.unshift(hrAlert);
       } else if(isHrWarn && !isHrCritical && !wasHrCritical && isOnline){
-        window.showToast && window.showToast('ðŸŸ  Avertissement: '+window._patients[idx].name+' Tachycardie ('+v.hr+' bpm)', 'info');
-        const hrWarn = {id:'hrw'+Date.now(), type:'warn', patient:window._patients[idx].name, msg:'Tachycardie: '+v.hr+' bpm â€” FC â‰¥ 100', time:'Maintenant', value:v.hr+' bpm'};
+        window.showToast && window.showToast('🟠 Avertissement: '+window._patients[idx].name+' Tachycardie ('+v.hr+' bpm)', 'info');
+        const hrWarn = {id:'hrw'+Date.now(), type:'warn', patient:window._patients[idx].name, msg:'Tachycardie: '+v.hr+' bpm — FC ≥ 100', time:'Maintenant', value:v.hr+' bpm'};
         window._alerts.unshift(hrWarn);
       }
       if(isCritical && !wasCritical && isOnline){
         window.playAlertSound && window.playAlertSound();
         if(navigator.vibrate) navigator.vibrate([400,200,400,200,400]);
-        window.showToast && window.showToast('ðŸš¨ ALERTE: '+window._patients[idx].name+' SpO2 critique ('+v.spo2+'%)', 'error');
+        window.showToast && window.showToast('🚨 ALERTE: '+window._patients[idx].name+' SpO2 critique ('+v.spo2+'%)', 'error');
       }
       window._patients[idx] = {
         ...window._patients[idx],
@@ -1527,7 +1612,12 @@ function subscribeToPatientVitals(patientId) {
 
 async function loadPatientsFromFirestore() {
   try {
-    const snap = await getDocs(collection(db, 'patients'));
+    // Ne charge que les patients assignes au medecin connecte
+    const uid = window._currentUser?.uid;
+    const q = uid
+      ? query(collection(db, 'patients'), where('doctorId', '==', uid))
+      : collection(db, 'patients');
+    const snap = await getDocs(q);
     const patients = [];
     let i = 0;
     snap.forEach(docSnap => {
@@ -1538,7 +1628,7 @@ async function loadPatientsFromFirestore() {
         age: d.age || '--',
         sex: d.sex || '--',
         phone: d.phone || '--',
-        severity: d.severity || 'Non spÃ©cifiÃ©',
+        severity: d.severity || 'Non specifie',
         online: false,
         spo2: null, hr: null, temp: null, resp: null,
         device: '--',
@@ -1559,16 +1649,79 @@ async function loadPatientsFromFirestore() {
   }
 }
 
+// ===== CHOISIR MES PATIENTS =====
+window.openChoosePatientsModal = async function() {
+  const modal = document.getElementById('choose-patients-modal');
+  const list = document.getElementById('choose-patients-list');
+  list.innerHTML = '<div style="color:var(--text3);font-size:13px">Chargement...</div>';
+  modal.classList.add('open');
+  try {
+    const snap = await getDocs(collection(db, 'patients'));
+    const uid = window._currentUser?.uid;
+    const rows = [];
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const mine = d.doctorId === uid;
+      rows.push(`
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;cursor:pointer">
+          <input type="checkbox" class="choose-patient-cb" value="${docSnap.id}" ${mine ? 'checked' : ''} onchange="updateChoosePatientsCount()">
+          <span style="flex:1">${d.name || 'Patient sans nom'}</span>
+          <span style="font-size:11px;color:var(--text3)">${d.severity || ''}</span>
+        </label>
+      `);
+    });
+    list.innerHTML = rows.length ? rows.join('') : '<div style="color:var(--text3);font-size:13px">Aucun patient enregistre pour le moment.</div>';
+    updateChoosePatientsCount();
+  } catch(e) {
+    console.error('Erreur chargement liste patients:', e);
+    list.innerHTML = '<div style="color:var(--red);font-size:13px">Erreur de chargement.</div>';
+  }
+};
+
+window.updateChoosePatientsCount = function() {
+  const n = document.querySelectorAll('.choose-patient-cb:checked').length;
+  document.getElementById('choose-patients-count').textContent = n + ' patient(s) selectionne(s)';
+};
+
+window.saveChosenPatients = async function() {
+  const uid = window._currentUser?.uid;
+  if (!uid) return;
+  const checkboxes = document.querySelectorAll('.choose-patient-cb');
+  let count = 0;
+  try {
+    for (const cb of checkboxes) {
+      const pid = cb.value;
+      if (cb.checked) {
+        await updateDoc(doc(db, 'patients', pid), { doctorId: uid });
+        count++;
+      } else {
+        // Ne retire l'assignation que si ce patient etait suivi par CE medecin
+        const snap = await getDoc(doc(db, 'patients', pid));
+        if (snap.exists() && snap.data().doctorId === uid) {
+          await updateDoc(doc(db, 'patients', pid), { doctorId: null });
+        }
+      }
+    }
+    await updateDoc(doc(db, 'doctors', uid), { patientCount: count });
+    closeModal('choose-patients-modal');
+    showToast(count + ' patient(s) assigne(s) a votre suivi', 'success');
+    loadPatientsFromFirestore();
+  } catch(e) {
+    console.error('Erreur sauvegarde selection patients:', e);
+    showToast('Erreur lors de la sauvegarde', 'error');
+  }
+};
+
 const DEMO_ALERTS = [];
 window._alerts = [...DEMO_ALERTS];
 
 const DEMO_MEDS = [
-  { name:'Salbutamol', class:'Bronchodilatateur Î²2', desc:'Bronchodilatateur Ã  courte durÃ©e d\'action (SABA). Traitement de secours en cas de crise d\'asthme aiguÃ«.', icon:'ðŸ’¨', tags:['SABA','Urgence','InhalÃ©','PremiÃ¨re ligne'], color:'#00d2ff' },
-  { name:'BudÃ©sonide', class:'CorticostÃ©roÃ¯de inhalÃ©', desc:'CorticostÃ©roÃ¯de inhalÃ© (CSI) pour le contrÃ´le Ã  long terme de l\'inflammation bronchique. Traitement de fond principal.', icon:'ðŸŒ¿', tags:['CSI','Fond','Anti-inflammatoire'], color:'#00e5a0' },
-  { name:'SalmÃ©tÃ©rol + Fluticasone', class:'LABA + CSI (combinÃ©)', desc:'Association LABA/CSI pour l\'asthme modÃ©rÃ© Ã  sÃ©vÃ¨re. Bronchodilatation prolongÃ©e + contrÃ´le inflammatoire.', icon:'âš—ï¸', tags:['LABA','CSI','CombinÃ©','ModÃ©rÃ©-SÃ©vÃ¨re'], color:'#a78bfa' },
-  { name:'Ipratropium', class:'Anticholinergique', desc:'Bronchodilatateur anticholinergique. UtilisÃ© en complÃ©ment du salbutamol dans les crises sÃ©vÃ¨res.', icon:'ðŸ”µ', tags:['Anticholinergique','ComplÃ©ment','Crise sÃ©vÃ¨re'], color:'#ffd84d' },
-  { name:'ThÃ©ophylline', class:'MÃ©thylxanthine', desc:'Bronchodilatateur oral. EfficacitÃ© modÃ©rÃ©e, index thÃ©rapeutique Ã©troit. Surveillance des taux sanguins requise.', icon:'ðŸ’Š', tags:['Oral','Bronchodilatateur','Surveillance'], color:'#ff8c42' },
-  { name:'Prednisolone', class:'CorticostÃ©roÃ¯de oral', desc:'CorticostÃ©roÃ¯de systÃ©mique pour les exacerbations sÃ©vÃ¨res et le contrÃ´le rapide de l\'inflammation aiguÃ«.', icon:'ðŸ”´', tags:['Oral','SystÃ©mique','Exacerbation','Court terme'], color:'#ff3d5a' },
+  { name:'Salbutamol', class:'Bronchodilatateur β2', desc:'Bronchodilatateur a courte duree d\'action (SABA). Traitement de secours en cas de crise d\'asthme aigue.', icon:'💨', tags:['SABA','Urgence','Inhale','Premiere ligne'], color:'#00d2ff' },
+  { name:'Budesonide', class:'Corticosteroide inhale', desc:'Corticosteroide inhale (CSI) pour le controle a long terme de l\'inflammation bronchique. Traitement de fond principal.', icon:'🌿', tags:['CSI','Fond','Anti-inflammatoire'], color:'#00e5a0' },
+  { name:'Salmeterol + Fluticasone', class:'LABA + CSI (combine)', desc:'Association LABA/CSI pour l\'asthme modere a severe. Bronchodilatation prolongee + controle inflammatoire.', icon:'⚗', tags:['LABA','CSI','Combine','Modere-Severe'], color:'#a78bfa' },
+  { name:'Ipratropium', class:'Anticholinergique', desc:'Bronchodilatateur anticholinergique. Utilise en complement du salbutamol dans les crises severes.', icon:'🔵', tags:['Anticholinergique','Complement','Crise severe'], color:'#ffd84d' },
+  { name:'Theophylline', class:'Methylxanthine', desc:'Bronchodilatateur oral. Efficacite moderee, index therapeutique etroit. Surveillance des taux sanguins requise.', icon:'💊', tags:['Oral','Bronchodilatateur','Surveillance'], color:'#ff8c42' },
+  { name:'Prednisolone', class:'Corticosteroide oral', desc:'Corticosteroide systemique pour les exacerbations severes et le controle rapide de l\'inflammation aigue.', icon:'🔴', tags:['Oral','Systemique','Exacerbation','Court terme'], color:'#ff3d5a' },
 ];
 
 window._ordonnances = []; // charge depuis Firestore
@@ -1591,7 +1744,7 @@ async function loadOrdonnancesFromFirestore() {
         dosage: d.dosage || '--',
         duration: d.duration || '--',
         date: dateStr,
-        doctor: d.doctorName || 'MÃ©decin',
+        doctor: d.doctorName || 'Medecin',
         instructions: d.instructions || '',
         synced: true
       });
@@ -1604,11 +1757,11 @@ async function loadOrdonnancesFromFirestore() {
 }
 
 const DEMO_REMINDERS = [
-  { id:'r1', patient:'Marie Essomba', med:'Salbutamol 100Âµg', time:'08:00', freq:'2Ã—/jour', active:true },
-  { id:'r2', patient:'Marie Essomba', med:'BudÃ©sonide 200Âµg', time:'20:00', freq:'2Ã—/jour', active:true },
-  { id:'r3', patient:'Paul Nkomo', med:'BudÃ©sonide 200Âµg', time:'07:30', freq:'2Ã—/jour', active:true },
-  { id:'r4', patient:'Aline Tchinda', med:'Salbutamol 100Âµg', time:'12:00', freq:'Si besoin', active:false },
-  { id:'r5', patient:'CÃ©cile Abomo', med:'ThÃ©ophylline 200mg', time:'21:00', freq:'1Ã—/jour', active:true },
+  { id:'r1', patient:'Marie Essomba', med:'Salbutamol 100μg', time:'08:00', freq:'2×/jour', active:true },
+  { id:'r2', patient:'Marie Essomba', med:'Budesonide 200μg', time:'20:00', freq:'2×/jour', active:true },
+  { id:'r3', patient:'Paul Nkomo', med:'Budesonide 200μg', time:'07:30', freq:'2×/jour', active:true },
+  { id:'r4', patient:'Aline Tchinda', med:'Salbutamol 100μg', time:'12:00', freq:'Si besoin', active:false },
+  { id:'r5', patient:'Cecile Abomo', med:'Theophylline 200mg', time:'21:00', freq:'1×/jour', active:true },
 ];
 window._reminders = [...DEMO_REMINDERS];
 
@@ -1633,7 +1786,7 @@ function updateDashboardData() {
   const online = window._patients.filter(p=>p.online);
   const count = online.length;
 
-  document.getElementById('live-patients-count').textContent = count + ' patients connectÃ©s';
+  document.getElementById('live-patients-count').textContent = count + ' patients connectes';
   document.getElementById('home-online-count').textContent = count;
   document.getElementById('stat-online').textContent = count;
   document.getElementById('patients-nav-badge').textContent = count;
@@ -1641,7 +1794,7 @@ function updateDashboardData() {
   const critAlerts = window._alerts.filter(a=>a.type==='crit');
   document.getElementById('stat-alerts').textContent = window._alerts.length;
   if(critAlerts.length > 0) {
-    document.getElementById('alert-badge').textContent = 'âš  ' + critAlerts.length + ' critique(s)';
+    document.getElementById('alert-badge').textContent = '⚠ ' + critAlerts.length + ' critique(s)';
     document.getElementById('alert-badge').classList.add('active');
     document.getElementById('alerts-nav-badge').textContent = window._alerts.length;
     document.getElementById('alerts-nav-badge').style.display = 'block';
@@ -1700,13 +1853,13 @@ function renderHomeCriticalPatients() {
   grid.innerHTML = atRisk.map(p => {
     const crit = p.spo2 < 88 || p.hr >= 120;
     return `<div class="alert-item ${crit?'crit':'warn'}" style="margin-bottom:0">
-      <div class="alert-icon">${crit?'ðŸš¨':'âš ï¸'}</div>
+      <div class="alert-icon">${crit?'🚨':'⚠'}</div>
       <div class="alert-info">
         <div class="alert-title">${p.name}</div>
-        <div class="alert-detail">SpO2: <strong>${p.spo2}%</strong> Â· FC: <strong>${p.hr} bpm</strong></div>
+        <div class="alert-detail">SpO2: <strong>${p.spo2}%</strong> · FC: <strong>${p.hr} bpm</strong></div>
       </div>
       <div class="alert-actions">
-        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="openPatientChat('${p.id}')">ðŸ’¬</button>
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="openPatientChat('${p.id}')">💬</button>
       </div>
     </div>`;
   }).join('');
@@ -1722,25 +1875,25 @@ window.renderPatientsTable = function() {
     const spo2Class = !hasData ? '' : p.spo2 < 88 ? 'text-red' : p.spo2 < 92 ? 'text-orange' : 'text-green';
     const hrClass = !hasData ? '' : p.hr >= 120 ? 'text-red' : p.hr >= 100 ? 'text-orange' : 'text-green';
     const statusBadge = p.online
-      ? '<span class="badge badge-green">â— En ligne</span>'
-      : '<span class="badge" style="background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)">â—‹ Hors ligne</span>';
+      ? '<span class="badge badge-green"> En ligne</span>'
+      : '<span class="badge" style="background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)">○ Hors ligne</span>';
     return `<tr>
       <td><div class="td-patient">
         <div class="patient-av" style="background:linear-gradient(135deg,${p.color}33,${p.color}66)">
           <span style="color:${p.color};font-size:13px;font-weight:700">${p.name.charAt(0)}</span>
         </div>
-        <div><div class="patient-name">${p.name}</div><div class="patient-id">${p.age}ans Â· ${p.sex} Â· ${p.severity}</div></div>
+        <div><div class="patient-name">${p.name}</div><div class="patient-id">${p.age}ans · ${p.sex} · ${p.severity}</div></div>
       </div></td>
       <td>${statusBadge}</td>
       <td><span class="vital-mini ${spo2Class}">${hasData ? p.spo2+'%' : '--'}</span></td>
       <td><span class="vital-mini ${hrClass}">${hasData ? p.hr+" bpm" : "--"}</span></td>
-      <td><span class="vital-mini text-yellow">${hasData ? p.temp+'Â°C' : '--'}</span></td>
+      <td><span class="vital-mini text-yellow">${hasData ? p.temp+'°C' : '--'}</span></td>
       <td><span class="vital-mini" style="color:#a78bfa">${hasData ? p.resp+'/min' : '--'}</span></td>
       <td><span style="font-size:12px;color:var(--text2)">${p.device}</span></td>
       <td><span style="font-size:12px;color:var(--text3);font-family:var(--font-mono)">${p.lastUpdate ? formatRelativeTime(p.lastUpdate) : '--'}</span></td>
       <td><div class="action-btns">
-        <button class="action-btn view-btn" onclick="viewPatientVitals('${p.id}')">ðŸ“Š Vitaux</button>
-        <button class="action-btn chat-btn" onclick="openPatientChat('${p.id}')">ðŸ’¬ Chat</button>
+        <button class="action-btn view-btn" onclick="viewPatientVitals('${p.id}')">📊 Vitaux</button>
+        <button class="action-btn chat-btn" onclick="openPatientChat('${p.id}')">💬 Chat</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -1760,15 +1913,15 @@ function renderAlerts() {
   const list = document.getElementById('alerts-list');
   list.innerHTML = window._alerts.map(a => `
     <div class="alert-item ${a.type}" id="alert-${a.id}">
-      <div class="alert-icon">${a.type==='crit'?'ðŸš¨':'âš ï¸'}</div>
+      <div class="alert-icon">${a.type==='crit'?'🚨':'⚠'}</div>
       <div class="alert-info">
-        <div class="alert-title">${a.patient} â€” ${a.msg}</div>
-        <div class="alert-detail">Valeur mesurÃ©e: <strong>${a.value}</strong></div>
+        <div class="alert-title">${a.patient} — ${a.msg}</div>
+        <div class="alert-detail">Valeur mesuree: <strong>${a.value}</strong></div>
         <div class="alert-time">${a.time}</div>
       </div>
       <div class="alert-actions">
-        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="openPatientChat('${window._patients.find(p=>p.name===a.patient)?.id||'p1'}')">ðŸ’¬ Contacter</button>
-        <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="acknowledgeAlert('${a.id}')">âœ“ Acquitter</button>
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="openPatientChat('${window._patients.find(p=>p.name===a.patient)?.id||'p1'}')">💬 Contacter</button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="acknowledgeAlert('${a.id}')">✓ Acquitter</button>
       </div>
     </div>`).join('');
 }
@@ -1778,7 +1931,7 @@ function renderRecentAlerts() {
   const recent = window._alerts.slice(0,3);
   list.innerHTML = recent.map(a => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg2);border-radius:9px;margin-bottom:8px">
-      <span>${a.type==='crit'?'ðŸš¨':'âš ï¸'}</span>
+      <span>${a.type==='crit'?'🚨':'⚠'}</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:500">${a.patient}</div>
         <div style="font-size:11px;color:var(--text2)">${a.msg.substring(0,50)}...</div>
@@ -1791,7 +1944,7 @@ window.acknowledgeAlert = function(id) {
   window._alerts = window._alerts.filter(a=>a.id!==id);
   renderAlerts();
   updateDashboardData();
-  showToast('Alerte acquittÃ©e', 'success');
+  showToast('Alerte acquittee', 'success');
 };
 
 window.clearAlerts = function() {
@@ -1800,7 +1953,7 @@ window.clearAlerts = function() {
   updateDashboardData();
   document.getElementById('alert-badge').classList.remove('active');
   document.getElementById('alerts-nav-badge').style.display = 'none';
-  showToast('Toutes les alertes acquittÃ©es', 'success');
+  showToast('Toutes les alertes acquittees', 'success');
 };
 
 // ===== CHAT =====
@@ -1809,7 +1962,7 @@ function renderChatList() {
   if (!list) return;
   const patients = window._patients;
   if (patients.length === 0) {
-    list.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:13px;text-align:center">Aucun patient enregistrÃ©</div>';
+    list.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:13px;text-align:center">Aucun patient enregistre</div>';
     return;
   }
   list.innerHTML = patients.map(p => {
@@ -1840,7 +1993,7 @@ window.selectChat = function(pid) {
   document.getElementById('chat-header-av').style.background = `linear-gradient(135deg,${p.color||'#00d2ff'}44,${p.color||'#00d2ff'}88)`;
   document.getElementById('chat-header-av').style.color = p.color||'#00d2ff';
   document.getElementById('chat-header-name').textContent = p.name;
-  document.getElementById('chat-header-status').textContent = p.online ? 'â— En ligne Â· '+p.spo2+'% SpO2' : 'â—‹ Hors ligne';
+  document.getElementById('chat-header-status').textContent = p.online ? ' En ligne · '+p.spo2+'% SpO2' : '○ Hors ligne';
   document.getElementById('chat-header-badge').style.display = p.online ? 'inline-flex' : 'none';
 
   // Unsubscribe previous listener
@@ -1855,7 +2008,7 @@ window.selectChat = function(pid) {
     const area = document.getElementById('chat-messages-area');
     if (!area) return;
     if (!data) {
-      area.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Aucun message. DÃ©marrez la conversation.</div>';
+      area.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Aucun message. Demarrez la conversation.</div>';
       return;
     }
     const msgs = Object.values(data).sort((a,b)=>a.timestamp-b.timestamp);
@@ -1897,7 +2050,7 @@ window.sendChatMessage = async function() {
   const pid = window._activeChatPatient;
   const doctorFirestoreId = window._doctorFirestoreId || window._currentUser?.uid || '';
   const chatId = pid + '_' + doctorFirestoreId;
-  const docName = window._doctorName || 'MÃ©decin';
+  const docName = window._doctorName || 'Medecin';
   const msg = {
     from: window._currentUser.uid,
     fromName: docName,
@@ -1907,7 +2060,7 @@ window.sendChatMessage = async function() {
   input.value = '';
   try {
     await push(ref(rtdb, 'chats/' + chatId), msg);
-    showToast('Message envoyÃ©', 'success');
+    showToast('Message envoye', 'success');
   } catch(e) {
     showToast('Erreur envoi message', 'error');
     console.error(e);
@@ -1952,18 +2105,18 @@ function renderRdv() {
   const list = document.getElementById('rdv-list');
   if (!list) return;
   if (window._rdvs.length === 0) {
-    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:16px;text-align:center">Aucun rendez-vous programmÃ©</div>';
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:16px;text-align:center">Aucun rendez-vous programme</div>';
     return;
   }
   const sorted = [...window._rdvs].sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
   list.innerHTML = sorted.map(r => `
     <div class="reminder-item" id="rdv-${r.id}">
-      <div class="reminder-icon">ðŸ“…</div>
+      <div class="reminder-icon">📅</div>
       <div class="reminder-info">
         <div class="reminder-name">${r.patient}</div>
-        <div class="reminder-detail">${formatRdvDate(r.date)} Ã  ${r.time} Â· ${r.motif||'Consultation'}</div>
+        <div class="reminder-detail">${formatRdvDate(r.date)} a ${r.time} · ${r.motif||'Consultation'}</div>
       </div>
-      <button class="action-btn" style="font-size:12px;padding:6px 10px" onclick="cancelRdv('${r.id}')">âœ• Annuler</button>
+      <button class="action-btn" style="font-size:12px;padding:6px 10px" onclick="cancelRdv('${r.id}')">✕ Annuler</button>
     </div>`).join('');
 }
 
@@ -1977,7 +2130,7 @@ window.addRdv = async function() {
   const date = document.getElementById('rdv-date').value;
   const time = document.getElementById('rdv-time').value || '09:00';
   const motif = document.getElementById('rdv-motif').value;
-  if (!patientId || !date) { showToast('SÃ©lectionnez un patient et une date', 'error'); return; }
+  if (!patientId || !date) { showToast('Selectionnez un patient et une date', 'error'); return; }
   const p = window._patients.find(x => x.id === patientId);
   const patientName = p ? p.name : 'Patient inconnu';
   const localEntry = { id: 'rdv'+Date.now(), patient: patientName, date, time, motif };
@@ -1989,14 +2142,14 @@ window.addRdv = async function() {
       patientId, patientName, date, time, motif,
       createdAt: serverTimestamp(),
       doctorId: window._currentUser?.uid,
-      doctorName: window._doctorName || 'MÃ©decin',
-      status: 'confirmÃ©'
+      doctorName: window._doctorName || 'Medecin',
+      status: 'confirme'
     });
-    showToast('âœ… Rendez-vous programmÃ© et synchronisÃ© avec l\'app!', 'success');
+    showToast('✅ Rendez-vous programme et synchronise avec l\'app!', 'success');
     await loadRdvsFromFirestore();
   } catch(e) {
     console.error(e);
-    showToast('Rendez-vous sauvegardÃ© localement (erreur sync)', 'error');
+    showToast('Rendez-vous sauvegarde localement (erreur sync)', 'error');
   }
 };
 
@@ -2005,9 +2158,9 @@ window.cancelRdv = async function(id) {
   renderRdv();
   try {
     await deleteDoc(doc(db, 'rdvs', id));
-    showToast('Rendez-vous annulÃ© et supprimÃ©', 'info');
+    showToast('Rendez-vous annule et supprime', 'info');
   } catch(e) {
-    showToast('Rendez-vous annulÃ© localement', 'info');
+    showToast('Rendez-vous annule localement', 'info');
   }
 };
 
@@ -2016,7 +2169,7 @@ function renderOrdonnances() {
   const hist = document.getElementById('ord-history');
   if (!hist) return;
   if (window._ordonnances.length === 0) {
-    hist.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:13px;text-align:center">Aucune ordonnance enregistrÃ©e</div>';
+    hist.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:13px;text-align:center">Aucune ordonnance enregistree</div>';
     return;
   }
   hist.innerHTML = window._ordonnances.map(o=>`
@@ -2026,17 +2179,17 @@ function renderOrdonnances() {
         <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${o.date}</span>
       </div>
       <div style="font-size:13px;color:var(--teal);font-weight:600">${o.med}</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:3px">${o.dosage} Â· ${o.duration}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px">${o.dosage} · ${o.duration}</div>
       ${o.instructions ? `<div style="font-size:12px;color:var(--text3);margin-top:4px;font-style:italic">${o.instructions}</div>` : ''}
       ${o.doctor ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">${o.doctor}</div>` : ''}
-      <div style="margin-top:8px">${o.synced ? '<span class="badge badge-green">âœ“ SynchronisÃ© app</span>' : '<span class="badge badge-yellow">â³ En attente</span>'}</div>
+      <div style="margin-top:8px">${o.synced ? '<span class="badge badge-green">✓ Synchronise app</span>' : '<span class="badge badge-yellow"> En attente</span>'}</div>
     </div>`).join('');
 }
 
 function populatePatientSelects() {
   ['ord-patient','rem-patient','rdv-patient','note-patient'].forEach(id => {
     const sel = document.getElementById(id);
-    if(sel) sel.innerHTML = '<option value="">SÃ©lectionner...</option>' +
+    if(sel) sel.innerHTML = '<option value="">Selectionner...</option>' +
       window._patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   });
 }
@@ -2052,10 +2205,10 @@ window.addMedicalNote = async function() {
       patientId, patientName, text,
       createdAt: serverTimestamp(),
       doctorId: window._currentUser?.uid,
-      doctorName: window._doctorName || 'MÃ©decin'
+      doctorName: window._doctorName || 'Medecin'
     });
     document.getElementById('note-text').value = '';
-    showToast('âœ… Note enregistree et synchronisee!', 'success');
+    showToast('✅ Note enregistree et synchronisee!', 'success');
     renderNotesHistory();
   } catch(e) {
     console.error(e);
@@ -2086,36 +2239,36 @@ function renderNotesHistory() {
 window.emitOrdonnance = async function() {
   const patientId = document.getElementById('ord-patient').value;
   const med     = document.getElementById('ord-med').value;
-  const dosage  = document.getElementById('ord-dosage').value || '1Ã— par jour';
+  const dosage  = document.getElementById('ord-dosage').value || '1× par jour';
   const dur     = document.getElementById('ord-duration').value;
-  if(!patientId) { showToast('SÃ©lectionnez un patient','error'); return; }
+  if(!patientId) { showToast('Selectionnez un patient','error'); return; }
   const p = window._patients.find(x => x.id === patientId);
   const patientName = p ? p.name : 'Patient inconnu';
   const now = new Date();
   const date = now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear();
-  window._ordonnances.unshift({patient: patientName, med, dosage, duration:dur, date, doctor: window._doctorName || 'MÃ©decin', instructions: document.getElementById('ord-instructions').value||'', synced: false});
+  window._ordonnances.unshift({patient: patientName, med, dosage, duration:dur, date, doctor: window._doctorName || 'Medecin', instructions: document.getElementById('ord-instructions').value||'', synced: false});
   renderOrdonnances();
   try {
     await addDoc(collection(db,'ordonnances'),{
       patientId, patientName, med, dosage, duration:dur, date,
       createdAt: serverTimestamp(),
       doctorId: window._currentUser?.uid,
-      doctorName: window._doctorName || 'MÃ©decin'
+      doctorName: window._doctorName || 'Medecin'
     });
-    // CrÃ©e automatiquement un rappel correspondant Ã  ce mÃ©dicament
+    // Cree automatiquement un rappel correspondant a ce medicament
     await addDoc(collection(db,'doctorReminders'), {
       patientId, patientName, med,
       time: '08:00', freq: dosage || '1x/jour', active: true,
       fromOrdonnance: true,
       createdAt: serverTimestamp(),
       doctorId: window._currentUser?.uid,
-      doctorName: window._doctorName || 'MÃ©decin'
+      doctorName: window._doctorName || 'Medecin'
     });
-    showToast('âœ… Ordonnance Ã©mise, synchronisÃ©e et rappel programmÃ©!','success');
+    showToast('✅ Ordonnance emise, synchronisee et rappel programme!','success');
     await loadOrdonnancesFromFirestore(); // recharger depuis Firestore
   } catch(e) {
     console.error(e);
-    showToast('Erreur synchronisation, sauvegardÃ© localement', 'error');
+    showToast('Erreur synchronisation, sauvegarde localement', 'error');
   }
 };
 
@@ -2124,10 +2277,10 @@ function renderReminders() {
   const list = document.getElementById('reminders-list');
   list.innerHTML = window._reminders.map(r=>`
     <div class="reminder-item">
-      <div class="reminder-icon">ðŸ’Š</div>
+      <div class="reminder-icon">💊</div>
       <div class="reminder-info">
         <div class="reminder-name">${r.med}</div>
-        <div class="reminder-detail">${r.patient} Â· ${r.time} Â· ${r.freq}</div>
+        <div class="reminder-detail">${r.patient} · ${r.time} · ${r.freq}</div>
       </div>
       <div class="toggle-wrap">
         <input type="checkbox" class="toggle-input" id="rem-${r.id}" ${r.active?'checked':''} onchange="toggleReminder('${r.id}',this.checked)">
@@ -2138,7 +2291,7 @@ function renderReminders() {
 
 window.toggleReminder = function(id, val) {
   window._reminders = window._reminders.map(r=>r.id===id?{...r,active:val}:r);
-  showToast(val ? 'âœ… Rappel activÃ©' : 'Rappel dÃ©sactivÃ©', val?'success':'info');
+  showToast(val ? '✅ Rappel active' : 'Rappel desactive', val?'success':'info');
 };
 
 window.addReminder = async function() {
@@ -2158,12 +2311,12 @@ window.addReminder = async function() {
       patientId, patientName, med, time, freq, active: true,
       createdAt: serverTimestamp(),
       doctorId: window._currentUser?.uid,
-      doctorName: window._doctorName || 'MÃ©decin'
+      doctorName: window._doctorName || 'Medecin'
     });
-    showToast('âœ… Rappel programmÃ© et synchronisÃ© avec l\'app!', 'success');
+    showToast('✅ Rappel programme et synchronise avec l\'app!', 'success');
   } catch(e) {
     console.error(e);
-    showToast('Rappel sauvegardÃ© localement (erreur sync)', 'error');
+    showToast('Rappel sauvegarde localement (erreur sync)', 'error');
   }
 };
 
@@ -2199,14 +2352,14 @@ function updateLiveVitals(pid) {
   document.getElementById('live-temp').textContent = p.temp;
   document.getElementById('live-resp').textContent = p.resp;
 
-  const spo2Status = p.spo2 < 88 ? 'ðŸ”´ CRITIQUE' : p.spo2 < 92 ? 'ðŸŸ  Avertissement' : 'ðŸŸ¢ Normal';
+  const spo2Status = p.spo2 < 88 ? '🔴 CRITIQUE' : p.spo2 < 92 ? '🟠 Avertissement' : '🟢 Normal';
   document.getElementById('live-spo2-status').textContent = spo2Status;
   document.getElementById('live-spo2-card').className = 'vital-card spo2' + (p.spo2<88?' alert-crit':p.spo2<92?' alert-warn':'');
   document.getElementById('live-hr-card').className = 'vital-card hr' + (p.hr>=120?' alert-crit':p.hr>=100?' alert-warn':'');
 
-  document.getElementById('live-hr-status').textContent = p.hr >= 120 ? 'ðŸ”´ CRITIQUE Tachycardie' : p.hr >= 100 ? 'ðŸŸ  Tachycardie' : 'ðŸŸ¢ Normal';
-  document.getElementById('live-temp-status').textContent = p.temp >= 38 ? 'ðŸŸ¡ FiÃ¨vre' : 'ðŸŸ¢ Normal';
-  document.getElementById('live-resp-status').textContent = p.resp > 20 ? 'ðŸŸ  TachypnÃ©e' : 'ðŸŸ¢ Normal';
+  document.getElementById('live-hr-status').textContent = p.hr >= 120 ? '🔴 CRITIQUE Tachycardie' : p.hr >= 100 ? '🟠 Tachycardie' : '🟢 Normal';
+  document.getElementById('live-temp-status').textContent = p.temp >= 38 ? '🟡 Fievre' : '🟢 Normal';
+  document.getElementById('live-resp-status').textContent = p.resp > 20 ? '🟠 Tachypnee' : '🟢 Normal';
 }
 
 // ===== CHARTS =====
@@ -2288,7 +2441,7 @@ window.showPage = function(page) {
 
 window.viewPatientVitals = function(pid) { showPage('vitals'); selectLivePatient(pid); };
 window.openPatientChat  = function(pid) { showPage('chat'); selectChat(pid); };
-window.refreshData = function() { loadPatientsFromFirestore(); showToast('DonnÃ©es actualisÃ©es','info'); };
+window.refreshData = function() { loadPatientsFromFirestore(); showToast('Donnees actualisees','info'); };
 
 // ===== MODALS =====
 window.openAddPatientModal = function() { document.getElementById('add-patient-modal').classList.add('open'); };
@@ -2310,7 +2463,7 @@ window.addPatient = function() {
   renderPatientsTable();
   populatePatientSelects();
   closeModal('add-patient-modal');
-  showToast('âœ… Patient '+name+' ajoutÃ©!','success');
+  showToast('✅ Patient '+name+' ajoute!','success');
 };
 
 // ===== UTILS =====
@@ -2379,10 +2532,10 @@ window.playAlertSound = function(){
 
 window.showToast = function(msg, type='info') {
   const container = document.getElementById('toast-container');
-  const icons = {success:'âœ…', error:'âŒ', info:'â„¹ï¸'};
+  const icons = {success:'✅', error:'❌', info:'i'};
   const toast = document.createElement('div');
   toast.className='toast '+type;
-  toast.innerHTML=`<span>${icons[type]||'â„¹ï¸'}</span><span>${msg}</span>`;
+  toast.innerHTML=`<span>${icons[type]||'i'}</span><span>${msg}</span>`;
   container.appendChild(toast);
   setTimeout(()=>toast.remove(), 3200);
 };
@@ -2392,6 +2545,7 @@ window.switchAuthTab = function(tab) {
   document.getElementById('login-form').style.display = tab==='login'?'block':'none';
   document.getElementById('register-form').style.display = tab==='register'?'block':'none';
   document.getElementById('auth-error').style.display='none';
+  if (tab === 'register') window.updateHospitalOptions();
 };
 
 // Clock

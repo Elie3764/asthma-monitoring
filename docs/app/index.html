@@ -372,6 +372,7 @@ window.doRegister = async function(){
         doctorId, doctorEmail:selectedDoc?.email||'', doctorName:selectedDoc?.name||'', createdAt:serverTimestamp()};
       await setDoc(doc(db,'patients',cred.user.uid), p);
       await updateDoc(doc(db,'doctors',doctorId), {patientCount: (selectedDoc?.patientCount||0)+1});
+      await setDoc(doc(db,'lookups',cred.user.uid), {uid:cred.user.uid, email, phone:(phone||'').replace(/\s/g,''), role:'patient'});
     }catch(e){
       showToast(e.code==='auth/email-already-in-use'?'Email deja utilise':'Erreur creation compte');
       btn.textContent = "S'INSCRIRE";
@@ -381,14 +382,13 @@ window.doRegister = async function(){
     if(!parentPhone){showToast('Entrez votre numero de telephone');btn.textContent="S'INSCRIRE";return;}
     try{
       const cleanPhone = parentPhone.replace(/\s/g,'');
-      const patientsSnap = await getDocs(collection(db,'patients'));
+      const lookupSnap = await getDocs(query(collection(db,'lookups'), where('phone','==',cleanPhone), where('role','==','patient')));
       let linkedPatient = null;
-      patientsSnap.forEach(d=>{
-        const data = d.data();
-        if(data.phone && data.phone.replace(/\s/g,'')===cleanPhone){
-          linkedPatient = {id:d.id, ...data};
-        }
-      });
+      if(!lookupSnap.empty){
+        const lookupDoc = lookupSnap.docs[0].data();
+        const patientDoc = await getDoc(doc(db,'patients',lookupDoc.uid));
+        if(patientDoc.exists()) linkedPatient = {id:patientDoc.id, ...patientDoc.data()};
+      }
       if(!linkedPatient){
         showToast("Aucun patient trouve avec ce numero d'urgence");
         btn.textContent = "S'INSCRIRE";
@@ -399,6 +399,8 @@ window.doRegister = async function(){
         uid:cred.user.uid, role:'parent', linkedPatientId:linkedPatient.id, linkedPatientName:linkedPatient.name,
         createdAt:serverTimestamp()};
       await setDoc(doc(db,'parents',cred.user.uid), p);
+      await setDoc(doc(db,'lookups',cred.user.uid), {uid:cred.user.uid, email, phone:parentPhone, role:'parent'});
+      await updateDoc(doc(db,'patients',linkedPatient.id), {linkedParentId:cred.user.uid, linkedParentName:name+' '+prenom});
       showToast('Connecte a '+linkedPatient.name+' !');
     }catch(e){
       showToast(e.code==='auth/email-already-in-use'?'Email deja utilise':'Erreur: '+e.message);
