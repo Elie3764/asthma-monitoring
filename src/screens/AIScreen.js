@@ -1,91 +1,153 @@
-﻿import React,{useState}from"react";
-import{View,Text,ScrollView,TouchableOpacity,StatusBar,TextInput,ActivityIndicator,Alert}from"react-native";
-import{useStore}from"../store/useStore";
-const GEMINI_API_KEY="VOTRE_CLE_API_GEMINI_ICI"; // Remplacez par votre propre cle: https://aistudio.google.com/apikey
-export default function AIScreen({navigation}){
-  const{theme,vitals,aiAnalysis,aiLoading,setAiAnalysis,setAiLoading}=useStore();
-  const isLight=theme==="light";
-  const bg=isLight?"#f4f7fb":"#0d1829";
-  const card=isLight?"#ffffff":"#111f35";
-  const text=isLight?"#16242f":"#e8f4ff";
-  const text2=isLight?"#50657a":"#8ba8c4";
-  const border=isLight?"#eef2f7":"#1e3050";
-  const[question,setQuestion]=useState("");
-  const suggestions=["Mon SpO2 est-il normal ?","Que faire lors d'une crise ?","Mes medicaments sont-ils adaptes ?","Quand consulter un medecin ?"];
-  const analyze=async(q)=>{
-    const prompt=q||("Analyse ces vitaux d'asthme: SpO2="+vitals.spo2+"%, FC="+vitals.hr+"bpm, Temp="+vitals.temp+"C, Resp="+vitals.resp+"/min. Donne une analyse courte et des conseils pratiques en francais.");
-    setAiLoading(true);
-    setAiAnalysis(null);
-    try{
-      const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+GEMINI_API_KEY,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          contents:[{parts:[{text:"Tu es un assistant medical specialise en asthme. Reponds en francais, de maniere courte et pratique. "+prompt}]}]
+import React, { useState } from "react";
+import {
+  View, Text, ScrollView, TouchableOpacity,
+  TextInput, StatusBar, KeyboardAvoidingView,
+  Platform, ActivityIndicator
+} from "react-native";
+import { useStore } from "../store/useStore";
+
+export default function AIScreen() {
+  const { theme, vitals } = useStore();
+  const isLight = theme === "light";
+  const bg    = isLight ? "#f4f7fb" : "#0d1829";
+  const card  = isLight ? "#ffffff" : "#111f35";
+  const text  = isLight ? "#16242f" : "#e8f4ff";
+  const text2 = isLight ? "#50657a" : "#8ba8c4";
+  const border= isLight ? "#eef2f7" : "#1e3050";
+
+  const [messages, setMessages] = useState([
+    { role:"assistant", text:"Bonjour! Je suis votre assistant sante. Comment puis-je vous aider?" }
+  ]);
+  const [input, setInput]   = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const envoyer = async () => {
+    const txt = input.trim();
+    if (!txt) return;
+    setInput("");
+    const newMessages = [...messages, { role:"user", text:txt }];
+    setMessages(newMessages);
+    setLoading(true);
+    try {
+      const contexte = `Parametres actuels du patient:
+SpO2: ${vitals.spo2 || "--"}%
+FC: ${vitals.hr || "--"} bpm
+Temp: ${vitals.temp || "--"}C
+Resp: ${vitals.resp || "--"}/min
+Question: ${txt}`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 500,
+          system: "Tu es un assistant medical specialise en asthme. Reponds en francais de maniere claire et concise. Ne remplace pas un medecin.",
+          messages: [{ role:"user", content:contexte }]
         })
       });
-      const d=await res.json();
-      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text;
-      setAiAnalysis(txt||"Analyse temporairement indisponible. Reessayez plus tard.");
-    }catch{setAiAnalysis("Erreur de connexion. Verifiez votre internet.");}
-    finally{setAiLoading(false);}
+      const data = await response.json();
+      const rep = data.content?.[0]?.text || "Je ne peux pas repondre maintenant.";
+      setMessages([...newMessages, { role:"assistant", text:rep }]);
+    } catch (e) {
+      setMessages([...newMessages, {
+        role:"assistant",
+        text:"Desolee, je ne peux pas repondre maintenant. Verifiez votre connexion."
+      }]);
+    } finally {
+      setLoading(false);
+    }
   };
-  return(
-    <View style={{flex:1,backgroundColor:bg}}>
-      <StatusBar barStyle={isLight?"dark-content":"light-content"} backgroundColor={bg}/>
-      <View style={{flexDirection:"row",alignItems:"center",padding:20,paddingTop:52}}>
-        <TouchableOpacity onPress={()=>navigation.goBack()} style={{marginRight:12}}>
-          <Text style={{fontSize:16,color:"#00c896",fontWeight:"700"}}>←</Text>
-        </TouchableOpacity>
-        <View style={{flex:1}}>
-          <Text style={{fontSize:22,fontWeight:"900",color:text}}>Analyse IA</Text>
-          <Text style={{fontSize:12,color:text2}}>Powered by Gemini - SUPPTIC </Text>
-        </View>
+
+  const suggestions = [
+    "Qu'est-ce que l'asthme?",
+    "Mes valeurs sont-elles normales?",
+    "Que faire en cas de crise?",
+    "Comment utiliser un bronchodilatateur?",
+  ];
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex:1, backgroundColor:bg }}
+      behavior={Platform.OS==="ios"?"padding":"height"}>
+      <StatusBar barStyle={isLight?"dark-content":"light-content"} backgroundColor={bg} />
+
+      <View style={{ paddingHorizontal:16, paddingTop:48, paddingBottom:16,
+        backgroundColor:card, borderBottomWidth:1, borderBottomColor:border }}>
+        <Text style={{ fontSize:20, fontWeight:"900", color:text }}>
+          Assistant IA
+        </Text>
+        <Text style={{ fontSize:13, color:text2, marginTop:2 }}>
+          Conseils sante personnalises
+        </Text>
       </View>
-      <ScrollView contentContainerStyle={{padding:16,paddingBottom:120}}>
-        <View style={{backgroundColor:card,borderRadius:16,padding:16,marginBottom:16,elevation:2}}>
-          <Text style={{fontSize:12,fontWeight:"700",color:text2,marginBottom:12,letterSpacing:1}}>VOS VITAUX ACTUELS</Text>
-          <View style={{flexDirection:"row",flexWrap:"wrap",gap:10}}>
-            {[["O2",vitals.spo2,"%","#00c896"],["HR",vitals.hr," bpm","#d96a1f"],["T",vitals.temp,"C","#b88a00"],["RR",vitals.resp,"/min","#7c3aed"]].map(([ic,v,u,c])=>(
-              <View key={ic} style={{flex:1,minWidth:"40%",backgroundColor:c+"15",borderRadius:12,padding:10,alignItems:"center"}}>
-                <Text style={{fontSize:10,fontWeight:"700",color:c}}>{ic}</Text>
-                <Text style={{fontSize:20,fontWeight:"900",color:c}}>{v!=null?(ic==="T"?v.toFixed(1):v):"--"}<Text style={{fontSize:11}}>{u}</Text></Text>
-              </View>
-            ))}
+
+      <ScrollView contentContainerStyle={{ padding:16, gap:10, paddingBottom:20 }}>
+        {messages.map((msg, i) => (
+          <View key={i} style={{
+            alignSelf:msg.role==="user"?"flex-end":"flex-start",
+            maxWidth:"85%" }}>
+            <View style={{
+              backgroundColor:msg.role==="user"?"#00c896":card,
+              borderRadius:16,
+              borderBottomRightRadius:msg.role==="user"?4:16,
+              borderBottomLeftRadius: msg.role==="user"?16:4,
+              padding:12,
+              borderWidth:msg.role==="user"?0:1,
+              borderColor:border }}>
+              <Text style={{ fontSize:14, lineHeight:20,
+                color:msg.role==="user"?"white":text }}>
+                {msg.text}
+              </Text>
+            </View>
           </View>
-          <TouchableOpacity onPress={()=>analyze(null)} disabled={aiLoading} style={{marginTop:14,backgroundColor:"#00c896",borderRadius:12,padding:14,alignItems:"center",flexDirection:"row",justifyContent:"center",gap:8}}>
-            {aiLoading?<ActivityIndicator color="white" size="small"/>:<Text style={{color:"white",fontWeight:"900",fontSize:14}}>Analyser mes vitaux avec l'IA</Text>}
-          </TouchableOpacity>
-        </View>
-        {aiAnalysis&&(
-          <View style={{backgroundColor:card,borderRadius:16,padding:16,marginBottom:16,elevation:2,borderWidth:1,borderColor:"#00c89630"}}>
-            <Text style={{fontSize:12,fontWeight:"700",color:"#00c896",marginBottom:10,letterSpacing:1}}>RESULTAT DE L'ANALYSE</Text>
-            <Text style={{fontSize:14,lineHeight:22,color:text}}>{aiAnalysis}</Text>
+        ))}
+
+        {loading && (
+          <View style={{ alignSelf:"flex-start", padding:12,
+            backgroundColor:card, borderRadius:16,
+            borderWidth:1, borderColor:border }}>
+            <ActivityIndicator color="#00c896" size="small" />
           </View>
         )}
-        <View style={{backgroundColor:card,borderRadius:16,padding:16,elevation:2}}>
-          <Text style={{fontSize:12,fontWeight:"700",color:text2,marginBottom:12,letterSpacing:1}}>POSER UNE QUESTION</Text>
-          <Text style={{fontSize:12,color:text2,marginBottom:10}}>Suggestions :</Text>
-          <View style={{gap:8,marginBottom:14}}>
-            {suggestions.map(s=>(
-              <TouchableOpacity key={s} onPress={()=>analyze(s)} style={{backgroundColor:bg,borderRadius:12,padding:12,borderWidth:1,borderColor:border}}>
-                <Text style={{fontSize:13,color:text}}>{s}</Text>
+
+        {messages.length === 1 && (
+          <View style={{ gap:8, marginTop:8 }}>
+            <Text style={{ fontSize:12, color:text2, fontWeight:"600" }}>
+              SUGGESTIONS
+            </Text>
+            {suggestions.map((s, i) => (
+              <TouchableOpacity key={i} onPress={() => setInput(s)}
+                style={{ backgroundColor:card, borderRadius:12, padding:12,
+                  borderWidth:1, borderColor:border }}>
+                <Text style={{ fontSize:13, color:text }}>{s}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <View style={{flexDirection:"row",gap:10}}>
-            <TextInput style={{flex:1,backgroundColor:bg,borderRadius:12,padding:12,fontSize:14,color:text,borderWidth:1.5,borderColor:border}} value={question} onChangeText={setQuestion} placeholder="Votre question..." placeholderTextColor={text2} multiline/>
-            <TouchableOpacity onPress={()=>{if(question.trim()){analyze(question);setQuestion("");}}} style={{width:44,height:44,borderRadius:22,backgroundColor:"#00c896",alignItems:"center",justifyContent:"center",alignSelf:"flex-end"}}>
-              <Text style={{color:"white",fontWeight:"900",fontSize:16}}>›</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <Text style={{fontSize:11,color:text2,textAlign:"center",marginTop:16,lineHeight:18}}>Analyse informative uniquement. En cas d'urgence, consultez un medecin.{"\n"}SUPPTIC -  Yaounde - Cameroun</Text>
+        )}
       </ScrollView>
-    </View>
+
+      <View style={{ flexDirection:"row", padding:12, gap:10,
+        backgroundColor:card, borderTopWidth:1, borderTopColor:border,
+        alignItems:"flex-end" }}>
+        <TextInput
+          style={{ flex:1, backgroundColor:bg, borderRadius:20,
+            paddingHorizontal:16, paddingVertical:10, fontSize:14,
+            color:text, borderWidth:1, borderColor:border, maxHeight:100 }}
+          value={input}
+          onChangeText={setInput}
+          placeholder="Posez votre question..."
+          placeholderTextColor={text2}
+          multiline
+        />
+        <TouchableOpacity onPress={envoyer}
+          disabled={!input.trim()||loading}
+          style={{ width:44, height:44, borderRadius:22,
+            backgroundColor:input.trim()?"#00c896":"#888",
+            alignItems:"center", justifyContent:"center" }}>
+          <Text style={{ color:"white", fontSize:18, fontWeight:"900" }}>→</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
-
-
-
-

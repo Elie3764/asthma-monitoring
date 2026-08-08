@@ -1,38 +1,77 @@
-﻿import {create} from "zustand";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-export const useStore=create((set,get)=>({
-  user:null,userProfile:null,setUser:u=>set({user:u}),setUserProfile:p=>set({userProfile:p}),
-  vitals:{spo2:null,hr:null,temp:null,resp:null},vitalsHistory:[],
-  setVitals:v=>{const ts={...v,timestamp:Date.now()};set(s=>({vitals:ts,vitalsHistory:[...s.vitalsHistory.slice(-500),ts]}));},
-  alertStatus:"normal",activeAlerts:[],
-  setAlertStatus:s=>set({alertStatus:s}),
-  addAlert:a=>set(s=>({activeAlerts:[a,...s.activeAlerts.slice(0,49)]})),
-  clearAlerts:()=>set({activeAlerts:[],alertStatus:"normal"}),
-  connectedDevice:null,connectionType:null,
-  setConnectedDevice:(d,t)=>set({connectedDevice:d,connectionType:t}),
-  disconnect:()=>set({connectedDevice:null,connectionType:null}),
-  reminders:[],
-  setReminders:r=>{
-    set({reminders:r});
-    AsyncStorage.setItem("@reminders",JSON.stringify(r)).catch(()=>{});
+import { create } from 'zustand';
+
+const useStore = create((set, get) => ({
+
+  // ===== UTILISATEUR =====
+  user:        null,
+  userProfile: null,
+  setUser:        (user)        => set({ user }),
+  setUserProfile: (userProfile) => set({ userProfile }),
+
+  // ===== THEME =====
+  theme: 'dark',
+  setTheme: (theme) => set({ theme }),
+
+  // ===== VITAUX =====
+  vitals: {
+    spo2:0, hr:0, temp:0, hum:0,
+    resp:0, lat:0, lng:0, gps:false, batt:100,
   },
-  toggleReminder:id=>{const u=get().reminders.map(r=>r.id===id?{...r,active:!r.active}:r);get().setReminders(u);},
-  theme:"light",setTheme:t=>{set({theme:t});AsyncStorage.setItem("@theme",t).catch(()=>{});},
-  profilePhoto:null,wallpaper:null,
-  setProfilePhoto:u=>{set({profilePhoto:u})},
-  setWallpaper:u=>{set({wallpaper:u})},
-  messages:{},
-  setMessages:(id,msgs)=>set(s=>({messages:{...s.messages,[id]:msgs}})),
-  appendMessage:(id,msg)=>set(s=>({messages:{...s.messages,[id]:[...(s.messages[id]||[]),msg]}})),
-  gpsLocation:null,setGpsLocation:loc=>set({gpsLocation:loc}),
-  aiAnalysis:null,aiLoading:false,setAiAnalysis:a=>set({aiAnalysis:a}),setAiLoading:v=>set({aiLoading:v}),
-  manualHistory:[],addManualVital:v=>{const e={...v,timestamp:Date.now(),source:"manual"};set(s=>({manualHistory:[e,...s.manualHistory.slice(0,99)]}));},
-  loadPersistedData:async()=>{
-    try{
-      const r=await AsyncStorage.getItem("@reminders");
-      if(r)set({reminders:JSON.parse(r)});
-      const t=await AsyncStorage.getItem("@theme");
-      if(t)set({theme:t});
-    }catch(e){}
+  setVitals:   (vitals) => set({ vitals }),
+  updateVital: (key, value) => set((s) => ({
+    vitals: { ...s.vitals, [key]: value }
+  })),
+
+  // ===== ALERTES =====
+  alertStatus: 'normal',
+  activeAlerts: [],
+  setAlertStatus: (alertStatus) => set({ alertStatus }),
+  addAlert: (alert) => set((s) => ({
+    activeAlerts: [alert, ...s.activeAlerts].slice(0, 20)
+  })),
+  clearAlerts: () => set({ activeAlerts: [], alertStatus: 'normal' }),
+
+  // ===== MONTRE =====
+  connectedDevice: null,
+  connectionType:  null,
+  setConnectedDevice: (connectedDevice) => set({ connectedDevice }),
+  setConnectionType:  (connectionType)  => set({ connectionType }),
+
+  // ===== NOTIFICATIONS =====
+  notificationsEnabled: true,
+  smsAlertsEnabled:     true,
+  setNotificationsEnabled: (v) => set({ notificationsEnabled: v }),
+  setSmsAlertsEnabled:     (v) => set({ smsAlertsEnabled: v }),
+
+  // ===== MESSAGES CHAT =====
+  messages: {},
+  setMessages: (chatId, list) => set((s) => ({
+    messages: { ...s.messages, [chatId]: list }
+  })),
+  appendMessage: (chatId, msg) => set((s) => ({
+    messages: {
+      ...s.messages,
+      [chatId]: [...(s.messages[chatId] || []), msg]
+    }
+  })),
+
+  // ===== PERSISTANCE (stub — pas de AsyncStorage requis) =====
+  loadPersistedData: () => {
+    // Rien a charger — Firebase gere la persistance
   },
+
+  // ===== RESET =====
+  reset: () => set({
+    user:            null,
+    userProfile:     null,
+    vitals:          { spo2:0, hr:0, temp:0, hum:0, resp:0, lat:0, lng:0, gps:false, batt:100 },
+    alertStatus:     'normal',
+    activeAlerts:    [],
+    connectedDevice: null,
+    connectionType:  null,
+    messages:        {},
+  }),
 }));
+
+export { useStore };
+export default useStore;

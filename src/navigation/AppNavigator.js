@@ -1,67 +1,95 @@
-import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Text, View } from "react-native";
-import { useStore } from "../store/useStore";
-import HomeScreen from "../screens/HomeScreen";
-import VitauxScreen from "../screens/VitauxScreen";
-import WatchScreen from "../screens/WatchScreen";
-import ChatScreen from "../screens/ChatScreen";
-import AIScreen from "../screens/AIScreen";
-import RemindersScreen from "../screens/RemindersScreen";
-import ProfileScreen from "../screens/ProfileScreen";
-const Tab = createBottomTabNavigator();
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text } from 'react-native';
+
+import HomeScreen         from '../screens/HomeScreen';
+import WatchScreen        from '../screens/WatchScreen';
+import WatchPairingScreen from '../screens/WatchPairingScreen';
+import ChatScreen         from '../screens/ChatScreen';
+import RemindersScreen    from '../screens/RemindersScreen';
+import ProfileScreen      from '../screens/ProfileScreen';
+import AIScreen           from '../screens/AIScreen';
+
+import { useStore } from '../store/useStore';
+
+const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-function TabIcon({ label, focused, color }) {
-  const icons = { "Sante":"S","Messages":"M","IA":"IA","Reglages":"R" };
-  return (
-    <View style={{ alignItems:"center", gap:2, paddingTop:4 }}>
-      <View style={{ width:28, height:28, borderRadius:8, backgroundColor:focused?"#00c89620":"transparent", alignItems:"center", justifyContent:"center" }}>
-        <Text style={{ fontSize:12, fontWeight:"900", color:focused?"#00c896":color }}>{icons[label]}</Text>
-      </View>
-      <Text style={{ fontSize:9, fontWeight:focused?"800":"500", color:focused?"#00c896":color }}>{label}</Text>
-    </View>
-  );
-}
+
+// ===== ICONES ONGLETS =====
+const ICONS = {
+  Home:     { on:'🏠', off:'🏠' },
+  Watch:    { on:'⌚', off:'⌚' },
+  Chat:     { on:'💬', off:'💬' },
+  AI:       { on:'🤖', off:'🤖' },
+  Profile:  { on:'👤', off:'👤' },
+};
+
+// ===== MAIN TABS =====
 function MainTabs() {
   const { theme } = useStore();
-  const isLight = theme === "light";
+  const isDark = theme === 'dark';
+  const bg     = isDark ? '#0d1829' : '#ffffff';
+  const border = isDark ? '#1e3050' : '#eef2f7';
+  const active = '#00c896';
+  const inactive= isDark ? '#4d6a85' : '#9ca3af';
+
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: isLight ? "#ffffff" : "#111f35",
-          borderTopColor: isLight ? "#eef2f7" : "#1e3050",
-          borderTopWidth: 1,
-          height: 65,
-          paddingBottom: 8,
-          elevation: 10,
+          backgroundColor: bg,
+          borderTopColor:  border,
+          borderTopWidth:  1,
+          paddingBottom:   6,
+          paddingTop:      6,
+          height:          62,
         },
-        tabBarActiveTintColor: "#00c896",
-        tabBarInactiveTintColor: isLight ? "#8093a3" : "#4d6a85",
-      }}
-    >
-      <Tab.Screen name="Home" component={HomeScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Sante" focused={focused} color={color}/> }}/>
-      <Tab.Screen name="Chat" component={ChatScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Messages" focused={focused} color={color}/> }}/>
-      <Tab.Screen name="AI" component={AIScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="IA" focused={focused} color={color}/> }}/>
-      <Tab.Screen name="Profile" component={ProfileScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon label="Reglages" focused={focused} color={color}/> }}/>
+        tabBarActiveTintColor:   active,
+        tabBarInactiveTintColor: inactive,
+        tabBarLabelStyle: { fontSize:10, fontWeight:'700', marginTop:-2 },
+        tabBarIcon: ({ focused }) => (
+          <Text style={{ fontSize: focused?22:18, opacity: focused?1:0.5 }}>
+            {ICONS[route.name]?.on || '●'}
+          </Text>
+        ),
+      })}>
+      <Tab.Screen name="Home"    component={HomeScreen}    options={{ title:'Accueil' }} />
+      <Tab.Screen name="Watch"   component={WatchScreen}   options={{ title:'Montre' }} />
+      <Tab.Screen name="Chat"    component={ChatScreen}    options={{ title:'Messages' }} />
+      <Tab.Screen name="AI"      component={AIScreen}      options={{ title:'Assistant' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title:'Profil' }} />
     </Tab.Navigator>
   );
 }
+
+// ===== APP NAVIGATOR (patient) =====
+// NOTE : plus de NavigationContainer ici, et plus de logique d'auth —
+// App.js (racine) pose deja le NavigationContainer et decide, via
+// onAuthStateChanged + le role Firestore, quand afficher AppNavigator,
+// ParentNavigator ou AuthScreen. Le faire ici aussi creait le
+// "nested NavigationContainer" et une double ecoute Firebase.
 export default function AppNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MainTabs" component={MainTabs} />
-      <Stack.Screen name="Vitaux" component={VitauxScreen} />
-      <Stack.Screen name="Watch" component={WatchScreen} />
-      <Stack.Screen name="Reminders" component={RemindersScreen} />
+    <Stack.Navigator screenOptions={{ headerShown:false }}>
+      <Stack.Screen name="MainTabs"    component={MainTabs} />
+      <Stack.Screen name="WatchPairing" component={WatchPairingScreen}
+        options={{
+          headerShown:      true,
+          headerTitle:      'Associer la montre',
+          headerTintColor:  '#00c896',
+          headerTitleStyle: { fontWeight:'800' },
+        }}
+      />
+      <Stack.Screen name="Reminders" component={RemindersScreen}
+        options={{
+          headerShown:      true,
+          headerTitle:      'Mes Rappels',
+          headerTintColor:  '#00c896',
+          headerTitleStyle: { fontWeight:'800' },
+        }}
+      />
     </Stack.Navigator>
   );
 }
-
