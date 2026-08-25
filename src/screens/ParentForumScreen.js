@@ -27,7 +27,9 @@ export default function ParentForumScreen(){
     if(!newPost.trim()||!user?.uid)return;
     setLoading(true);
     try{
-      await firestore().collection("forum").add({text:newPost.trim(),from:user.uid,fromName:(userProfile?.name||"Parent")+" (proche)",category:postCategory,likes:0,comments:0,createdAt:firestore.FieldValue.serverTimestamp()});
+      const isParent=userProfile?.role==="parent";
+      const fromName=(userProfile?.name||(isParent?"Parent":"Patient"))+(isParent?" (proche)":"");
+      await firestore().collection("forum").add({text:newPost.trim(),from:user.uid,fromName,category:postCategory,likes:0,comments:0,createdAt:firestore.FieldValue.serverTimestamp()});
       setNewPost("");
     }catch{Alert.alert("Erreur","Impossible de publier");}
     finally{setLoading(false);}

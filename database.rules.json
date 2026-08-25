@@ -1,0 +1,64 @@
+{
+  "rules": {
+
+    "patients": {
+      "$uid": {
+
+        // Lecture : le patient lui-même, OU un parent lié à ce patient
+        // (on suppose que /parents/{parentUid}/linkedPatientId existe
+        // aussi côté Realtime Database — voir note plus bas si ce n'est
+        // pas le cas chez toi)
+        ".read": "auth != null && (auth.uid === $uid || root.child('parents').child(auth.uid).child('linkedPatientId').val() === $uid)",
+
+        // Écriture générale sur le nœud patient : uniquement le patient
+        // lui-même (ex: mise à jour de son profil)
+        ".write": "auth != null && auth.uid === $uid",
+
+        // Profil du patient (contient notamment l'âge utilisé par la
+        // Cloud Function pour choisir la bonne tranche de seuils)
+        "profile": {
+          ".read": "auth != null && (auth.uid === $uid || root.child('parents').child(auth.uid).child('linkedPatientId').val() === $uid)",
+          ".write": "auth != null && auth.uid === $uid"
+        },
+
+        // Mesures brutes envoyées par le firmware ESP32 (spo2, fc, fr,
+        // tempAmbiante, timestamp). En pratique le firmware écrit ici
+        // via une clé d'API/service, pas via un compte utilisateur
+        // classique — adapte la condition ci-dessous à ton mode
+        // d'authentification firmware (ex: un uid de service dédié).
+        "vitals": {
+          ".read": "auth != null && (auth.uid === $uid || root.child('parents').child(auth.uid).child('linkedPatientId').val() === $uid)",
+          ".write": "auth != null && auth.uid === $uid"
+        },
+
+        // Résultat calculé par la Cloud Function (evaluerSeuilsVitaux) :
+        // niveaux d'alerte spo2/fc/fr/tempAmbiante/global. Écrit
+        // uniquement par le SDK Admin (qui contourne ces règles), donc
+        // on bloque l'écriture pour tout utilisateur normal.
+        "alerts": {
+          ".read": "auth != null && (auth.uid === $uid || root.child('parents').child(auth.uid).child('linkedPatientId').val() === $uid)",
+          ".write": false
+        }
+      }
+    },
+
+    // Miroir minimal des liens parent -> patient, utilisé uniquement
+    // pour les vérifications ".read" ci-dessus. Ne dupliquer ici QUE
+    // le champ linkedPatientId (pas tout le dossier du parent).
+    "parents": {
+      "$parentUid": {
+        ".read": "auth != null && auth.uid === $parentUid",
+        ".write": "auth != null && auth.uid === $parentUid",
+        "linkedPatientId": {
+          ".read": "auth != null"
+        }
+      }
+    },
+
+    // Tout le reste est fermé par défaut
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

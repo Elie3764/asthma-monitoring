@@ -530,8 +530,13 @@ function renderFab(){
 window.toggleTheme = function(){
   window._state.theme = window._state.theme==='light' ? 'dark' : 'light';
   document.body.classList.toggle('dark', window._state.theme==='dark');
-  if(window._state.currentScreen==='home' || window._state.currentTab==='home') renderHomeScreen();
-  else switchTab(window._state.currentTab);
+  if(window._state.role==='parent'){
+    switchParentTab(window._state.currentTab||'suivi');
+  }else if(window._state.currentScreen==='home' || window._state.currentTab==='home'){
+    renderHomeScreen();
+  }else{
+    switchTab(window._state.currentTab);
+  }
 };
 
 window.toggleMenu = function(open){
@@ -1206,17 +1211,21 @@ function renderParentApp(){
       <button data-tab="suivi" onclick="switchParentTab('suivi')" class="active"><div class="tab-icon">S</div><div class="tab-label">Suivi</div></button>
       <button data-tab="forum" onclick="switchParentTab('forum')"><div class="tab-icon">F</div><div class="tab-label">Forum</div></button>
       <button data-tab="alertes" onclick="switchParentTab('alertes')"><div class="tab-icon">A</div><div class="tab-label">Alertes</div></button>
+      <button data-tab="reglages" onclick="switchParentTab('reglages')"><div class="tab-icon">R</div><div class="tab-label">Reglages</div></button>
     </div>
   `;
+  window._state.currentTab = 'suivi';
   switchParentTab('suivi');
 }
 window.renderParentApp = renderParentApp;
 
 window.switchParentTab = function(tab){
+  window._state.currentTab = tab;
   document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   if(tab==='suivi') renderParentSuiviScreen();
   if(tab==='forum'){ const sc=document.getElementById('screen-container'); sc.innerHTML='<div class="topbar"><h1>Forum</h1></div><div id="forum-host" style="padding:0 16px;"></div><div style="height:90px;"></div>'; renderForumTab(document.getElementById('forum-host')); }
   if(tab==='alertes') renderParentAlertsScreen();
+  if(tab==='reglages') renderParentReglagesScreen();
 };
 
 window._parentSubTab = 'suivi';
@@ -1396,6 +1405,55 @@ function renderParentAlertsScreen(){
   `;
 }
 window.renderParentAlertsScreen = renderParentAlertsScreen;
+
+// ===== PARENT REGLAGES SCREEN =====
+function renderParentReglagesScreen(){
+  const p = window._state.profile;
+  const sc = document.getElementById('screen-container');
+  sc.innerHTML = `
+    <div class="topbar"><h1>Reglages</h1></div>
+    <div style="text-align:center;padding:20px 0;">
+      <div style="width:80px;height:80px;border-radius:40px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:3px solid var(--primary);font-size:28px;font-weight:900;color:var(--primary);">${initials(p?.name)}</div>
+      <div style="font-size:18px;font-weight:900;">${p?.name||'Parent'}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:2px;">${p?.email||''}</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+        <div style="padding:4px 12px;border-radius:20px;background:var(--border);font-size:11px;font-weight:700;color:var(--text2);">Parent / Proche</div>
+        ${p?.linkedPatientName?`<div style="padding:4px 12px;border-radius:20px;background:rgba(0,200,150,0.12);font-size:11px;font-weight:700;color:var(--primary);">Suit ${p.linkedPatientName}</div>`:''}
+      </div>
+    </div>
+    <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);margin-bottom:16px;">
+      <div onclick="editParentProfile()" style="display:flex;align-items:center;padding:16px;border-bottom:1px solid var(--border);">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:var(--primary);">P</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Profil</div><div style="font-size:12px;color:var(--text2);">Modifier vos informations</div></div>
+        <div style="color:var(--text2);">›</div>
+      </div>
+      <div onclick="toggleTheme()" style="display:flex;align-items:center;padding:16px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:#7c3aed;">T</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Mode sombre</div><div style="font-size:12px;color:var(--text2);">Changer l'apparence</div></div>
+        <div style="color:var(--text2);">${window._state.theme==='dark'?'On':'Off'}</div>
+      </div>
+    </div>
+    <div style="margin:16px;border-radius:16px;border:1px solid #fde8ec;background:rgba(214,48,74,0.06);padding:16px;">
+      <div style="font-size:12px;font-weight:700;color:#d6304a;margin-bottom:12px;">Zone de danger</div>
+      <button onclick="doLogout()" style="width:100%;background:#d6304a;border-radius:12px;padding:14px;color:white;font-weight:900;font-size:15px;">Se deconnecter</button>
+    </div>
+    <div style="height:90px;"></div>
+  `;
+}
+window.renderParentReglagesScreen = renderParentReglagesScreen;
+
+window.editParentProfile = async function(){
+  const p = window._state.profile;
+  const name = prompt('Nom complet :', p?.name||'');
+  if(name===null) return;
+  const phone = prompt('Telephone :', p?.phone||'');
+  try{
+    await updateDoc(doc(db,'parents',window._state.user.uid), {name, phone});
+    window._state.profile = {...p, name, phone};
+    showToast('Profil mis a jour !');
+    renderParentReglagesScreen();
+  }catch(e){ showToast('Impossible de sauvegarder'); }
+};
 
 renderAuth();
 </script>
