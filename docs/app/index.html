@@ -119,7 +119,7 @@ input,textarea,select{font-family:var(--font);}
 <script src="config.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, onSnapshot, serverTimestamp, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getDatabase, ref, onValue, set, push, off, serverTimestamp as rtdbTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
@@ -1229,54 +1229,133 @@ window.deleteLocalReminder = function(id){
 };
 
 // ===== PROFILE SCREEN =====
+window._notificationsEnabled = JSON.parse(localStorage.getItem('notifEnabled')??'true');
+window._smsAlertsEnabled = JSON.parse(localStorage.getItem('smsEnabled')??'true');
+
 function renderProfileScreen(){
   window._state.currentScreen = 'profile';
   const p = window._state.profile;
   const sc = document.getElementById('screen-container');
+  const appareilActif = !!window._state.simInterval || !!window._state.gsmInterval;
+  const rowEdit = (label, field, value) => `
+    <div onclick="editProfileField('${field}','${label.replace(/'/g,"")}')" style="display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--border);cursor:pointer;">
+      <div style="flex:1;">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:2px;">${label}</div>
+        <div style="font-size:14px;font-weight:600;">${value||'Non renseigne'}</div>
+      </div>
+      <div style="color:var(--primary);font-size:14px;font-weight:700;">Modifier</div>
+    </div>`;
+  const rowStatic = (label, value) => `
+    <div style="display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--border);">
+      <div style="flex:1;font-size:14px;color:var(--text2);">${label}</div>
+      <div style="font-size:14px;font-weight:600;">${value||'--'}</div>
+    </div>`;
+  const rowSwitch = (label, desc, enabled, onclickFn) => `
+    <div style="display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--border);">
+      <div style="flex:1;">
+        <div style="font-size:14px;">${label}</div>
+        ${desc?`<div style="font-size:11px;color:var(--text2);margin-top:2px;">${desc}</div>`:''}
+      </div>
+      <div onclick="${onclickFn}" style="width:44px;height:26px;border-radius:13px;background:${enabled?'#00c896':'var(--border)'};position:relative;cursor:pointer;transition:background .2s;">
+        <div style="width:20px;height:20px;border-radius:10px;background:white;position:absolute;top:3px;left:${enabled?'21px':'3px'};transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+      </div>
+    </div>`;
+
   sc.innerHTML = `
     <div class="topbar"><h1>Reglages</h1></div>
-    <div style="text-align:center;padding:20px 0;">
-      <div style="width:80px;height:80px;border-radius:40px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:3px solid var(--primary);font-size:28px;font-weight:900;color:var(--primary);">${initials(p?.name)}</div>
+    <div style="text-align:center;padding-bottom:20px;">
+      <div style="width:80px;height:80px;border-radius:40px;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 12px rgba(0,200,150,0.3);">
+        <span style="font-size:32px;color:white;font-weight:900;">${(p?.name?.[0]||'P').toUpperCase()}</span>
+      </div>
       <div style="font-size:18px;font-weight:900;">${p?.name||'Patient'}</div>
-      <div style="font-size:13px;color:var(--text2);margin-top:2px;">${p?.email||''}</div>
-      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
-        <div style="padding:4px 12px;border-radius:20px;background:rgba(0,200,150,0.12);font-size:11px;font-weight:700;color:var(--primary);">${p?.severity||'Modere persistant'}</div>
-        <div style="padding:4px 12px;border-radius:20px;background:var(--border);font-size:11px;font-weight:700;color:var(--text2);">${p?.ville||'Yaounde'}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px;">${p?.role==='parent'?'Parent / Proche':'Patient Asthmatique'}</div>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:var(--text2);padding:0 16px 8px;text-transform:uppercase;letter-spacing:0.5px;">Informations personnelles</div>
+    <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);">
+      ${rowEdit('Nom complet','name',p?.name)}
+      ${rowEdit('Age','age',p?.age)}
+      ${rowEdit('Ville','ville',p?.ville)}
+      ${rowEdit('Telephone urgence','phone',p?.phone)}
+      ${rowEdit('Email medecin','doctorEmail',p?.doctorEmail)}
+      ${rowStatic('Email', p?.email)}
+      ${rowStatic('Role', p?.role==='parent'?'Parent/Proche':'Patient')}
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:var(--text2);padding:0 16px 8px;text-transform:uppercase;letter-spacing:0.5px;">Appareil connecte</div>
+    <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);">
+      ${rowStatic('Statut', appareilActif?'Associe':'Non associe')}
+      ${rowStatic('Appareil', window._state.deviceName||'--')}
+      <div onclick="switchScreenStandalone('connexion')" style="display:flex;align-items:center;padding:14px;cursor:pointer;">
+        <div style="flex:1;font-size:14px;">Gerer mon appareil</div>
+        <div style="color:var(--primary);font-size:16px;">›</div>
       </div>
     </div>
-    <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);margin-bottom:16px;">
-      <div onclick="editProfile()" style="display:flex;align-items:center;padding:16px;border-bottom:1px solid var(--border);">
-        <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:var(--primary);">P</div>
-        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Profil</div><div style="font-size:12px;color:var(--text2);">Modifier vos informations</div></div>
-        <div style="color:var(--text2);">›</div>
+
+    <div style="font-size:12px;font-weight:700;color:var(--text2);padding:0 16px 8px;text-transform:uppercase;letter-spacing:0.5px;">Affichage</div>
+    <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);">
+      ${rowSwitch('Mode sombre','Interface sombre pour economiser la batterie', window._state.theme==='dark', 'toggleTheme()')}
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:var(--text2);padding:0 16px 8px;text-transform:uppercase;letter-spacing:0.5px;">Alertes et notifications</div>
+    <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);">
+      ${rowSwitch('Notifications','Recevoir les alertes sur le telephone', window._notificationsEnabled, 'toggleNotifSetting()')}
+      ${rowSwitch('Alertes SMS',"SMS automatique au contact d'urgence", window._smsAlertsEnabled, 'toggleSmsSetting()')}
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:var(--text2);padding:0 16px 8px;text-transform:uppercase;letter-spacing:0.5px;">Compte</div>
+    <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);">
+      <div onclick="changerMotDePasse()" style="display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--border);cursor:pointer;">
+        <div style="flex:1;font-size:14px;">Changer le mot de passe</div>
+        <div style="color:var(--primary);font-size:16px;">›</div>
       </div>
-      <div onclick="toggleTheme()" style="display:flex;align-items:center;padding:16px;">
-        <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:#7c3aed;">T</div>
-        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Mode sombre</div><div style="font-size:12px;color:var(--text2);">Changer l'apparence</div></div>
-        <div style="color:var(--text2);">${window._state.theme==='dark'?'On':'Off'}</div>
+      <div onclick="switchScreenStandalone('reminders')" style="display:flex;align-items:center;padding:14px;cursor:pointer;">
+        <div style="flex:1;font-size:14px;">Mes rappels</div>
+        <div style="color:var(--primary);font-size:16px;">›</div>
       </div>
     </div>
-    <div style="margin:16px;border-radius:16px;border:1px solid #fde8ec;background:rgba(214,48,74,0.06);padding:16px;">
-      <div style="font-size:12px;font-weight:700;color:#d6304a;margin-bottom:12px;">Zone de danger</div>
+
+    <div style="margin:0 16px 8px;border-radius:16px;border:1px solid #fde8ec;background:rgba(214,48,74,0.06);padding:16px;">
       <button onclick="doLogout()" style="width:100%;background:#d6304a;border-radius:12px;padding:14px;color:white;font-weight:900;font-size:15px;">Se deconnecter</button>
     </div>
+
+    <div style="text-align:center;color:var(--text2);font-size:11px;margin:16px 0;">Asthma Monitoring v3.1 · SUPPTIC ENSP 2026</div>
     <div style="height:90px;"></div>
   `;
 }
 window.renderProfileScreen = renderProfileScreen;
 
-window.editProfile = async function(){
-  const p = window._state.profile;
-  const name = prompt('Nom complet :', p?.name||'');
-  if(name===null) return;
-  const phone = prompt('Telephone :', p?.phone||'');
-  const ville = prompt('Ville :', p?.ville||'');
+window.editProfileField = async function(field, label){
+  const currentValue = window._state.profile?.[field];
+  const value = prompt('Modifier '+label+' :', currentValue||'');
+  if(value===null || !value.trim()) return;
   try{
-    await updateDoc(doc(db,'patients',window._state.user.uid), {name, phone, ville});
-    window._state.profile = {...p, name, phone, ville};
-    showToast('Profil mis a jour !');
+    const uid = window._state.user.uid;
+    await updateDoc(doc(db,'patients',uid), {[field]: value.trim()});
+    window._state.profile = {...window._state.profile, [field]: value.trim()};
+    showToast(label+' mis a jour !');
     renderProfileScreen();
   }catch(e){ showToast('Impossible de sauvegarder'); }
+};
+
+window.toggleNotifSetting = function(){
+  window._notificationsEnabled = !window._notificationsEnabled;
+  localStorage.setItem('notifEnabled', JSON.stringify(window._notificationsEnabled));
+  renderProfileScreen();
+};
+
+window.toggleSmsSetting = function(){
+  window._smsAlertsEnabled = !window._smsAlertsEnabled;
+  localStorage.setItem('smsEnabled', JSON.stringify(window._smsAlertsEnabled));
+  renderProfileScreen();
+};
+
+window.changerMotDePasse = function(){
+  const email = window._state.profile?.email;
+  if(!confirm("Un email de reinitialisation sera envoye a "+email+". Continuer ?")) return;
+  sendPasswordResetEmail(auth, email)
+    .then(()=> showToast('Email envoye ! Verifiez votre boite mail.'))
+    .catch(()=> showToast('Erreur lors de l\\'envoi'));
 };
 
 // ===== PARENT MODE =====
