@@ -162,6 +162,75 @@ function initials(name){
 }
 window.initials = initials;
 
+// ===== SEUILS PAR AGE (identiques a functions/thresholds.js) =====
+const AGE_GROUPS = [
+  { id: "nourrisson", min: 0,  max: 1  },
+  { id: "enfant_1_3", min: 1,  max: 3  },
+  { id: "enfant_4_12", min: 4,  max: 12 },
+  { id: "adolescent", min: 13, max: 17 },
+  { id: "adulte",     min: 18, max: 64 },
+  { id: "senior",     min: 65, max: 999 },
+];
+function getAgeGroup(age){
+  const group = AGE_GROUPS.find((g) => age >= g.min && age <= g.max);
+  return group ? group.id : "adulte";
+}
+const SPO2_THRESHOLDS = {
+  nourrisson:  { normalMin: 95, avertMin: 92, avertMax: 94, critiqueMax: 92 },
+  enfant_1_3:  { normalMin: 95, avertMin: 92, avertMax: 94, critiqueMax: 92 },
+  enfant_4_12: { normalMin: 95, avertMin: 92, avertMax: 94, critiqueMax: 92 },
+  adolescent:  { normalMin: 95, avertMin: 92, avertMax: 94, critiqueMax: 92 },
+  adulte:      { normalMin: 95, avertMin: 92, avertMax: 94, critiqueMax: 88 },
+  senior:      { normalMin: 94, avertMin: 90, avertMax: 93, critiqueMax: 88 },
+};
+const FC_THRESHOLDS = {
+  nourrisson:  { bradyMax: 80, normalMin: 80,  normalMax: 160, avertMax: 180 },
+  enfant_1_3:  { bradyMax: 70, normalMin: 70,  normalMax: 150, avertMax: 170 },
+  enfant_4_12: { bradyMax: 60, normalMin: 60,  normalMax: 130, avertMax: 150 },
+  adolescent:  { bradyMax: 55, normalMin: 55,  normalMax: 110, avertMax: 130 },
+  adulte:      { bradyMax: 50, normalMin: 50,  normalMax: 100, avertMax: 120 },
+  senior:      { bradyMax: 45, normalMin: 45,  normalMax: 100, avertMax: 120 },
+};
+const FR_THRESHOLDS = {
+  nourrisson:  { bradyMax: 30, normalMin: 30, normalMax: 53, avertMax: 60 },
+  enfant_1_3:  { bradyMax: 22, normalMin: 22, normalMax: 37, avertMax: 45 },
+  enfant_4_12: { bradyMax: 18, normalMin: 18, normalMax: 30, avertMax: 40 },
+  adolescent:  { bradyMax: 12, normalMin: 12, normalMax: 20, avertMax: 25 },
+  adulte:      { bradyMax: 12, normalMin: 12, normalMax: 20, avertMax: 24 },
+  senior:      { bradyMax: 12, normalMin: 12, normalMax: 24, avertMax: 30 },
+};
+
+// ===== SON D'ALERTE (Web Audio, meme principe que le dashboard medecin) =====
+let _pwaAudioCtx = null;
+function getPwaAudioCtx(){
+  if(!_pwaAudioCtx) _pwaAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if(_pwaAudioCtx.state==='suspended') _pwaAudioCtx.resume();
+  return _pwaAudioCtx;
+}
+function playPwaTone(freq, duration, delay=0, volume=0.35){
+  try{
+    const ctx = getPwaAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    const startTime = ctx.currentTime + delay;
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(volume, startTime+0.02);
+    gain.gain.linearRampToValueAtTime(0, startTime+duration);
+    osc.start(startTime);
+    osc.stop(startTime+duration+0.05);
+  }catch(e){}
+}
+function playCrisisAlertSound(){
+  for(let i=0;i<6;i++){
+    playPwaTone(1400, 0.25, i*0.35, 0.4);
+    playPwaTone(900, 0.25, i*0.35+0.15, 0.3);
+  }
+}
+window.playCrisisAlertSound = playCrisisAlertSound;
+
 // ===== AUTH STATE =====
 onAuthStateChanged(auth, async (u) => {
   document.getElementById('loading-screen').style.display='none';
@@ -643,11 +712,41 @@ function renderConnexionScreen(){
         <div style="font-size:11px;color:var(--text2);margin-top:-8px;margin-bottom:12px;">Format attendu: GET /vitals avec JSON contenant spo2, hr, temp, resp</div>
         <button class="btn-primary" style="width:100%;" onclick="connectGSM()">Connecter via WiFi/GSM</button>
       </div>
+      <div class="card" style="border-color:rgba(214,48,74,0.3);background:rgba(214,48,74,0.06);">
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px;color:#d6304a;">Zone de test</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Genere des vitaux critiques adaptes a l'age du patient pour tester les alertes, sans avoir besoin de la montre physique.</div>
+        <button style="width:100%;background:#d6304a;border-radius:14px;padding:16px;color:white;font-weight:900;font-size:14px;" onclick="simulerCriseWeb()">Simuler une crise</button>
+      </div>
     </div>
     <div style="height:80px;"></div>
   `;
 }
 window.renderConnexionScreen = renderConnexionScreen;
+
+window.simulerCriseWeb = function(){
+  if(!confirm("Ceci va generer des valeurs vitales critiques pour tester les alertes (SpO2 basse, FC et frequence respiratoire elevees). A utiliser uniquement pour les tests. Continuer ?")) return;
+  const age = parseInt(window._state.profile?.age, 10) || 30;
+  const ageGroup = getAgeGroup(age);
+  const spo2T = SPO2_THRESHOLDS[ageGroup];
+  const fcT   = FC_THRESHOLDS[ageGroup];
+  const frT   = FR_THRESHOLDS[ageGroup];
+
+  const crisisSpo2 = Math.max(70, spo2T.critiqueMax - 4);
+  const crisisHr   = fcT.avertMax + 15;
+  const crisisResp = frT.avertMax + 8;
+
+  handleVitalsUpdate({
+    spo2: crisisSpo2,
+    hr: crisisHr,
+    temp: 37.4,
+    resp: crisisResp
+  }, 'simulation_crise');
+
+  playCrisisAlertSound();
+  if(navigator.vibrate) navigator.vibrate([400,200,400,200,400,200,400,200,400]);
+  showToast('Crise simulee: SpO2 '+crisisSpo2+'% - FC '+crisisHr+' bpm - Resp '+crisisResp+'/min ('+ageGroup+')');
+  renderConnexionScreen();
+};
 
 function handleVitalsUpdate(v, source){
   window._state.vitals = v;

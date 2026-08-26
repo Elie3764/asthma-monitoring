@@ -6,8 +6,11 @@ import {
 import { useStore } from "../store/useStore";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import database from "@react-native-firebase/database";
 import { BleManager } from "react-native-ble-plx";
 import { Buffer } from "buffer";
+import { getAgeGroup, SPO2_THRESHOLDS, FC_THRESHOLDS, FR_THRESHOLDS } from "../../functions/thresholds";
+import { playCritique } from "../utils/SoundManager";
 
 // UUIDs BLE
 const BLE_SVC  = "4fafc201-1fb5-459e-8fcc-c5c9c3319142";
@@ -49,6 +52,7 @@ export default function WatchScreen({ navigation }) {
   const [themeActuel, setThemeActuel] = useState(0);
   const [onglet, setOnglet]           = useState("vitaux"); // vitaux | controle | reglages
   const [vitauxMontre, setVitauxMontre] = useState(null);
+  const [simulating, setSimulating]   = useState(false);
   const deviceRef = useRef(null);
 
   // Charger infos depuis Firebase
@@ -157,6 +161,59 @@ export default function WatchScreen({ navigation }) {
         setWatchInfo(null); setConnected(false);
       }}
     ]);
+  };
+
+  // Simuler une crise d'asthme : genere des vitaux critiques coherents
+  // avec la tranche d'age du patient (memes seuils que thresholds.js,
+  // utilises aussi par le dashboard medecin et l'app parent), et les
+  // ecrit dans Realtime Database au meme endroit que la vraie montre
+  // (patients/{uid}/vitals) pour declencher les alertes normalement.
+  const simulerCrise = () => {
+    Alert.alert(
+      "Simuler une crise ?",
+      "Ceci va generer des valeurs vitales critiques pour tester les alertes (SpO2 basse, FC et frequence respiratoire elevees). A utiliser uniquement pour les tests.",
+      [
+        { text:"Annuler", style:"cancel" },
+        { text:"Simuler", style:"destructive", onPress: async () => {
+          const uid = auth().currentUser?.uid;
+          if (!uid) return;
+          setSimulating(true);
+          try {
+            const age = parseInt(userProfile?.age, 10) || 30;
+            const ageGroup = getAgeGroup(age);
+            const spo2T = SPO2_THRESHOLDS[ageGroup];
+            const fcT   = FC_THRESHOLDS[ageGroup];
+            const frT   = FR_THRESHOLDS[ageGroup];
+
+            // Valeurs nettement dans la zone "critique" pour l'age du patient
+            const crisisSpo2 = Math.max(70, spo2T.critiqueMax - 4);
+            const crisisHr   = fcT.avertMax + 15;
+            const crisisResp = frT.avertMax + 8;
+
+            const crisisVitals = {
+              spo2: crisisSpo2,
+              hr: crisisHr,
+              temp: 37.4,
+              resp: crisisResp,
+              timestamp: Date.now(),
+              source: "simulation_crise",
+            };
+
+            await database().ref("patients/" + uid + "/vitals").set(crisisVitals);
+            setVitauxMontre(crisisVitals);
+            playCritique();
+            Alert.alert(
+              "Crise simulee",
+              `SpO2: ${crisisSpo2}% - FC: ${crisisHr} bpm - Resp: ${crisisResp}/min\nBase sur la tranche d'age: ${ageGroup}`
+            );
+          } catch (e) {
+            Alert.alert("Erreur", "Impossible de simuler la crise: " + e.message);
+          } finally {
+            setSimulating(false);
+          }
+        }}
+      ]
+    );
   };
 
   // Vitaux a afficher (BLE direct ou store)
@@ -301,6 +358,24 @@ export default function WatchScreen({ navigation }) {
                     </Text>
                   </View>
                 )}
+
+                {/* SIMULATION DE CRISE (test) */}
+                <View style={{ backgroundColor:isLight?"#fde8ec":"#2a0a10",
+                  borderRadius:14, padding:16, borderWidth:1,
+                  borderColor:"#d6304a"+"40" }}>
+                  <Text style={{ fontSize:14, fontWeight:"800", color:"#d6304a",
+                    marginBottom:4 }}>Zone de test</Text>
+                  <Text style={{ fontSize:12, color:text2, marginBottom:12, lineHeight:18 }}>
+                    Genere des vitaux critiques adaptes a l'age du patient pour tester les alertes, sans avoir besoin de la montre physique.
+                  </Text>
+                  <TouchableOpacity onPress={simulerCrise} disabled={simulating}
+                    style={{ backgroundColor:simulating?"#888":"#d6304a",
+                      borderRadius:12, padding:14, alignItems:"center" }}>
+                    <Text style={{ color:"white", fontWeight:"900" }}>
+                      {simulating ? "Simulation en cours..." : "Simuler une crise"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
                 {!connected && (
                   <View style={{ backgroundColor:isLight?"#fff8e8":"#1a1400",
