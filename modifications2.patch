@@ -1,0 +1,92 @@
+diff --git a/database.rules.json b/database.rules.json
+index f63b61e..a819757 100644
+--- a/database.rules.json
++++ b/database.rules.json
+@@ -55,6 +55,16 @@
+       }
+     },
+ 
++    // Messages (chat medecin <-> patient). L'id de conversation est
++    // construit a partir des deux uids concernes (ex: "uidA_uidB"),
++    // donc on autorise l'acces si l'uid connecte apparait dans l'id.
++    "chats": {
++      "$chatId": {
++        ".read": "auth != null && $chatId.contains(auth.uid)",
++        ".write": "auth != null && $chatId.contains(auth.uid)"
++      }
++    },
++
+     // Tout le reste est fermé par défaut
+     "$other": {
+       ".read": false,
+diff --git a/docs/app/index.html b/docs/app/index.html
+index 5281828..864ad65 100644
+--- a/docs/app/index.html
++++ b/docs/app/index.html
+@@ -717,8 +717,8 @@ function startVitalsListener(){
+ }
+ window.startVitalsListener = startVitalsListener;
+ 
+-// ===== CHAT SCREEN (Medecin / Patients / Forum) =====
+-window._chatState = { tab:'medecin', selected:null, selectedType:null, doctors:[], patients:[], posts:[], unsubMsg:null, activeCategory:'Tous' };
++// ===== CHAT SCREEN (Medecin / Forum) =====
++window._chatState = { tab:'medecin', selected:null, selectedType:null, doctors:[], posts:[], unsubMsg:null, activeCategory:'Tous' };
+ 
+ function renderChatListScreen(){
+   window._state.currentScreen = 'chat-list';
+@@ -728,7 +728,6 @@ function renderChatListScreen(){
+     <div class="topbar"><h1>Messages</h1></div>
+     <div style="display:flex;padding:4px;border-radius:14px;margin:0 16px 12px;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+       <button onclick="setChatTab('medecin')" id="ct-medecin" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Mon Medecin</button>
+-      <button onclick="setChatTab('patients')" id="ct-patients" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Patients</button>
+       <button onclick="setChatTab('forum')" id="ct-forum" style="flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;">Forum</button>
+     </div>
+     <div id="chat-list-content" style="padding:0 16px;"></div>
+@@ -740,7 +739,7 @@ window.renderChatListScreen = renderChatListScreen;
+ 
+ window.setChatTab = async function(tab){
+   window._chatState.tab = tab;
+-  ['medecin','patients','forum'].forEach(t=>{
++  ['medecin','forum'].forEach(t=>{
+     const b = document.getElementById('ct-'+t);
+     if(b){ b.style.background = t===tab?'var(--primary)':'transparent'; b.style.color = t===tab?'white':'var(--text2)'; }
+   });
+@@ -765,27 +764,6 @@ window.setChatTab = async function(tab){
+       </div>
+     `).join('');
+   }
+-  if(tab==='patients'){
+-    content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Chargement...</div>';
+-    const snap = await getDocs(collection(db,'patients'));
+-    const docs = [];
+-    snap.forEach(d=>{ if(d.id!==window._state.user.uid) docs.push({id:d.id, ...d.data()}); });
+-    window._chatState.patients = docs;
+-    if(docs.length===0){ content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">Aucun autre patient</div>'; return; }
+-    content.innerHTML = docs.map((p,i)=>{
+-      const colors = ['#00c896','#d96a1f','#7c3aed','#b88a00','#d6304a'];
+-      const c = colors[i%colors.length];
+-      return `
+-      <div class="card" style="margin-bottom:10px;display:flex;align-items:center;gap:12px;" onclick="openChat('${p.id}','patient','${(p.name||'').replace(/'/g,"")}')">
+-        <div style="width:46px;height:46px;border-radius:23px;background:${c}20;display:flex;align-items:center;justify-content:center;font-weight:900;color:${c};">${initials(p.name)}</div>
+-        <div style="flex:1;">
+-          <div style="font-size:14px;font-weight:700;">${p.name}</div>
+-          <div style="font-size:12px;color:var(--text2);">${p.severity||'Patient'} - ${p.ville||''}</div>
+-        </div>
+-        <div style="padding:5px 10px;border-radius:10px;background:rgba(0,200,150,0.12);font-size:11px;font-weight:700;color:var(--primary);">Message</div>
+-      </div>`;
+-    }).join('');
+-  }
+   if(tab==='forum'){
+     renderForumTab(content);
+   }
+@@ -885,9 +863,7 @@ window.likeForumPost = async function(id, likes){
+ 
+ function getChatId(otherId, type){
+   const uid = window._state.user.uid;
+-  if(type==='medecin') return uid+'_'+otherId;
+-  const ids = [uid, otherId].sort();
+-  return ids[0]+'_'+ids[1];
++  return uid+'_'+otherId;
+ }
+ 
+ window.openChat = function(otherId, type, otherName){

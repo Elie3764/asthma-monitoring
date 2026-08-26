@@ -55,6 +55,16 @@
       }
     },
 
+    // Messages (chat medecin <-> patient). L'id de conversation est
+    // construit a partir des deux uids concernes (ex: "uidA_uidB"),
+    // donc on autorise l'acces si l'uid connecte apparait dans l'id.
+    "chats": {
+      "$chatId": {
+        ".read": "auth != null && $chatId.contains(auth.uid)",
+        ".write": "auth != null && $chatId.contains(auth.uid)"
+      }
+    },
+
     // Tout le reste est fermé par défaut
     "$other": {
       ".read": false,

@@ -1,0 +1,506 @@
+diff --git a/docs/app/index.html b/docs/app/index.html
+index cfedaad..5281828 100644
+--- a/docs/app/index.html
++++ b/docs/app/index.html
+@@ -530,8 +530,13 @@ function renderFab(){
+ window.toggleTheme = function(){
+   window._state.theme = window._state.theme==='light' ? 'dark' : 'light';
+   document.body.classList.toggle('dark', window._state.theme==='dark');
+-  if(window._state.currentScreen==='home' || window._state.currentTab==='home') renderHomeScreen();
+-  else switchTab(window._state.currentTab);
++  if(window._state.role==='parent'){
++    switchParentTab(window._state.currentTab||'suivi');
++  }else if(window._state.currentScreen==='home' || window._state.currentTab==='home'){
++    renderHomeScreen();
++  }else{
++    switchTab(window._state.currentTab);
++  }
+ };
+ 
+ window.toggleMenu = function(open){
+@@ -1206,17 +1211,21 @@ function renderParentApp(){
+       <button data-tab="suivi" onclick="switchParentTab('suivi')" class="active"><div class="tab-icon">S</div><div class="tab-label">Suivi</div></button>
+       <button data-tab="forum" onclick="switchParentTab('forum')"><div class="tab-icon">F</div><div class="tab-label">Forum</div></button>
+       <button data-tab="alertes" onclick="switchParentTab('alertes')"><div class="tab-icon">A</div><div class="tab-label">Alertes</div></button>
++      <button data-tab="reglages" onclick="switchParentTab('reglages')"><div class="tab-icon">R</div><div class="tab-label">Reglages</div></button>
+     </div>
+   `;
++  window._state.currentTab = 'suivi';
+   switchParentTab('suivi');
+ }
+ window.renderParentApp = renderParentApp;
+ 
+ window.switchParentTab = function(tab){
++  window._state.currentTab = tab;
+   document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+   if(tab==='suivi') renderParentSuiviScreen();
+   if(tab==='forum'){ const sc=document.getElementById('screen-container'); sc.innerHTML='<div class="topbar"><h1>Forum</h1></div><div id="forum-host" style="padding:0 16px;"></div><div style="height:90px;"></div>'; renderForumTab(document.getElementById('forum-host')); }
+   if(tab==='alertes') renderParentAlertsScreen();
++  if(tab==='reglages') renderParentReglagesScreen();
+ };
+ 
+ window._parentSubTab = 'suivi';
+@@ -1397,6 +1406,55 @@ function renderParentAlertsScreen(){
+ }
+ window.renderParentAlertsScreen = renderParentAlertsScreen;
+ 
++// ===== PARENT REGLAGES SCREEN =====
++function renderParentReglagesScreen(){
++  const p = window._state.profile;
++  const sc = document.getElementById('screen-container');
++  sc.innerHTML = `
++    <div class="topbar"><h1>Reglages</h1></div>
++    <div style="text-align:center;padding:20px 0;">
++      <div style="width:80px;height:80px;border-radius:40px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:3px solid var(--primary);font-size:28px;font-weight:900;color:var(--primary);">${initials(p?.name)}</div>
++      <div style="font-size:18px;font-weight:900;">${p?.name||'Parent'}</div>
++      <div style="font-size:13px;color:var(--text2);margin-top:2px;">${p?.email||''}</div>
++      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
++        <div style="padding:4px 12px;border-radius:20px;background:var(--border);font-size:11px;font-weight:700;color:var(--text2);">Parent / Proche</div>
++        ${p?.linkedPatientName?`<div style="padding:4px 12px;border-radius:20px;background:rgba(0,200,150,0.12);font-size:11px;font-weight:700;color:var(--primary);">Suit ${p.linkedPatientName}</div>`:''}
++      </div>
++    </div>
++    <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);margin-bottom:16px;">
++      <div onclick="editParentProfile()" style="display:flex;align-items:center;padding:16px;border-bottom:1px solid var(--border);">
++        <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,200,150,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:var(--primary);">P</div>
++        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Profil</div><div style="font-size:12px;color:var(--text2);">Modifier vos informations</div></div>
++        <div style="color:var(--text2);">›</div>
++      </div>
++      <div onclick="toggleTheme()" style="display:flex;align-items:center;padding:16px;">
++        <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:900;color:#7c3aed;">T</div>
++        <div style="flex:1;"><div style="font-size:14px;font-weight:700;">Mode sombre</div><div style="font-size:12px;color:var(--text2);">Changer l'apparence</div></div>
++        <div style="color:var(--text2);">${window._state.theme==='dark'?'On':'Off'}</div>
++      </div>
++    </div>
++    <div style="margin:16px;border-radius:16px;border:1px solid #fde8ec;background:rgba(214,48,74,0.06);padding:16px;">
++      <div style="font-size:12px;font-weight:700;color:#d6304a;margin-bottom:12px;">Zone de danger</div>
++      <button onclick="doLogout()" style="width:100%;background:#d6304a;border-radius:12px;padding:14px;color:white;font-weight:900;font-size:15px;">Se deconnecter</button>
++    </div>
++    <div style="height:90px;"></div>
++  `;
++}
++window.renderParentReglagesScreen = renderParentReglagesScreen;
++
++window.editParentProfile = async function(){
++  const p = window._state.profile;
++  const name = prompt('Nom complet :', p?.name||'');
++  if(name===null) return;
++  const phone = prompt('Telephone :', p?.phone||'');
++  try{
++    await updateDoc(doc(db,'parents',window._state.user.uid), {name, phone});
++    window._state.profile = {...p, name, phone};
++    showToast('Profil mis a jour !');
++    renderParentReglagesScreen();
++  }catch(e){ showToast('Impossible de sauvegarder'); }
++};
++
+ renderAuth();
+ </script>
+ </body>
+diff --git a/src/screens/ChatScreen.js b/src/screens/ChatScreen.js
+index 4f0892a..5c7bd71 100644
+--- a/src/screens/ChatScreen.js
++++ b/src/screens/ChatScreen.js
+@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
+ import {
+   View, Text, ScrollView, TouchableOpacity,
+   TextInput, StatusBar, KeyboardAvoidingView,
+-  Platform, ActivityIndicator
++  Platform, ActivityIndicator, Alert
+ } from "react-native";
+ import { useStore } from "../store/useStore";
+ import firestore from "@react-native-firebase/firestore";
+ import auth from "@react-native-firebase/auth";
+ 
+ export default function ChatScreen({ navigation }) {
+-  const { theme, userProfile } = useStore();
++  const { theme, userProfile, user } = useStore();
+   const isLight = theme === "light";
+   const bg    = isLight ? "#f4f7fb" : "#0d1829";
+   const card  = isLight ? "#ffffff" : "#111f35";
+@@ -17,11 +17,23 @@ export default function ChatScreen({ navigation }) {
+   const text2 = isLight ? "#50657a" : "#8ba8c4";
+   const border= isLight ? "#eef2f7" : "#1e3050";
+ 
++  const [mode, setMode] = useState("medecin"); // "medecin" | "forum"
++
+   const [messages, setMessages] = useState([]);
+   const [input, setInput]       = useState("");
+   const [loading, setLoading]   = useState(false);
+   const scrollRef = useRef(null);
+ 
++  // ===== FORUM STATE =====
++  const [posts, setPosts]               = useState([]);
++  const [newPost, setNewPost]           = useState("");
++  const [postCategory, setPostCategory] = useState("General");
++  const [activeCategory, setActiveCategory] = useState("Tous");
++  const [forumLoading, setForumLoading] = useState(false);
++  const categories = ["Tous","Pollution","Astuces Inhalateur","Alimentation","Sport","General"];
++  const postCategories = ["General","Pollution","Astuces Inhalateur","Alimentation","Sport"];
++  const forumColors = ["#00c896","#7c3aed","#d96a1f","#b88a00","#d6304a"];
++
+   useEffect(() => {
+     const uid = auth().currentUser?.uid;
+     if (!uid) return;
+@@ -41,6 +53,19 @@ export default function ChatScreen({ navigation }) {
+     return unsub;
+   }, []);
+ 
++  useEffect(() => {
++    const unsub = firestore()
++      .collection("forum")
++      .orderBy("createdAt", "desc")
++      .limit(50)
++      .onSnapshot(snap => {
++        const p = [];
++        snap.forEach(d => p.push({ id: d.id, ...d.data() }));
++        setPosts(p);
++      }, () => {});
++    return unsub;
++  }, []);
++
+   const envoyer = async () => {
+     const txt = input.trim();
+     if (!txt) return;
+@@ -64,6 +89,34 @@ export default function ChatScreen({ navigation }) {
+     }
+   };
+ 
++  const sendPost = async () => {
++    if (!newPost.trim() || !user?.uid) return;
++    setForumLoading(true);
++    try {
++      await firestore().collection("forum").add({
++        text: newPost.trim(),
++        from: user.uid,
++        fromName: userProfile?.name || "Patient",
++        category: postCategory,
++        likes: 0,
++        comments: 0,
++        createdAt: firestore.FieldValue.serverTimestamp(),
++      });
++      setNewPost("");
++    } catch {
++      Alert.alert("Erreur", "Impossible de publier");
++    } finally {
++      setForumLoading(false);
++    }
++  };
++
++  const likePost = async (id, likes) => {
++    await firestore().collection("forum").doc(id).update({ likes: (likes||0)+1 }).catch(() => {});
++  };
++
++  const initials = (name) => name ? name.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2) : "?";
++  const filteredPosts = activeCategory === "Tous" ? posts : posts.filter(p => p.category === activeCategory);
++
+   return (
+     <KeyboardAvoidingView
+       style={{ flex: 1, backgroundColor: bg }}
+@@ -71,97 +124,212 @@ export default function ChatScreen({ navigation }) {
+       <StatusBar barStyle={isLight?"dark-content":"light-content"} backgroundColor={bg} />
+ 
+       {/* HEADER */}
+-      <View style={{ paddingHorizontal:16, paddingTop:48, paddingBottom:16,
++      <View style={{ paddingHorizontal:16, paddingTop:48, paddingBottom:12,
+         backgroundColor:card, borderBottomWidth:1, borderBottomColor:border }}>
+         <Text style={{ fontSize:20, fontWeight:"900", color:text }}>
+-          Mon Medecin
++          {mode === "medecin" ? "Mon Medecin" : "Forum Communautaire"}
+         </Text>
+         <Text style={{ fontSize:13, color:text2, marginTop:2 }}>
+-          {userProfile?.doctorEmail || "Messagerie medecin"}
++          {mode === "medecin"
++            ? (userProfile?.doctorEmail || "Messagerie medecin")
++            : "Echangez avec d'autres patients et proches"}
+         </Text>
++
++        {/* SELECTEUR MEDECIN / FORUM */}
++        <View style={{ flexDirection:"row", backgroundColor:bg, borderRadius:12,
++          padding:4, marginTop:14, borderWidth:1, borderColor:border }}>
++          <TouchableOpacity onPress={() => setMode("medecin")}
++            style={{ flex:1, paddingVertical:9, borderRadius:9, alignItems:"center",
++              backgroundColor: mode==="medecin" ? "#00c896" : "transparent" }}>
++            <Text style={{ fontSize:13, fontWeight:"700",
++              color: mode==="medecin" ? "white" : text2 }}>Mon Medecin</Text>
++          </TouchableOpacity>
++          <TouchableOpacity onPress={() => setMode("forum")}
++            style={{ flex:1, paddingVertical:9, borderRadius:9, alignItems:"center",
++              backgroundColor: mode==="forum" ? "#00c896" : "transparent" }}>
++            <Text style={{ fontSize:13, fontWeight:"700",
++              color: mode==="forum" ? "white" : text2 }}>Forum</Text>
++          </TouchableOpacity>
++        </View>
+       </View>
+ 
+-      {/* MESSAGES */}
+-      <ScrollView
+-        ref={scrollRef}
+-        contentContainerStyle={{ padding:16, gap:10, paddingBottom:20 }}
+-        showsVerticalScrollIndicator={false}>
+-
+-        {messages.length === 0 && (
+-          <View style={{ alignItems:"center", paddingTop:60 }}>
+-            <Text style={{ fontSize:40, marginBottom:16 }}>💬</Text>
+-            <Text style={{ fontSize:16, fontWeight:"700", color:text, textAlign:"center" }}>
+-              Pas encore de messages
+-            </Text>
+-            <Text style={{ fontSize:13, color:text2, textAlign:"center", marginTop:8 }}>
+-              Envoyez un message a votre medecin
+-            </Text>
+-          </View>
+-        )}
+-
+-        {messages.map(msg => {
+-          const moi = msg.role === "patient";
+-          return (
+-            <View key={msg.id}
+-              style={{ alignSelf:moi?"flex-end":"flex-start",
+-                maxWidth:"80%", gap:4 }}>
+-              {!moi && (
+-                <Text style={{ fontSize:11, color:text2, marginLeft:4 }}>
+-                  {msg.senderName || "Medecin"}
++      {mode === "medecin" ? (
++        <>
++          {/* MESSAGES */}
++          <ScrollView
++            ref={scrollRef}
++            contentContainerStyle={{ padding:16, gap:10, paddingBottom:20 }}
++            showsVerticalScrollIndicator={false}>
++
++            {messages.length === 0 && (
++              <View style={{ alignItems:"center", paddingTop:60 }}>
++                <Text style={{ fontSize:40, marginBottom:16 }}>💬</Text>
++                <Text style={{ fontSize:16, fontWeight:"700", color:text, textAlign:"center" }}>
++                  Pas encore de messages
+                 </Text>
+-              )}
+-              <View style={{
+-                backgroundColor: moi ? "#00c896" : card,
+-                borderRadius:16,
+-                borderBottomRightRadius: moi ? 4 : 16,
+-                borderBottomLeftRadius:  moi ? 16 : 4,
+-                padding:12,
+-                borderWidth: moi ? 0 : 1,
+-                borderColor: border,
+-              }}>
+-                <Text style={{
+-                  fontSize:14, lineHeight:20,
+-                  color: moi ? "white" : text
+-                }}>
+-                  {msg.text}
++                <Text style={{ fontSize:13, color:text2, textAlign:"center", marginTop:8 }}>
++                  Envoyez un message a votre medecin
+                 </Text>
+               </View>
+-              <Text style={{ fontSize:10, color:text2,
+-                alignSelf:moi?"flex-end":"flex-start", marginHorizontal:4 }}>
+-                {msg.createdAt?.toDate?.()?.toLocaleTimeString("fr-FR",
+-                  { hour:"2-digit", minute:"2-digit" }) || ""}
+-              </Text>
++            )}
++
++            {messages.map(msg => {
++              const moi = msg.role === "patient";
++              return (
++                <View key={msg.id}
++                  style={{ alignSelf:moi?"flex-end":"flex-start",
++                    maxWidth:"80%", gap:4 }}>
++                  {!moi && (
++                    <Text style={{ fontSize:11, color:text2, marginLeft:4 }}>
++                      {msg.senderName || "Medecin"}
++                    </Text>
++                  )}
++                  <View style={{
++                    backgroundColor: moi ? "#00c896" : card,
++                    borderRadius:16,
++                    borderBottomRightRadius: moi ? 4 : 16,
++                    borderBottomLeftRadius:  moi ? 16 : 4,
++                    padding:12,
++                    borderWidth: moi ? 0 : 1,
++                    borderColor: border,
++                  }}>
++                    <Text style={{
++                      fontSize:14, lineHeight:20,
++                      color: moi ? "white" : text
++                    }}>
++                      {msg.text}
++                    </Text>
++                  </View>
++                  <Text style={{ fontSize:10, color:text2,
++                    alignSelf:moi?"flex-end":"flex-start", marginHorizontal:4 }}>
++                    {msg.createdAt?.toDate?.()?.toLocaleTimeString("fr-FR",
++                      { hour:"2-digit", minute:"2-digit" }) || ""}
++                  </Text>
++                </View>
++              );
++            })}
++          </ScrollView>
++
++          {/* INPUT */}
++          <View style={{ flexDirection:"row", padding:12, gap:10,
++            backgroundColor:card, borderTopWidth:1, borderTopColor:border,
++            alignItems:"flex-end" }}>
++            <TextInput
++              style={{ flex:1, backgroundColor:bg, borderRadius:20,
++                paddingHorizontal:16, paddingVertical:10, fontSize:14,
++                color:text, borderWidth:1, borderColor:border,
++                maxHeight:100 }}
++              value={input}
++              onChangeText={setInput}
++              placeholder="Votre message..."
++              placeholderTextColor={text2}
++              multiline
++            />
++            <TouchableOpacity
++              onPress={envoyer}
++              disabled={!input.trim() || loading}
++              style={{ width:44, height:44, borderRadius:22,
++                backgroundColor:input.trim()?"#00c896":"#888",
++                alignItems:"center", justifyContent:"center" }}>
++              {loading
++                ? <ActivityIndicator color="white" size="small" />
++                : <Text style={{ color:"white", fontSize:18, fontWeight:"900" }}>→</Text>}
++            </TouchableOpacity>
++          </View>
++        </>
++      ) : (
++        <ScrollView contentContainerStyle={{ padding:16, paddingBottom:40 }}
++          showsVerticalScrollIndicator={false}>
++          <View style={{ backgroundColor:card, borderRadius:16, padding:14,
++            marginBottom:14, borderWidth:1, borderColor:border }}>
++            <TextInput
++              style={{ backgroundColor:bg, borderRadius:12, padding:12,
++                fontSize:14, color:text, borderWidth:1.5, borderColor:border,
++                minHeight:60 }}
++              value={newPost}
++              onChangeText={setNewPost}
++              placeholder="Partagez votre experience..."
++              placeholderTextColor={text2}
++              multiline
++            />
++            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop:10 }}>
++              <View style={{ flexDirection:"row", gap:8 }}>
++                {postCategories.map(c => (
++                  <TouchableOpacity key={c} onPress={() => setPostCategory(c)}
++                    style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:12,
++                      backgroundColor: postCategory===c ? "#00c896" : bg,
++                      borderWidth:1, borderColor: postCategory===c ? "#00c896" : border }}>
++                    <Text style={{ fontSize:11, fontWeight:"700",
++                      color: postCategory===c ? "white" : text2 }}>{c}</Text>
++                  </TouchableOpacity>
++                ))}
++              </View>
++            </ScrollView>
++            <TouchableOpacity onPress={sendPost} disabled={forumLoading}
++              style={{ marginTop:10, backgroundColor:"#00c896", borderRadius:12,
++                padding:10, alignItems:"center" }}>
++              {forumLoading
++                ? <ActivityIndicator color="white" size="small" />
++                : <Text style={{ color:"white", fontWeight:"700" }}>Publier</Text>}
++            </TouchableOpacity>
++          </View>
++
++          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:14 }}>
++            <View style={{ flexDirection:"row", gap:8 }}>
++              {categories.map(c => (
++                <TouchableOpacity key={c} onPress={() => setActiveCategory(c)}
++                  style={{ paddingHorizontal:14, paddingVertical:7, borderRadius:20,
++                    backgroundColor: activeCategory===c ? "#00c896" : card,
++                    borderWidth:1, borderColor: activeCategory===c ? "#00c896" : border }}>
++                  <Text style={{ fontSize:12, fontWeight:"700",
++                    color: activeCategory===c ? "white" : text2 }}>{c}</Text>
++                </TouchableOpacity>
++              ))}
+             </View>
+-          );
+-        })}
+-      </ScrollView>
+-
+-      {/* INPUT */}
+-      <View style={{ flexDirection:"row", padding:12, gap:10,
+-        backgroundColor:card, borderTopWidth:1, borderTopColor:border,
+-        alignItems:"flex-end" }}>
+-        <TextInput
+-          style={{ flex:1, backgroundColor:bg, borderRadius:20,
+-            paddingHorizontal:16, paddingVertical:10, fontSize:14,
+-            color:text, borderWidth:1, borderColor:border,
+-            maxHeight:100 }}
+-          value={input}
+-          onChangeText={setInput}
+-          placeholder="Votre message..."
+-          placeholderTextColor={text2}
+-          multiline
+-        />
+-        <TouchableOpacity
+-          onPress={envoyer}
+-          disabled={!input.trim() || loading}
+-          style={{ width:44, height:44, borderRadius:22,
+-            backgroundColor:input.trim()?"#00c896":"#888",
+-            alignItems:"center", justifyContent:"center" }}>
+-          {loading
+-            ? <ActivityIndicator color="white" size="small" />
+-            : <Text style={{ color:"white", fontSize:18, fontWeight:"900" }}>→</Text>}
+-        </TouchableOpacity>
+-      </View>
++          </ScrollView>
++
++          {filteredPosts.length === 0 && (
++            <View style={{ alignItems:"center", paddingTop:20 }}>
++              <Text style={{ color:text2 }}>Aucune publication</Text>
++            </View>
++          )}
++
++          {filteredPosts.map((p, i) => (
++            <View key={p.id} style={{ backgroundColor:card, borderRadius:16,
++              padding:14, marginBottom:10, borderWidth:1, borderColor:border }}>
++              <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:10 }}>
++                <View style={{ width:36, height:36, borderRadius:18,
++                  backgroundColor: forumColors[i % forumColors.length]+"20",
++                  alignItems:"center", justifyContent:"center" }}>
++                  <Text style={{ fontSize:13, fontWeight:"900",
++                    color: forumColors[i % forumColors.length] }}>{initials(p.fromName||"U")}</Text>
++                </View>
++                <View style={{ flex:1 }}>
++                  <Text style={{ fontSize:13, fontWeight:"700", color:text }}>{p.fromName || "Patient"}</Text>
++                  <Text style={{ fontSize:11, color:text2 }}>
++                    {p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString("fr-FR") : "Maintenant"}
++                  </Text>
++                </View>
++                {p.category && (
++                  <View style={{ paddingHorizontal:8, paddingVertical:3, borderRadius:12,
++                    backgroundColor:"#00c89615" }}>
++                    <Text style={{ fontSize:10, fontWeight:"700", color:"#00c896" }}>{p.category}</Text>
++                  </View>
++                )}
++              </View>
++              <Text style={{ fontSize:14, lineHeight:22, color:text, marginBottom:12 }}>{p.text}</Text>
++              <View style={{ flexDirection:"row", gap:16, borderTopWidth:1,
++                borderTopColor:border, paddingTop:10 }}>
++                <TouchableOpacity onPress={() => likePost(p.id, p.likes)}
++                  style={{ flexDirection:"row", alignItems:"center", gap:6 }}>
++                  <Text style={{ fontSize:16, color:"#d6304a" }}>♥</Text>
++                  <Text style={{ fontSize:12, color:text2 }}>{p.likes || 0}</Text>
++                </TouchableOpacity>
++              </View>
++            </View>
++          ))}
++        </ScrollView>
++      )}
+     </KeyboardAvoidingView>
+   );
+ }
+diff --git a/src/screens/ParentForumScreen.js b/src/screens/ParentForumScreen.js
+index 98434c6..8db58d9 100644
+--- a/src/screens/ParentForumScreen.js
++++ b/src/screens/ParentForumScreen.js
+@@ -27,7 +27,9 @@ export default function ParentForumScreen(){
+     if(!newPost.trim()||!user?.uid)return;
+     setLoading(true);
+     try{
+-      await firestore().collection("forum").add({text:newPost.trim(),from:user.uid,fromName:(userProfile?.name||"Parent")+" (proche)",category:postCategory,likes:0,comments:0,createdAt:firestore.FieldValue.serverTimestamp()});
++      const isParent=userProfile?.role==="parent";
++      const fromName=(userProfile?.name||(isParent?"Parent":"Patient"))+(isParent?" (proche)":"");
++      await firestore().collection("forum").add({text:newPost.trim(),from:user.uid,fromName,category:postCategory,likes:0,comments:0,createdAt:firestore.FieldValue.serverTimestamp()});
+       setNewPost("");
+     }catch{Alert.alert("Erreur","Impossible de publier");}
+     finally{setLoading(false);}
