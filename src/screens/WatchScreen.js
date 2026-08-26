@@ -10,7 +10,7 @@ import database from "@react-native-firebase/database";
 import { BleManager } from "react-native-ble-plx";
 import { Buffer } from "buffer";
 import { getAgeGroup, SPO2_THRESHOLDS, FC_THRESHOLDS, FR_THRESHOLDS } from "../../functions/thresholds";
-import { playCritique } from "../utils/SoundManager";
+import { playCritique, stopAll } from "../utils/SoundManager";
 
 // UUIDs BLE
 const BLE_SVC  = "4fafc201-1fb5-459e-8fcc-c5c9c3319142";
@@ -373,6 +373,14 @@ export default function WatchScreen({ navigation }) {
                       borderRadius:12, padding:14, alignItems:"center" }}>
                     <Text style={{ color:"white", fontWeight:"900" }}>
                       {simulating ? "Simulation en cours..." : "Simuler une crise"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => stopAll()}
+                    style={{ backgroundColor:"transparent", borderRadius:12,
+                      padding:12, alignItems:"center", marginTop:8,
+                      borderWidth:1, borderColor:"#d6304a" }}>
+                    <Text style={{ color:"#d6304a", fontWeight:"700", fontSize:13 }}>
+                      Arreter l'alerte (son/vibration)
                     </Text>
                   </TouchableOpacity>
                 </View>
