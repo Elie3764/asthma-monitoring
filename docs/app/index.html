@@ -116,6 +116,7 @@ input,textarea,select{font-family:var(--font);}
 <div id="root"></div>
 <div id="toast-container"></div>
 
+<script src="config.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
@@ -984,9 +985,14 @@ window.sendAIQuestion = async function(){
   try{
     const v = window._state.vitals;
     const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{
+        'Content-Type':'application/json',
+        'x-api-key': window.ANTHROPIC_API_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body: JSON.stringify({
-        model:'claude-sonnet-4-6', max_tokens:400,
+        model:'claude-sonnet-5', max_tokens:400,
         messages:[{role:'user', content:`Tu es un assistant medical pour patients asthmatiques. Vitaux actuels: SpO2 ${v.spo2||'inconnu'}%, FC ${v.hr||'inconnu'} bpm, Temp ${v.temp||'inconnu'}C, Resp ${v.resp||'inconnu'}/min. Question du patient: ${q}. Reponds en francais, de maniere concise et bienveillante, sans jamais remplacer un avis medical professionnel.`}]
       })
     });
@@ -1435,4 +1441,3 @@ renderAuth();
 </script>
 </body>
 </html>
-

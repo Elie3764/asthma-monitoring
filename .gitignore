@@ -72,3 +72,5 @@ android/.gradle/
 android/.idea/
 android/local.properties
 functions/node_modules/
+src/config/secrets.js
+docs/app/config.js

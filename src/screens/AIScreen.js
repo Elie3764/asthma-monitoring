@@ -5,6 +5,7 @@ import {
   Platform, ActivityIndicator
 } from "react-native";
 import { useStore } from "../store/useStore";
+import { ANTHROPIC_API_KEY } from "../config/secrets";
 
 export default function AIScreen() {
   const { theme, vitals } = useStore();
@@ -38,9 +39,13 @@ Question: ${txt}`;
 
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01"
+        },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-sonnet-5",
           max_tokens: 500,
           system: "Tu es un assistant medical specialise en asthme. Reponds en francais de maniere claire et concise. Ne remplace pas un medecin.",
           messages: [{ role:"user", content:contexte }]
