@@ -7,6 +7,11 @@ import { useStore } from "../store/useStore";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 
+const VILLES = [
+  "Yaounde", "Douala", "Bafoussam", "Garoua", "Bamenda",
+  "Maroua", "Ngaoundere", "Bertoua", "Ebolowa", "Buea"
+];
+
 export default function ProfileScreen({ navigation }) {
   const { theme, setTheme, userProfile, setUserProfile,
           connectedDevice, notificationsEnabled, setNotificationsEnabled,
@@ -43,6 +48,21 @@ export default function ProfileScreen({ navigation }) {
       setUserProfile({ ...userProfile, [editField]: editValue.trim() });
       setEditModal(false);
       Alert.alert("Modifie!", editLabel + " mis a jour.");
+    } catch (e) {
+      Alert.alert("Erreur", e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const selectVille = async (ville) => {
+    setSaving(true);
+    try {
+      const uid = auth().currentUser?.uid;
+      await firestore().collection("patients").doc(uid)
+        .update({ ville });
+      setUserProfile({ ...userProfile, ville });
+      setEditModal(false);
     } catch (e) {
       Alert.alert("Erreur", e.message);
     } finally {
@@ -262,33 +282,59 @@ export default function ProfileScreen({ navigation }) {
               marginBottom:16 }}>
               Modifier {editLabel}
             </Text>
-            <TextInput
-              style={{ backgroundColor:bg, borderRadius:12, padding:14,
-                fontSize:16, color:text, borderWidth:1.5,
-                borderColor:"#00c896", marginBottom:20 }}
-              value={editValue}
-              onChangeText={setEditValue}
-              placeholder={editLabel}
-              placeholderTextColor={text2}
-              autoFocus
-            />
-            <View style={{ flexDirection:"row", gap:12 }}>
+            {editField === "ville" ? (
+              <View style={{ marginBottom:20 }}>
+                {VILLES.map(v => (
+                  <TouchableOpacity key={v} onPress={() => selectVille(v)}
+                    style={{ paddingVertical:14, borderBottomWidth:1,
+                      borderBottomColor:border, flexDirection:"row",
+                      alignItems:"center", justifyContent:"space-between" }}>
+                    <Text style={{ fontSize:15, color:text,
+                      fontWeight:editValue===v?"900":"400" }}>{v}</Text>
+                    {editValue === v && (
+                      <Text style={{ color:"#00c896", fontWeight:"900" }}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <TextInput
+                style={{ backgroundColor:bg, borderRadius:12, padding:14,
+                  fontSize:16, color:text, borderWidth:1.5,
+                  borderColor:"#00c896", marginBottom:20 }}
+                value={editValue}
+                onChangeText={setEditValue}
+                placeholder={editLabel}
+                placeholderTextColor={text2}
+                autoFocus
+              />
+            )}
+            {editField === "ville" ? (
               <TouchableOpacity
                 onPress={() => setEditModal(false)}
-                style={{ flex:1, borderWidth:1, borderColor:border,
+                style={{ borderWidth:1, borderColor:border,
                   borderRadius:12, padding:14, alignItems:"center" }}>
-                <Text style={{ color:text2, fontWeight:"700" }}>Annuler</Text>
+                <Text style={{ color:text2, fontWeight:"700" }}>Fermer</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={sauvegarder}
-                disabled={saving}
-                style={{ flex:1, backgroundColor:"#00c896",
-                  borderRadius:12, padding:14, alignItems:"center" }}>
-                <Text style={{ color:"white", fontWeight:"900" }}>
-                  {saving ? "Sauvegarde..." : "Enregistrer"}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            ) : (
+              <View style={{ flexDirection:"row", gap:12 }}>
+                <TouchableOpacity
+                  onPress={() => setEditModal(false)}
+                  style={{ flex:1, borderWidth:1, borderColor:border,
+                    borderRadius:12, padding:14, alignItems:"center" }}>
+                  <Text style={{ color:text2, fontWeight:"700" }}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={sauvegarder}
+                  disabled={saving}
+                  style={{ flex:1, backgroundColor:"#00c896",
+                    borderRadius:12, padding:14, alignItems:"center" }}>
+                  <Text style={{ color:"white", fontWeight:"900" }}>
+                    {saving ? "Sauvegarde..." : "Enregistrer"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>

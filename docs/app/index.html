@@ -156,6 +156,12 @@ function showToast(msg){
 }
 window.showToast = showToast;
 
+function normalizePhone(str){
+  const digits = (str||'').replace(/\D/g,''); // ne garde que les chiffres
+  return digits.slice(-9); // les 9 derniers chiffres (numero Cameroun sans indicatif)
+}
+window.normalizePhone = normalizePhone;
+
 function initials(name){
   if(!name) return '?';
   return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
@@ -230,6 +236,12 @@ function playCrisisAlertSound(){
   }
 }
 window.playCrisisAlertSound = playCrisisAlertSound;
+
+function stopCrisisAlert(){
+  if(_pwaAudioCtx) _pwaAudioCtx.suspend();
+  if(navigator.vibrate) navigator.vibrate(0);
+}
+window.stopCrisisAlert = stopCrisisAlert;
 
 // ===== AUTH STATE =====
 onAuthStateChanged(auth, async (u) => {
@@ -442,7 +454,7 @@ window.doRegister = async function(){
         doctorId, doctorEmail:selectedDoc?.email||'', doctorName:selectedDoc?.name||'', createdAt:serverTimestamp()};
       await setDoc(doc(db,'patients',cred.user.uid), p);
       await updateDoc(doc(db,'doctors',doctorId), {patientCount: (selectedDoc?.patientCount||0)+1});
-      await setDoc(doc(db,'lookups',cred.user.uid), {uid:cred.user.uid, email, phone:(phone||'').replace(/\s/g,''), role:'patient'});
+      await setDoc(doc(db,'lookups',cred.user.uid), {uid:cred.user.uid, email, phone:normalizePhone(phone), role:'patient'});
     }catch(e){
       showToast(e.code==='auth/email-already-in-use'?'Email deja utilise':'Erreur creation compte');
       btn.textContent = "S'INSCRIRE";
@@ -451,7 +463,7 @@ window.doRegister = async function(){
     const parentPhone = document.getElementById('rg-parent-phone').value;
     if(!parentPhone){showToast('Entrez votre numero de telephone');btn.textContent="S'INSCRIRE";return;}
     try{
-      const cleanPhone = parentPhone.replace(/\s/g,'');
+      const cleanPhone = normalizePhone(parentPhone);
       const lookupSnap = await getDocs(query(collection(db,'lookups'), where('phone','==',cleanPhone), where('role','==','patient')));
       let linkedPatient = null;
       if(!lookupSnap.empty){
@@ -469,7 +481,7 @@ window.doRegister = async function(){
         uid:cred.user.uid, role:'parent', linkedPatientId:linkedPatient.id, linkedPatientName:linkedPatient.name,
         createdAt:serverTimestamp()};
       await setDoc(doc(db,'parents',cred.user.uid), p);
-      await setDoc(doc(db,'lookups',cred.user.uid), {uid:cred.user.uid, email, phone:parentPhone, role:'parent'});
+      await setDoc(doc(db,'lookups',cred.user.uid), {uid:cred.user.uid, email, phone:normalizePhone(parentPhone), role:'parent'});
       await updateDoc(doc(db,'patients',linkedPatient.id), {linkedParentId:cred.user.uid, linkedParentName:name+' '+prenom});
       showToast('Connecte a '+linkedPatient.name+' !');
     }catch(e){
@@ -716,6 +728,7 @@ function renderConnexionScreen(){
         <div style="font-size:16px;font-weight:700;margin-bottom:4px;color:#d6304a;">Zone de test</div>
         <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Genere des vitaux critiques adaptes a l'age du patient pour tester les alertes, sans avoir besoin de la montre physique.</div>
         <button style="width:100%;background:#d6304a;border-radius:14px;padding:16px;color:white;font-weight:900;font-size:14px;" onclick="simulerCriseWeb()">Simuler une crise</button>
+        <button style="width:100%;background:transparent;border-radius:14px;padding:12px;color:#d6304a;font-weight:700;font-size:13px;border:1px solid #d6304a;margin-top:8px;" onclick="stopCrisisAlert()">Arreter l'alerte (son/vibration)</button>
       </div>
     </div>
     <div style="height:80px;"></div>
@@ -1325,7 +1338,16 @@ function renderProfileScreen(){
 }
 window.renderProfileScreen = renderProfileScreen;
 
+const VILLES_LIST = [
+  "Yaounde", "Douala", "Bafoussam", "Garoua", "Bamenda",
+  "Maroua", "Ngaoundere", "Bertoua", "Ebolowa", "Buea"
+];
+
 window.editProfileField = async function(field, label){
+  if(field === 'ville'){
+    editVilleField();
+    return;
+  }
   const currentValue = window._state.profile?.[field];
   const value = prompt('Modifier '+label+' :', currentValue||'');
   if(value===null || !value.trim()) return;
@@ -1334,6 +1356,42 @@ window.editProfileField = async function(field, label){
     await updateDoc(doc(db,'patients',uid), {[field]: value.trim()});
     window._state.profile = {...window._state.profile, [field]: value.trim()};
     showToast(label+' mis a jour !');
+    renderProfileScreen();
+  }catch(e){ showToast('Impossible de sauvegarder'); }
+};
+
+window.editVilleField = function(){
+  const current = window._state.profile?.ville;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:flex-end;';
+  overlay.onclick = (e) => { if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:var(--card);border-top-left-radius:20px;border-top-right-radius:20px;padding:20px;padding-bottom:40px;width:100%;max-height:70%;overflow-y:auto;">
+      <div style="font-size:18px;font-weight:900;margin-bottom:16px;">Choisir la ville</div>
+      ${VILLES_LIST.map(v => `
+        <div onclick="selectVilleField('${v}')" style="padding:14px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+          <span style="font-size:15px;font-weight:${v===current?'900':'400'};">${v}</span>
+          ${v===current ? '<span style="color:var(--primary);font-weight:900;">✓</span>' : ''}
+        </div>
+      `).join('')}
+      <button onclick="closeVilleOverlay()" style="width:100%;margin-top:16px;padding:14px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text2);font-weight:700;">Fermer</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  window._villeOverlay = overlay;
+};
+
+window.closeVilleOverlay = function(){
+  if(window._villeOverlay){ window._villeOverlay.remove(); window._villeOverlay = null; }
+};
+
+window.selectVilleField = async function(ville){
+  try{
+    const uid = window._state.user.uid;
+    await updateDoc(doc(db,'patients',uid), {ville});
+    window._state.profile = {...window._state.profile, ville};
+    if(window._villeOverlay) window._villeOverlay.remove();
+    showToast('Ville mise a jour !');
     renderProfileScreen();
   }catch(e){ showToast('Impossible de sauvegarder'); }
 };
