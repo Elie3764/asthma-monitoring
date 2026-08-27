@@ -126,6 +126,26 @@ export default function WatchScreen({ navigation }) {
     }
   };
 
+  // Declenche une alerte manuelle directement sur la montre via BLE
+  // (envoie "ALERT:CRISE" sur la caracteristique commande, gere par
+  // CommandCallbacks::onWrite dans le firmware -> vibreur + ecran rouge
+  // immediatement, sans passer par la Realtime Database).
+  const declencherAlerteBLE = async () => {
+    if (!deviceRef.current || !connected) {
+      Alert.alert("Non connecte", "Connectez la montre en BLE d'abord.");
+      return;
+    }
+    try {
+      const b64 = Buffer.from("ALERT:CRISE").toString("base64");
+      await deviceRef.current.writeCharacteristicWithResponseForService(
+        BLE_SVC, CHR_UID, b64
+      );
+      Alert.alert("Alerte envoyee", "La montre devrait vibrer et afficher l'ecran d'alerte immediatement.");
+    } catch (e) {
+      Alert.alert("Erreur", "Impossible d'envoyer l'alerte: " + e.message);
+    }
+  };
+
   // Envoyer commande theme
   const envoyerTheme = async (themeId) => {
     if (!deviceRef.current || !connected) {
@@ -375,6 +395,15 @@ export default function WatchScreen({ navigation }) {
                       {simulating ? "Simulation en cours..." : "Simuler une crise"}
                     </Text>
                   </TouchableOpacity>
+                  {connected && (
+                    <TouchableOpacity onPress={declencherAlerteBLE}
+                      style={{ backgroundColor:"#7c3aed", borderRadius:12,
+                        padding:14, alignItems:"center", marginTop:8 }}>
+                      <Text style={{ color:"white", fontWeight:"900" }}>
+                        Declencher une alerte sur la montre (BLE)
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity onPress={() => stopAll()}
                     style={{ backgroundColor:"transparent", borderRadius:12,
                       padding:12, alignItems:"center", marginTop:8,
