@@ -1483,12 +1483,26 @@ async function renderParentSuiviScreen(){
   onValue(vitalsRef, (snap)=>{
     const data = snap.val();
     if(data){
-      const wasCritical = window._parentVitals?.spo2 < 88;
+      const patientAge = parseInt(patientInfo?.age, 10) || 30;
+      const ageGroup = getAgeGroup(patientAge);
+      const spo2T = SPO2_THRESHOLDS[ageGroup];
+
+      const wasCritical = window._parentVitals?.spo2 != null && window._parentVitals.spo2 < spo2T.critiqueMax;
+      const isCritical = data.spo2 != null && data.spo2 < spo2T.critiqueMax;
+
       window._parentVitals = data;
       window._parentOnline = (Date.now()-(data.timestamp||0)) < 60000;
-      if(data.spo2 < 88 && !wasCritical && navigator.vibrate){
-        navigator.vibrate([400,200,400,200,400,200,400,200,400]);
+
+      if(isCritical && !wasCritical){
+        // Nouvelle crise detectee : son + vibration + toast + historique
+        playCrisisAlertSound();
+        if(navigator.vibrate) navigator.vibrate([400,200,400,200,400,200,400,200,400]);
+        showToast('🚨 ALERTE: SpO2 critique ('+data.spo2+'%) chez '+(patientInfo?.name||'le patient'));
+        window._parentAlertHistory.unshift({
+          spo2: data.spo2, critical: true, warning: false, timestamp: data.timestamp || Date.now()
+        });
       }
+
       if(window._state.currentTab!=='chat' && document.querySelector('.topbar h1')?.textContent==='Suivi' && window._parentSubTab==='suivi'){
         renderParentSuiviScreen();
       }

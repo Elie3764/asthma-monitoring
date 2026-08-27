@@ -1,9 +1,11 @@
-﻿import React,{useEffect,useState}from"react";
+﻿import React,{useEffect,useState,useRef}from"react";
 import{View,Text,ScrollView,TouchableOpacity,StatusBar,Linking,Alert,ActivityIndicator}from"react-native";
 import database from"@react-native-firebase/database";
 import firestore from"@react-native-firebase/firestore";
 import auth from"@react-native-firebase/auth";
 import{useStore}from"../store/useStore";
+import{playCritique,stopAll}from"../utils/SoundManager";
+import{getAgeGroup,SPO2_THRESHOLDS}from"../../functions/thresholds";
 export default function ParentDashboardScreen(){
   const{theme,userProfile,setTheme}=useStore();
   const isLight=theme==="light";
@@ -21,6 +23,9 @@ export default function ParentDashboardScreen(){
   const[reminders,setReminders]=useState([]);
   const[notes,setNotes]=useState([]);
   const linkedId=userProfile?.linkedPatientId;
+  const wasCriticalRef=useRef(false);
+  const patientInfoRef=useRef(null);
+  useEffect(()=>{patientInfoRef.current=patientInfo;},[patientInfo]);
 
   useEffect(()=>{
     if(!linkedId)return;
@@ -41,6 +46,20 @@ export default function ParentDashboardScreen(){
         setVitals(v);
         const ageMs=Date.now()-(v.timestamp||0);
         setOnline(ageMs<60000);
+
+        const age=parseInt(patientInfoRef.current?.age,10)||30;
+        const ageGroup=getAgeGroup(age);
+        const spo2T=SPO2_THRESHOLDS[ageGroup];
+        const isCritical=v.spo2!=null&&v.spo2<spo2T.critiqueMax;
+
+        if(isCritical&&!wasCriticalRef.current){
+          playCritique();
+          Alert.alert(
+            "🚨 Alerte critique",
+            "SpO2 critique detectee chez "+(patientInfoRef.current?.name||"le patient")+": "+v.spo2+"%"
+          );
+        }
+        wasCriticalRef.current=isCritical;
       }
     });
     const unsubRdv=firestore().collection("rdvs").where("patientId","==",linkedId).orderBy("date","asc")
@@ -150,6 +169,11 @@ export default function ParentDashboardScreen(){
                 {vitals.spo2&&vitals.spo2<92?"Attention : SpO2 basse":"Aucune alerte actuellement"}
               </Text>
             </View>
+            {vitals.spo2&&vitals.spo2<92&&(
+              <TouchableOpacity onPress={()=>stopAll()} style={{borderWidth:1,borderColor:"#d6304a",borderRadius:12,padding:12,alignItems:"center",marginBottom:16}}>
+                <Text style={{color:"#d6304a",fontWeight:"700",fontSize:13}}>Arreter l'alerte (son/vibration)</Text>
+              </TouchableOpacity>
+            )}
             {(patientInfo?.phone||doctorInfo?.phone)&&(
               <TouchableOpacity onPress={callEmergency} style={{backgroundColor:"#d6304a",borderRadius:14,padding:16,alignItems:"center",elevation:4}}>
                 <Text style={{color:"white",fontWeight:"900",fontSize:15}}>Appeler en cas d'urgence</Text>
