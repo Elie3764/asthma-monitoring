@@ -3,11 +3,16 @@ import {
   View, Text, ScrollView, TouchableOpacity, Animated,
   StatusBar, RefreshControl, Modal
 } from "react-native";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import database from "@react-native-firebase/database";
 import { useStore } from "../store/useStore";
+import { getAgeGroup, SPO2_THRESHOLDS } from "../../functions/thresholds";
+import { playCritique, stopAll } from "../utils/SoundManager";
 
 export default function HomeScreen({ navigation }) {
   const { vitals, alertStatus, userProfile, theme, connectedDevice,
-          connectionType, setTheme } = useStore();
+          connectionType, setTheme, setVitals, setAlertStatus } = useStore();
   const isLight = theme === "light";
   const bg     = isLight ? "#f4f7fb" : "#0d1829";
   const card   = isLight ? "#ffffff" : "#111f35";
@@ -19,6 +24,57 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const pulse = useRef(new Animated.Value(1)).current;
+  const wasCritical = useRef(false);
+
+  // ---- Listener temps reel des vitaux (patient OU patient affilie) ----
+  // Corrige le probleme ou le parent, sur un telephone different du
+  // patient, ne recevait jamais rien lors d'une simulation de crise
+  // (ou d'une vraie alerte de la montre) : personne n'ecoutait le
+  // chemin Realtime Database "patients/{uid}/vitals" cote parent.
+  useEffect(() => {
+    const monUid = auth().currentUser?.uid;
+    if (!monUid) return;
+
+    // Patient : on ecoute ses propres vitaux.
+    // Parent : on ecoute les vitaux du patient auquel il est lie
+    // (linkedPatientId, enregistre dans son propre document parents/{uid}).
+    const cibleUid = userProfile?.role === "parent"
+      ? userProfile?.linkedPatientId
+      : monUid;
+
+    if (!cibleUid) return;
+
+    let ageGroup = "adulte";
+    firestore().collection("patients").doc(cibleUid).get()
+      .then(snap => {
+        const age = parseInt(snap.data()?.age, 10);
+        if (!isNaN(age)) ageGroup = getAgeGroup(age);
+      })
+      .catch(() => {});
+
+    const ref = database().ref("patients/" + cibleUid + "/vitals");
+    const onValue = ref.on("value", snap => {
+      const v = snap.val();
+      if (!v) return;
+      setVitals(v);
+
+      const seuil = SPO2_THRESHOLDS[ageGroup];
+      const estCritique = seuil && v.spo2 && v.spo2 < seuil.critiqueMax;
+      const nouveauStatus = estCritique ? "critical" : "normal";
+      setAlertStatus(nouveauStatus);
+
+      // Ne (re)declenche le son que sur une TRANSITION vers critique,
+      // pas a chaque mise a jour tant que ca reste critique.
+      if (estCritique && !wasCritical.current) {
+        playCritique();
+      } else if (!estCritique && wasCritical.current) {
+        stopAll();
+      }
+      wasCritical.current = estCritique;
+    });
+
+    return () => ref.off("value", onValue);
+  }, [userProfile?.role, userProfile?.linkedPatientId]);
 
   useEffect(() => {
     setDate(new Date().toLocaleDateString("fr-FR",
