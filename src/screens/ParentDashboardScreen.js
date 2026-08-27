@@ -34,60 +34,71 @@ export default function ParentDashboardScreen(){
   // userProfile.linkedPatientId (source Firestore, deja fiable).
   // Plutot que de le recopier a la main dans la console (source
   // d'erreurs de frappe difficiles a reperer entre I/l et 0/O),
-  // l'app l'ecrit elle-meme a chaque chargement, garantissant une
-  // valeur toujours identique, sans jamais la retaper.
+  // l'app l'ecrit elle-meme. IMPORTANT : cette ecriture doit etre
+  // TERMINEE avant d'attacher le listener des vitaux, sinon Firebase
+  // refuse une premiere fois (permission-denied) et ne reessaie
+  // JAMAIS automatiquement ce meme listener, meme si le miroir est
+  // correct une fraction de seconde plus tard.
   useEffect(()=>{
     if(!linkedId)return;
-    const monUid=auth().currentUser?.uid;
-    if(!monUid)return;
-    database().ref("parents/"+monUid+"/linkedPatientId").set(linkedId).catch(()=>{});
-  },[linkedId]);
+    let ref=null,unsub=null,unsubRdv=()=>{},unsubNotes=()=>{},annule=false;
 
-  useEffect(()=>{
-    if(!linkedId)return;
-    firestore().collection("patients").doc(linkedId).get().then(async snap=>{
-      if(snap.exists){
-        const data=snap.data();
-        setPatientInfo(data);
-        if(data.doctorId){
-          const docSnap=await firestore().collection("doctors").doc(data.doctorId).get();
-          if(docSnap.exists)setDoctorInfo(docSnap.data());
+    const demarrer=async()=>{
+      const monUid=auth().currentUser?.uid;
+      if(!monUid)return;
+      try{
+        await database().ref("parents/"+monUid+"/linkedPatientId").set(linkedId);
+      }catch{}
+      if(annule)return;
+
+      firestore().collection("patients").doc(linkedId).get().then(async snap=>{
+        if(snap.exists){
+          const data=snap.data();
+          setPatientInfo(data);
+          if(data.doctorId){
+            const docSnap=await firestore().collection("doctors").doc(data.doctorId).get();
+            if(docSnap.exists)setDoctorInfo(docSnap.data());
+          }
         }
-      }
-    }).catch(()=>{});
-    const ref=database().ref("patients/"+linkedId+"/vitals");
-    const unsub=ref.on("value",snap=>{
-      const v=snap.val();
-      if(v){
-        setVitals(v);
-        const ageMs=Date.now()-(v.timestamp||0);
-        setOnline(ageMs<60000);
+      }).catch(()=>{});
 
-        const age=parseInt(patientInfoRef.current?.age,10)||30;
-        const ageGroup=getAgeGroup(age);
-        const spo2T=SPO2_THRESHOLDS[ageGroup];
-        const isCritical=v.spo2!=null&&v.spo2<spo2T.critiqueMax;
+      ref=database().ref("patients/"+linkedId+"/vitals");
+      unsub=ref.on("value",snap=>{
+        const v=snap.val();
+        if(v){
+          setVitals(v);
+          const ageMs=Date.now()-(v.timestamp||0);
+          setOnline(ageMs<60000);
 
-        if(isCritical&&!wasCriticalRef.current){
-          playCritique();
-          Alert.alert(
-            "🚨 Alerte critique",
-            "SpO2 critique detectee chez "+(patientInfoRef.current?.name||"le patient")+": "+v.spo2+"%"
-          );
+          const age=parseInt(patientInfoRef.current?.age,10)||30;
+          const ageGroup=getAgeGroup(age);
+          const spo2T=SPO2_THRESHOLDS[ageGroup];
+          const isCritical=v.spo2!=null&&v.spo2<spo2T.critiqueMax;
+
+          if(isCritical&&!wasCriticalRef.current){
+            playCritique();
+            Alert.alert(
+              "🚨 Alerte critique",
+              "SpO2 critique detectee chez "+(patientInfoRef.current?.name||"le patient")+": "+v.spo2+"%"
+            );
+          }
+          wasCriticalRef.current=isCritical;
         }
-        wasCriticalRef.current=isCritical;
-      }
-    },error=>{
-      // DEBUG TEMPORAIRE : affiche l'erreur exacte du listener RTDB
-      // (permission-denied, etc.) au lieu d'echouer silencieusement.
-      // A retirer une fois le probleme identifie/resolu.
-      Alert.alert("Erreur listener vitaux", error.code+" : "+error.message);
-    });
-    const unsubRdv=firestore().collection("rdvs").where("patientId","==",linkedId).orderBy("date","asc")
-      .onSnapshot(s=>{const l=[];s.forEach(d=>l.push({id:d.id,...d.data()}));setRdvs(l);},()=>{});
-    const unsubNotes=firestore().collection("medicalNotes").where("patientId","==",linkedId).orderBy("createdAt","desc")
-      .onSnapshot(s=>{const l=[];s.forEach(d=>l.push({id:d.id,...d.data()}));setNotes(l);},()=>{});
-    return()=>{ref.off("value",unsub);unsubRdv();unsubNotes();};
+      },error=>{
+        // DEBUG TEMPORAIRE : affiche l'erreur exacte du listener RTDB
+        // (permission-denied, etc.) au lieu d'echouer silencieusement.
+        // A retirer une fois le probleme identifie/resolu.
+        Alert.alert("Erreur listener vitaux", error.code+" : "+error.message);
+      });
+
+      unsubRdv=firestore().collection("rdvs").where("patientId","==",linkedId).orderBy("date","asc")
+        .onSnapshot(s=>{const l=[];s.forEach(d=>l.push({id:d.id,...d.data()}));setRdvs(l);},()=>{});
+      unsubNotes=firestore().collection("medicalNotes").where("patientId","==",linkedId).orderBy("createdAt","desc")
+        .onSnapshot(s=>{const l=[];s.forEach(d=>l.push({id:d.id,...d.data()}));setNotes(l);},()=>{});
+    };
+    demarrer();
+
+    return()=>{annule=true;if(ref&&unsub)ref.off("value",unsub);unsubRdv();unsubNotes();};
   },[linkedId]);
 
   const callPatient=()=>{
