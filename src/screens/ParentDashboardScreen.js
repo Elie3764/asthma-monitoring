@@ -27,6 +27,22 @@ export default function ParentDashboardScreen(){
   const patientInfoRef=useRef(null);
   useEffect(()=>{patientInfoRef.current=patientInfo;},[patientInfo]);
 
+  // ---- Auto-synchronisation du miroir linkedPatientId (RTDB) ----
+  // Les regles de securite Realtime Database verifient
+  // root.child('parents').child(auth.uid).child('linkedPatientId'),
+  // un noeud SEPARE de Firestore qui doit rester identique a
+  // userProfile.linkedPatientId (source Firestore, deja fiable).
+  // Plutot que de le recopier a la main dans la console (source
+  // d'erreurs de frappe difficiles a reperer entre I/l et 0/O),
+  // l'app l'ecrit elle-meme a chaque chargement, garantissant une
+  // valeur toujours identique, sans jamais la retaper.
+  useEffect(()=>{
+    if(!linkedId)return;
+    const monUid=auth().currentUser?.uid;
+    if(!monUid)return;
+    database().ref("parents/"+monUid+"/linkedPatientId").set(linkedId).catch(()=>{});
+  },[linkedId]);
+
   useEffect(()=>{
     if(!linkedId)return;
     firestore().collection("patients").doc(linkedId).get().then(async snap=>{
