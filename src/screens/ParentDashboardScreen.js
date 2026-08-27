@@ -61,6 +61,11 @@ export default function ParentDashboardScreen(){
         }
         wasCriticalRef.current=isCritical;
       }
+    },error=>{
+      // DEBUG TEMPORAIRE : affiche l'erreur exacte du listener RTDB
+      // (permission-denied, etc.) au lieu d'echouer silencieusement.
+      // A retirer une fois le probleme identifie/resolu.
+      Alert.alert("Erreur listener vitaux", error.code+" : "+error.message);
     });
     const unsubRdv=firestore().collection("rdvs").where("patientId","==",linkedId).orderBy("date","asc")
       .onSnapshot(s=>{const l=[];s.forEach(d=>l.push({id:d.id,...d.data()}));setRdvs(l);},()=>{});
