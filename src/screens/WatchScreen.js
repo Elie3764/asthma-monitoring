@@ -190,8 +190,64 @@ export default function WatchScreen({ navigation }) {
     }
   };
 
-  // Envoyer commande theme
-  const envoyerTheme = async (themeId) => {
+  // Efface les identifiants WiFi sauvegardes sur la montre et la
+  // redemarre : elle recree son portail de configuration
+  // "AsthmaWatch-Setup" au prochain demarrage, permettant de se
+  // connecter a un nouveau reseau (autre compte/autre WiFi).
+  const reinitialiserWifi = async () => {
+    if (!deviceRef.current || !connected) {
+      Alert.alert("Non connecte", "Connectez la montre en BLE d'abord.");
+      return;
+    }
+    Alert.alert(
+      "Reinitialiser le WiFi",
+      "La montre va oublier son reseau WiFi actuel et redemarrer. Vous devrez la reconfigurer via le portail \"AsthmaWatch-Setup\". Continuer ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { text: "Reinitialiser", style: "destructive", onPress: async () => {
+          try {
+            const b64 = Buffer.from("WIFI:RESET").toString("base64");
+            await deviceRef.current.writeCharacteristicWithResponseForService(
+              BLE_SVC, CHR_UID, b64
+            );
+            Alert.alert("WiFi reinitialise", "La montre redemarre. Connectez votre telephone au reseau \"AsthmaWatch-Setup\" dans les 3 minutes pour configurer un nouveau WiFi.");
+          } catch (e) {
+            Alert.alert("Erreur", "Impossible de reinitialiser le WiFi: " + e.message);
+          }
+        }}
+      ]
+    );
+  };
+
+  // Efface le pairage sauvegarde sur la montre (patientUid) et la
+  // redemarre : elle regenere un nouveau code a 6 chiffres, permettant
+  // de l'associer a un tout autre compte patient.
+  const reinitialiserPairage = async () => {
+    if (!deviceRef.current || !connected) {
+      Alert.alert("Non connecte", "Connectez la montre en BLE d'abord.");
+      return;
+    }
+    Alert.alert(
+      "Reinitialiser le pairage",
+      "La montre va oublier son association actuelle et redemarrer. Un nouveau code a 6 chiffres s'affichera pour l'associer a un autre compte. Continuer ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { text: "Reinitialiser", style: "destructive", onPress: async () => {
+          try {
+            const b64 = Buffer.from("PAIR:RESET").toString("base64");
+            await deviceRef.current.writeCharacteristicWithResponseForService(
+              BLE_SVC, CHR_UID, b64
+            );
+            Alert.alert("Pairage reinitialise", "La montre redemarre et affiche un nouveau code a 6 chiffres a entrer dans l'app.");
+          } catch (e) {
+            Alert.alert("Erreur", "Impossible de reinitialiser le pairage: " + e.message);
+          }
+        }}
+      ]
+    );
+  };
+
+
     if (!deviceRef.current || !connected) {
       Alert.alert("Non connecte", "Connectez la montre en BLE d'abord.");
       return;
@@ -571,6 +627,36 @@ export default function WatchScreen({ navigation }) {
                     </View>
                   ))}
                 </View>
+
+                {/* Bouton reinitialiser le WiFi */}
+                {connected && (
+                  <TouchableOpacity onPress={reinitialiserWifi}
+                    style={{ backgroundColor:isLight?"#fef3e8":"#2a1a00",
+                      borderRadius:16, padding:16, alignItems:"center",
+                      borderWidth:1, borderColor:"#d96a1f"+"40" }}>
+                    <Text style={{ color:"#d96a1f", fontWeight:"900" }}>
+                      Reinitialiser le WiFi de la montre
+                    </Text>
+                    <Text style={{ color:"#d96a1f", fontSize:11, marginTop:4, opacity:0.8 }}>
+                      Pour connecter la montre a un autre reseau
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Bouton reinitialiser le pairage */}
+                {connected && (
+                  <TouchableOpacity onPress={reinitialiserPairage}
+                    style={{ backgroundColor:isLight?"#f3e8fe":"#1e0a2a",
+                      borderRadius:16, padding:16, alignItems:"center",
+                      borderWidth:1, borderColor:"#7c3aed"+"40" }}>
+                    <Text style={{ color:"#7c3aed", fontWeight:"900" }}>
+                      Reinitialiser le pairage
+                    </Text>
+                    <Text style={{ color:"#7c3aed", fontSize:11, marginTop:4, opacity:0.8 }}>
+                      Pour associer la montre a un autre compte patient
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
                 {/* Bouton dissocier */}
                 <TouchableOpacity onPress={dissocier}
