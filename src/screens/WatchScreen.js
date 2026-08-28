@@ -130,8 +130,13 @@ export default function WatchScreen({ navigation }) {
           }
         }
       };
-      lireVitaux(); // premiere lecture immediate
-      pollingRef.current = setInterval(lireVitaux, 3000);
+      // Delai avant la premiere lecture : evite "operation was rejected",
+      // erreur BLE frequente si on lit trop tot juste apres la connexion,
+      // pendant que la negociation Bluetooth n'est pas encore stabilisee.
+      setTimeout(() => {
+        lireVitaux();
+        pollingRef.current = setInterval(lireVitaux, 3000);
+      }, 800);
 
       // Detecter deconnexion
       dev.onDisconnected(() => {
@@ -144,7 +149,7 @@ export default function WatchScreen({ navigation }) {
         }
       });
 
-      Alert.alert("Connecte!", "Montre BLE connectee avec succes.");
+      // (Alerte "Connecte!" retiree - trop de popups pendant les tests)
     } catch (e) {
       Alert.alert("Erreur", e.message);
     } finally {
