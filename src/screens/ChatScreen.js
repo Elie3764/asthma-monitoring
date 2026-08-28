@@ -6,6 +6,7 @@ import {
 } from "react-native";
 import { useStore } from "../store/useStore";
 import firestore from "@react-native-firebase/firestore";
+import database from "@react-native-firebase/database";
 import auth from "@react-native-firebase/auth";
 
 export default function ChatScreen({ navigation }) {
@@ -36,22 +37,27 @@ export default function ChatScreen({ navigation }) {
 
   useEffect(() => {
     const uid = auth().currentUser?.uid;
-    if (!uid) return;
-    const unsub = firestore()
-      .collection("messages")
-      .where("patientId", "==", uid)
-      .orderBy("createdAt", "asc")
-      .limit(50)
-      .onSnapshot(snap => {
-        if (!snap) return;
-        const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setMessages(msgs);
-        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-      }, err => {
-        console.log("Chat erreur:", err.message);
-      });
-    return unsub;
-  }, []);
+    const doctorId = userProfile?.doctorId;
+    if (!uid || !doctorId) return;
+    // Meme chemin et meme format que le dashboard medecin
+    // (Realtime Database, pas Firestore) : chats/{patientId}_{doctorId},
+    // liste chainee via push(). Corrige l'incompatibilite ou le
+    // medecin ecrivait dans un endroit que le patient ne lisait jamais.
+    const chatId = uid + "_" + doctorId;
+    const chatRef = database().ref("chats/" + chatId);
+    const onValue = chatRef.on("value", snap => {
+      const val = snap.val();
+      if (!val) { setMessages([]); return; }
+      const msgs = Object.entries(val)
+        .map(([id, m]) => ({ id, ...m }))
+        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      setMessages(msgs);
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }, err => {
+      console.log("Chat erreur:", err.message);
+    });
+    return () => chatRef.off("value", onValue);
+  }, [userProfile?.doctorId]);
 
   useEffect(() => {
     const unsub = firestore()
@@ -70,17 +76,17 @@ export default function ChatScreen({ navigation }) {
     const txt = input.trim();
     if (!txt) return;
     const uid = auth().currentUser?.uid;
-    if (!uid) return;
+    const doctorId = userProfile?.doctorId;
+    if (!uid || !doctorId) return;
     setInput("");
     setLoading(true);
     try {
-      await firestore().collection("messages").add({
-        text:      txt,
-        patientId: uid,
-        senderName:userProfile?.name || "Patient",
-        role:      "patient",
-        createdAt: firestore.FieldValue.serverTimestamp(),
-        lu:        false,
+      const chatId = uid + "_" + doctorId;
+      await database().ref("chats/" + chatId).push({
+        from: uid,
+        fromName: userProfile?.name || "Patient",
+        text: txt,
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.log("Envoi erreur:", e.message);
@@ -174,14 +180,15 @@ export default function ChatScreen({ navigation }) {
             )}
 
             {messages.map(msg => {
-              const moi = msg.role === "patient";
+              const monUid = auth().currentUser?.uid;
+              const moi = msg.from === monUid;
               return (
                 <View key={msg.id}
                   style={{ alignSelf:moi?"flex-end":"flex-start",
                     maxWidth:"80%", gap:4 }}>
                   {!moi && (
                     <Text style={{ fontSize:11, color:text2, marginLeft:4 }}>
-                      {msg.senderName || "Medecin"}
+                      {msg.fromName || "Medecin"}
                     </Text>
                   )}
                   <View style={{
@@ -202,8 +209,8 @@ export default function ChatScreen({ navigation }) {
                   </View>
                   <Text style={{ fontSize:10, color:text2,
                     alignSelf:moi?"flex-end":"flex-start", marginHorizontal:4 }}>
-                    {msg.createdAt?.toDate?.()?.toLocaleTimeString("fr-FR",
-                      { hour:"2-digit", minute:"2-digit" }) || ""}
+                    {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("fr-FR",
+                      { hour:"2-digit", minute:"2-digit" }) : ""}
                   </Text>
                 </View>
               );
