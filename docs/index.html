@@ -88,6 +88,8 @@ body {
   border-radius: 20px;
   padding: 48px 40px;
   width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 0 80px rgba(0,210,255,0.08), var(--shadow);
 }
 .auth-logo {
@@ -1642,6 +1644,7 @@ async function loadPatientsFromFirestore() {
     updateDashboardData();
     renderPatientsTable();
     renderPatientSelector();
+    renderChatList();
     populatePatientSelects();
   } catch(e) {
     console.error('Erreur chargement patients Firestore:', e);
