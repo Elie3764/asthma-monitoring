@@ -259,11 +259,23 @@ onAuthStateChanged(auth, async (u) => {
 
 async function checkRole(uid){
   try{
+    // Arrete un eventuel listener precedent (changement de compte)
+    if (window._profileUnsub) { window._profileUnsub(); window._profileUnsub = null; }
+
     const parentSnap = await getDoc(doc(db,'parents',uid));
     if(parentSnap.exists()){
       window._state.role = 'parent';
       window._state.profile = parentSnap.data();
       renderParentApp();
+      // Ecoute en temps reel : toute modification du document (ex:
+      // liaison a un nouveau patient) se reflete aussitot dans l'app,
+      // sans avoir besoin de se reconnecter.
+      window._profileUnsub = onSnapshot(doc(db,'parents',uid), (snap)=>{
+        if(snap.exists()){
+          window._state.profile = snap.data();
+          renderParentApp();
+        }
+      });
       return;
     }
     const patientSnap = await getDoc(doc(db,'patients',uid));
@@ -271,6 +283,15 @@ async function checkRole(uid){
       window._state.role = 'patient';
       window._state.profile = patientSnap.data();
       renderPatientApp();
+      // Meme principe cote patient : si le medecin accepte le patient
+      // depuis le dashboard (doctorId/doctorEmail mis a jour sur ce
+      // document), l'app le voit immediatement.
+      window._profileUnsub = onSnapshot(doc(db,'patients',uid), (snap)=>{
+        if(snap.exists()){
+          window._state.profile = snap.data();
+          renderPatientApp();
+        }
+      });
       return;
     }
     renderAuth();
@@ -494,6 +515,7 @@ window.doRegister = async function(){
 window.doLogout = function(){
   if(confirm('Voulez-vous vous deconnecter ?')){
     if(window._state.simInterval) clearInterval(window._state.simInterval);
+    if(window._profileUnsub) { window._profileUnsub(); window._profileUnsub = null; }
     signOut(auth);
   }
 };
