@@ -248,6 +248,7 @@ export default function WatchScreen({ navigation }) {
   };
 
 
+  const envoyerTheme = async (themeId) => {
     if (!deviceRef.current || !connected) {
       Alert.alert("Non connecte", "Connectez la montre en BLE d'abord.");
       return;
