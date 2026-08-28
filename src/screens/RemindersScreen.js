@@ -6,6 +6,67 @@ import {
 import { useStore } from "../store/useStore";
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
+import notifee, {
+  TriggerType, RepeatFrequency, AndroidImportance, AuthorizationStatus
+} from "@notifee/react-native";
+
+// Canal Android dedie aux rappels, avec son (utilise le son de
+// notification par defaut du systeme - suffisant pour un rappel de
+// medicament, contrairement a l'alerte critique qui a son propre
+// SoundManager avec une vraie alarme en boucle).
+const CANAL_RAPPELS = "rappels-medicaments";
+
+async function assurerPermissionsEtCanal() {
+  const settings = await notifee.requestPermission();
+  if (settings.authorizationStatus < AuthorizationStatus.AUTHORIZED) {
+    Alert.alert(
+      "Notifications desactivees",
+      "Autorisez les notifications dans les reglages du telephone pour que vos rappels sonnent."
+    );
+  }
+  await notifee.createChannel({
+    id: CANAL_RAPPELS,
+    name: "Rappels de medicaments",
+    importance: AndroidImportance.HIGH,
+    sound: "default",
+  });
+}
+
+// Calcule le prochain declenchement (aujourd'hui si l'heure n'est
+// pas encore passee, sinon demain), pour un rappel qui se repete
+// ensuite tous les jours a la meme heure.
+function prochainDeclenchement(heureStr) {
+  const [h, m] = heureStr.split(":").map(n => parseInt(n, 10) || 0);
+  const date = new Date();
+  date.setHours(h, m, 0, 0);
+  if (date.getTime() <= Date.now()) {
+    date.setDate(date.getDate() + 1);
+  }
+  return date.getTime();
+}
+
+async function programmerRappel(id, titre, heureStr) {
+  await notifee.createTriggerNotification(
+    {
+      id, // meme id que le document Firestore : permet d'annuler/remplacer facilement
+      title: "Rappel medicament",
+      body: titre,
+      android: {
+        channelId: CANAL_RAPPELS,
+        pressAction: { id: "default" },
+      },
+    },
+    {
+      type: TriggerType.TIMESTAMP,
+      timestamp: prochainDeclenchement(heureStr),
+      repeatFrequency: RepeatFrequency.DAILY,
+    }
+  );
+}
+
+async function annulerRappel(id) {
+  await notifee.cancelTriggerNotification(id).catch(() => {});
+}
 
 export default function RemindersScreen({ navigation }) {
   const { theme } = useStore();
@@ -21,6 +82,10 @@ export default function RemindersScreen({ navigation }) {
   const [titre, setTitre]     = useState("");
   const [heure, setHeure]     = useState("08:00");
   const [actif, setActif]     = useState(true);
+
+  useEffect(() => {
+    assurerPermissionsEtCanal();
+  }, []);
 
   useEffect(() => {
     const uid = auth().currentUser?.uid;
@@ -40,11 +105,14 @@ export default function RemindersScreen({ navigation }) {
     if (!titre.trim()) { Alert.alert("Titre requis"); return; }
     const uid = auth().currentUser?.uid;
     if (!uid) return;
-    await firestore().collection("patients").doc(uid)
+    const docRef = await firestore().collection("patients").doc(uid)
       .collection("rappels").add({
         titre: titre.trim(), heure, actif,
         createdAt: firestore.FieldValue.serverTimestamp()
       });
+    if (actif) {
+      await programmerRappel(docRef.id, titre.trim(), heure);
+    }
     setTitre(""); setHeure("08:00"); setActif(true); setShowForm(false);
   };
 
@@ -55,14 +123,20 @@ export default function RemindersScreen({ navigation }) {
         const uid = auth().currentUser?.uid;
         if (uid) await firestore().collection("patients").doc(uid)
           .collection("rappels").doc(id).delete();
+        await annulerRappel(id);
       }}
     ]);
   };
 
-  const toggleActif = async (id, val) => {
+  const toggleActif = async (id, val, r) => {
     const uid = auth().currentUser?.uid;
     if (uid) await firestore().collection("patients").doc(uid)
       .collection("rappels").doc(id).update({ actif: val });
+    if (val) {
+      await programmerRappel(id, r.titre, r.heure);
+    } else {
+      await annulerRappel(id);
+    }
   };
 
   return (
@@ -161,7 +235,7 @@ export default function RemindersScreen({ navigation }) {
               </Text>
             </View>
             <Switch value={r.actif}
-              onValueChange={(v) => toggleActif(r.id, v)}
+              onValueChange={(v) => toggleActif(r.id, v, r)}
               trackColor={{ false:border, true:"#00c896" }}
               thumbColor="white" />
             <TouchableOpacity onPress={() => supprimer(r.id)}>
