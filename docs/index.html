@@ -1689,19 +1689,23 @@ window.updateChoosePatientsCount = function() {
 window.saveChosenPatients = async function() {
   const uid = window._currentUser?.uid;
   if (!uid) return;
+  const doctorEmail = window._currentUser?.email || '';
   const checkboxes = document.querySelectorAll('.choose-patient-cb');
   let count = 0;
   try {
     for (const cb of checkboxes) {
       const pid = cb.value;
       if (cb.checked) {
-        await updateDoc(doc(db, 'patients', pid), { doctorId: uid });
+        // L'email du medecin est ecrit en meme temps que doctorId,
+        // pour que l'app mobile du patient l'affiche automatiquement
+        // (via le listener temps reel sur son propre document).
+        await updateDoc(doc(db, 'patients', pid), { doctorId: uid, doctorEmail: doctorEmail });
         count++;
       } else {
         // Ne retire l'assignation que si ce patient etait suivi par CE medecin
         const snap = await getDoc(doc(db, 'patients', pid));
         if (snap.exists() && snap.data().doctorId === uid) {
-          await updateDoc(doc(db, 'patients', pid), { doctorId: null });
+          await updateDoc(doc(db, 'patients', pid), { doctorId: null, doctorEmail: null });
         }
       }
     }
@@ -2566,5 +2570,3 @@ setInterval(updateClock,1000); updateClock();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </body>
 </html>
-
-

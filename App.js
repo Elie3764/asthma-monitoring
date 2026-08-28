@@ -20,18 +20,38 @@ export default function App() {
 
   useEffect(() => {
     initSounds();
+    let profileUnsub = null;
+
     const unsub = auth().onAuthStateChanged(async u => {
       setUser(u);
       setLocalUser(u);
+
+      // Arrete l'ecoute du profil precedent avant d'en demarrer une
+      // nouvelle (changement de compte, deconnexion, etc.)
+      if (profileUnsub) { profileUnsub(); profileUnsub = null; }
+
       if (u) {
         try {
           const parentSnap = await firestore().collection("parents").doc(u.uid).get();
           if (parentSnap.exists) {
             setUserProfile(parentSnap.data());
             setRole("parent");
+            // Ecoute en temps reel : toute modification du document
+            // (ex: liaison a un nouveau patient) se reflete aussitot
+            // dans l'app, sans redemarrage necessaire.
+            profileUnsub = firestore().collection("parents").doc(u.uid)
+              .onSnapshot(snap => { if (snap.exists) setUserProfile(snap.data()); });
           } else {
             const snap = await firestore().collection("patients").doc(u.uid).get();
-            if (snap.exists) { setUserProfile(snap.data()); setRole("patient"); }
+            if (snap.exists) {
+              setUserProfile(snap.data());
+              setRole("patient");
+              // Meme principe cote patient : si le medecin accepte le
+              // patient depuis le dashboard (doctorId/doctorEmail mis a
+              // jour sur ce document), l'app le voit immediatement.
+              profileUnsub = firestore().collection("patients").doc(u.uid)
+                .onSnapshot(snap2 => { if (snap2.exists) setUserProfile(snap2.data()); });
+            }
           }
         } catch (e) { console.error(e); }
       } else {
@@ -39,7 +59,8 @@ export default function App() {
       }
       if (initializing) setInitializing(false);
     });
-    return unsub;
+
+    return () => { unsub(); if (profileUnsub) profileUnsub(); };
   }, []);
 
   if (initializing) return (
