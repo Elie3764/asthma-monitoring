@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StatusBar, Alert, Switch, Modal, FlatList
+  StatusBar, Alert, Switch, Modal, FlatList, AppState
 } from "react-native";
 import { useStore } from "../store/useStore";
 import auth from "@react-native-firebase/auth";
@@ -106,36 +106,51 @@ export default function WatchScreen({ navigation }) {
       // Lecture des vitaux par polling (plus fiable que "monitor"/notify
       // sur certains telephones ou l'abonnement notify echoue
       // silencieusement, sans jamais declencher le callback d'erreur).
-      let premierPollDebug = true;
       const lireVitaux = async () => {
         try {
           const char = await dev.readCharacteristicForService(BLE_SVC, CHR_VIT);
-          if (!char?.value) {
-            if (premierPollDebug) {
-              premierPollDebug = false;
-              Alert.alert("Debug lecture BLE", "Lecture reussie mais char.value est vide.");
-            }
-            return;
-          }
+          if (!char?.value) return;
           const json = Buffer.from(char.value, "base64").toString("utf8");
-          if (premierPollDebug) {
-            premierPollDebug = false;
-            Alert.alert("Debug lecture BLE - Recu", json);
-          }
           setVitauxMontre(JSON.parse(json));
         } catch (e) {
-          if (premierPollDebug) {
-            premierPollDebug = false;
-            Alert.alert("Erreur lecture BLE", e.message || String(e));
-          }
+          // Silencieux : une lecture peut echouer ponctuellement
+          // (ex: juste apres un retour de veille), pas grave, on
+          // reessaie au prochain intervalle.
         }
       };
+
+      const demarrerPolling = () => {
+        if (pollingRef.current) return; // deja actif
+        pollingRef.current = setInterval(lireVitaux, 3000);
+      };
+      const arreterPolling = () => {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      };
+
+      // Suspend le polling BLE quand le telephone part en veille/arriere-
+      // plan, et le reprend au reveil. Evite d'envoyer des requetes BLE
+      // pendant la renegociation des parametres de connexion Android au
+      // moment ou l'ecran se verrouille, qui semblait declencher un
+      // plantage cote ESP32 (Guru Meditation / LoadProhibited).
+      const appStateSub = AppState.addEventListener("change", (etat) => {
+        if (etat === "active") {
+          // Petit delai avant de reprendre, meme raison que le delai
+          // initial : laisser la connexion BLE se re-stabiliser.
+          setTimeout(() => { lireVitaux(); demarrerPolling(); }, 800);
+        } else {
+          arreterPolling();
+        }
+      });
+
       // Delai avant la premiere lecture : evite "operation was rejected",
       // erreur BLE frequente si on lit trop tot juste apres la connexion,
       // pendant que la negociation Bluetooth n'est pas encore stabilisee.
       setTimeout(() => {
         lireVitaux();
-        pollingRef.current = setInterval(lireVitaux, 3000);
+        demarrerPolling();
       }, 800);
 
       // Detecter deconnexion
@@ -143,10 +158,8 @@ export default function WatchScreen({ navigation }) {
         setConnected(false);
         setBleDevice(null);
         setVitauxMontre(null);
-        if (pollingRef.current) {
-          clearInterval(pollingRef.current);
-          pollingRef.current = null;
-        }
+        arreterPolling();
+        appStateSub.remove();
       });
 
       // (Alerte "Connecte!" retiree - trop de popups pendant les tests)
