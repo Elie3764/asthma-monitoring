@@ -54,6 +54,7 @@ export default function WatchScreen({ navigation }) {
   const [vitauxMontre, setVitauxMontre] = useState(null);
   const [simulating, setSimulating]   = useState(false);
   const deviceRef = useRef(null);
+  const pollingRef = useRef(null);
 
   // Charger infos depuis Firebase
   useEffect(() => {
@@ -102,20 +103,33 @@ export default function WatchScreen({ navigation }) {
       setBleDevice(dev);
       setConnected(true);
 
-      // Ecouter les vitaux en temps reel
-      dev.monitorCharacteristicForService(BLE_SVC, CHR_VIT, (err, char) => {
-        if (err || !char) return;
+      // Lecture des vitaux par polling (plus fiable que "monitor"/notify
+      // sur certains telephones ou l'abonnement notify echoue
+      // silencieusement, sans jamais declencher le callback d'erreur).
+      const lireVitaux = async () => {
         try {
+          const char = await dev.readCharacteristicForService(BLE_SVC, CHR_VIT);
+          if (!char?.value) return;
           const json = Buffer.from(char.value, "base64").toString("utf8");
           setVitauxMontre(JSON.parse(json));
-        } catch {}
-      });
+        } catch (e) {
+          // Silencieux : la lecture peut echouer ponctuellement
+          // (deconnexion en cours, etc.), pas grave, on reessaie
+          // au prochain intervalle.
+        }
+      };
+      lireVitaux(); // premiere lecture immediate
+      pollingRef.current = setInterval(lireVitaux, 3000);
 
       // Detecter deconnexion
       dev.onDisconnected(() => {
         setConnected(false);
         setBleDevice(null);
         setVitauxMontre(null);
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
       });
 
       Alert.alert("Connecte!", "Montre BLE connectee avec succes.");
@@ -177,6 +191,7 @@ export default function WatchScreen({ navigation }) {
           watchConnected: false,
         });
         if (deviceRef.current) deviceRef.current.cancelConnection().catch(()=>{});
+        if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
         setConnectedDevice(null); setConnectionType(null);
         setWatchInfo(null); setConnected(false);
       }}
