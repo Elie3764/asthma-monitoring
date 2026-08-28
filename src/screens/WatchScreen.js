@@ -111,7 +111,26 @@ export default function WatchScreen({ navigation }) {
           const char = await dev.readCharacteristicForService(BLE_SVC, CHR_VIT);
           if (!char?.value) return;
           const json = Buffer.from(char.value, "base64").toString("utf8");
-          setVitauxMontre(JSON.parse(json));
+          const vitaux = JSON.parse(json);
+          setVitauxMontre(vitaux);
+
+          // Relais vers la Realtime Database via la connexion internet
+          // DU TELEPHONE (pas celle de la montre) : contourne un reseau
+          // WiFi qui bloquerait la montre, ou un module SIM800L
+          // defectueux/sans SIM valide - le telephone sert de passerelle
+          // des qu'il est connecte en BLE, en utilisant sa propre
+          // connexion (donnees mobiles ou WiFi) pour joindre Firebase.
+          const monUid = auth().currentUser?.uid;
+          if (monUid) {
+            database().ref("patients/" + monUid + "/vitals").set({
+              ...vitaux,
+              timestamp: new Date().toISOString(),
+              source: "phone_relay",
+            }).catch(() => {
+              // Silencieux : le telephone peut aussi etre hors ligne
+              // ponctuellement, pas grave, on reessaie au prochain poll.
+            });
+          }
         } catch (e) {
           // Silencieux : une lecture peut echouer ponctuellement
           // (ex: juste apres un retour de veille), pas grave, on
