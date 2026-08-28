@@ -124,11 +124,13 @@ export default function WatchScreen({ navigation }) {
           if (monUid) {
             database().ref("patients/" + monUid + "/vitals").set({
               ...vitaux,
-              timestamp: new Date().toISOString(),
+              timestamp: Date.now(), // nombre (epoch ms), pas une chaine ISO -
+              // le calcul du statut "en ligne" ailleurs fait
+              // Date.now() - v.timestamp, qui necessite un nombre.
               source: "phone_relay",
-            }).catch(() => {
-              // Silencieux : le telephone peut aussi etre hors ligne
-              // ponctuellement, pas grave, on reessaie au prochain poll.
+            }).catch((err) => {
+              // DEBUG TEMPORAIRE : affiche l'erreur exacte du relais
+              Alert.alert("Erreur relais RTDB", err.code + " : " + err.message);
             });
           }
         } catch (e) {
