@@ -106,12 +106,17 @@ export default function WatchScreen({ navigation }) {
       // Lecture des vitaux par polling (plus fiable que "monitor"/notify
       // sur certains telephones ou l'abonnement notify echoue
       // silencieusement, sans jamais declencher le callback d'erreur).
+      let premierPollDebug2 = true;
       const lireVitaux = async () => {
         try {
           const char = await dev.readCharacteristicForService(BLE_SVC, CHR_VIT);
-          if (!char?.value) return;
+          if (!char?.value) {
+            if (premierPollDebug2) { premierPollDebug2 = false; Alert.alert("Debug BLE", "char.value est vide"); }
+            return;
+          }
           const json = Buffer.from(char.value, "base64").toString("utf8");
           const vitaux = JSON.parse(json);
+          if (premierPollDebug2) { premierPollDebug2 = false; Alert.alert("Debug BLE - Recu", json); }
           setVitauxMontre(vitaux);
 
           // Relais vers la Realtime Database via la connexion internet
@@ -134,9 +139,7 @@ export default function WatchScreen({ navigation }) {
             });
           }
         } catch (e) {
-          // Silencieux : une lecture peut echouer ponctuellement
-          // (ex: juste apres un retour de veille), pas grave, on
-          // reessaie au prochain intervalle.
+          if (premierPollDebug2) { premierPollDebug2 = false; Alert.alert("Erreur lecture BLE", e.message || String(e)); }
         }
       };
 
