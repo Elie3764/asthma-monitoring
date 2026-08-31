@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StatusBar, KeyboardAvoidingView,
-  Platform, ActivityIndicator
+  Platform, ActivityIndicator, Alert
 } from "react-native";
 import { useStore } from "../store/useStore";
 import { ANTHROPIC_API_KEY } from "../config/secrets";
@@ -52,9 +52,24 @@ Question: ${txt}`;
         })
       });
       const data = await response.json();
+
+      // DEBUG TEMPORAIRE : affiche la reponse brute si la requete a
+      // echoue cote serveur (cle API invalide, modele incorrect,
+      // etc.) - a retirer une fois le probleme identifie.
+      if (!response.ok) {
+        Alert.alert(
+          "Debug IA - Erreur " + response.status,
+          JSON.stringify(data).slice(0, 500)
+        );
+      }
+
       const rep = data.content?.[0]?.text || "Je ne peux pas repondre maintenant.";
       setMessages([...newMessages, { role:"assistant", text:rep }]);
     } catch (e) {
+      // DEBUG TEMPORAIRE : affiche l'erreur exacte (reseau, cle API
+      // manquante, etc.) au lieu de la cacher derriere un message
+      // generique - a retirer une fois le probleme identifie.
+      Alert.alert("Debug IA - Exception", e.message || String(e));
       setMessages([...newMessages, {
         role:"assistant",
         text:"Desolee, je ne peux pas repondre maintenant. Verifiez votre connexion."

@@ -6,9 +6,26 @@ import {
 import { useStore } from "../store/useStore";
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
-import notifee, {
-  TriggerType, RepeatFrequency, AndroidImportance, AuthorizationStatus
-} from "@notifee/react-native";
+
+// IMPORTANT : pas d'import statique de notifee ici. Un import
+// classique ("import notifee from ...") execute IMMEDIATEMENT le
+// code interne de notifee des que ce fichier est charge par le
+// bundle JS - y compris sur des ecrans jamais ouverts par
+// l'utilisateur, simplement parce qu'un autre fichier les importe
+// (ex: le navigateur). Si le pont natif n'a pas encore fini de tout
+// enregistrer a cet instant precis (variable selon l'appareil et sa
+// rapidite), ca provoque un crash immediat et systematique de toute
+// l'app au demarrage : "Notifee native module not found".
+// On charge donc notifee UNIQUEMENT au moment ou une fonction qui
+// en a besoin est reellement appelee (via require() a l'interieur
+// de la fonction), c'est-a-dire bien apres que l'app ait fini de
+// demarrer et que le pont natif soit garanti pret.
+function getNotifee() {
+  return require("@notifee/react-native").default;
+}
+function getNotifeeConstants() {
+  return require("@notifee/react-native");
+}
 
 // Canal Android dedie aux rappels, avec son (utilise le son de
 // notification par defaut du systeme - suffisant pour un rappel de
@@ -17,6 +34,8 @@ import notifee, {
 const CANAL_RAPPELS = "rappels-medicaments";
 
 async function assurerPermissionsEtCanal() {
+  const notifee = getNotifee();
+  const { AndroidImportance, AuthorizationStatus } = getNotifeeConstants();
   const settings = await notifee.requestPermission();
   if (settings.authorizationStatus < AuthorizationStatus.AUTHORIZED) {
     Alert.alert(
@@ -46,6 +65,8 @@ function prochainDeclenchement(heureStr) {
 }
 
 async function programmerRappel(id, titre, heureStr) {
+  const notifee = getNotifee();
+  const { TriggerType, RepeatFrequency } = getNotifeeConstants();
   await notifee.createTriggerNotification(
     {
       id, // meme id que le document Firestore : permet d'annuler/remplacer facilement
@@ -65,6 +86,7 @@ async function programmerRappel(id, titre, heureStr) {
 }
 
 async function annulerRappel(id) {
+  const notifee = getNotifee();
   await notifee.cancelTriggerNotification(id).catch(() => {});
 }
 
